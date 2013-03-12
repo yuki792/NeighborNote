@@ -2,7 +2,7 @@
 rem #####################
 rem # Install variables #
 rem #####################
-set NIXNOTE=%~dp0
+set NEIGHBORNOTE=%~dp0
 
 rem ########################################
 rem # Memory settings.  These can be tuned #
@@ -42,7 +42,7 @@ rem set NN_DEBUG=-verbose:gc
 rem ########################################
 rem # This next variable is optional. It   #
 rem # is only needed if you want to run    #
-rem # multiple copies of NixNote under     #
+rem # multiple copies of NeighborNote under#
 rem # the same user id.  Each              #
 rem # additional copy (after the first)    #
 rem # should have a unique name.  This     #
@@ -77,37 +77,37 @@ GOTO Loop
 rem #####################
 rem # Setup environment #
 rem #####################
-set NN_CLASSPATH=%NIXNOTE%nixnote.jar
+set NN_CLASSPATH=%NEIGHBORNOTE%neighbornote.jar
 
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\apache-mime4j-0.6.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\commons-codec-1.5.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\commons-compress-1.2.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\commons-lang3-3.0.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\commons-logging-1.1.1.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\evernote-api-1.20.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\h2-1.3.158.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\httpclient-4.1.1.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\httpcore-4.1.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\httpmime-4.1.1.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\jaxen-1.1.3.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\jazzy.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\jtidy-r938.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\libthrift.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\log4j-1.2.14.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\pdfbox-app-1.6.0.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\poi-3.7-20101029.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\poi-ooxml-3.7.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\poi-ooxml-schemas-3.7-20101029.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\poi-scratchpad-3.7-20101029.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\scribe-1.3.0.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\tika.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\xmlbeans-2.3.0.jar
-set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\xsdlib-20060615.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\apache-mime4j-0.6.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\commons-codec-1.5.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\commons-compress-1.2.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\commons-lang3-3.0.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\commons-logging-1.1.1.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\evernote-api-1.20.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\h2-1.3.158.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\httpclient-4.1.1.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\httpcore-4.1.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\httpmime-4.1.1.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\jaxen-1.1.3.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\jazzy.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\jtidy-r938.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\libthrift.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\log4j-1.2.14.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\pdfbox-app-1.6.0.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\poi-3.7-20101029.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\poi-ooxml-3.7.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\poi-ooxml-schemas-3.7-20101029.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\poi-scratchpad-3.7-20101029.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\scribe-1.3.0.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\tika.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\xmlbeans-2.3.0.jar
+set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\xsdlib-20060615.jar
 
-if exist "%NIXNOTE%lib\qtjambi-win32-4.5.2_01.jar" set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\qtjambi-win32-4.5.2_01.jar
-if exist "%NIXNOTE%lib\qtjambi-win32-msvc2005-4.5.2_01.jar" set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\qtjambi-win32-msvc2005-4.5.2_01.jar
-if exist "%NIXNOTE%lib\qtjambi-win64-4.5.2_01.jar" set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\qtjambi-win64-4.5.2_01.jar
-if exist "%NIXNOTE%lib\qtjambi-win64-msvc2005x64-4.5.2_01.jar" set NN_CLASSPATH=%NN_CLASSPATH%;%NIXNOTE%lib\qtjambi-win64-msvc2005x64-4.5.2_01.jar
+if exist "%NEIGHBORNOTE%lib\qtjambi-win32-4.5.2_01.jar" set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\qtjambi-win32-4.5.2_01.jar
+if exist "%NEIGHBORNOTE%lib\qtjambi-win32-msvc2005-4.5.2_01.jar" set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\qtjambi-win32-msvc2005-4.5.2_01.jar
+if exist "%NEIGHBORNOTE%lib\qtjambi-win64-4.5.2_01.jar" set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\qtjambi-win64-4.5.2_01.jar
+if exist "%NEIGHBORNOTE%lib\qtjambi-win64-msvc2005x64-4.5.2_01.jar" set NN_CLASSPATH=%NN_CLASSPATH%;%NEIGHBORNOTE%lib\qtjambi-win64-msvc2005x64-4.5.2_01.jar
 
 rem set NN_CLASSPATH="%NN_CLASSPATH%"
 

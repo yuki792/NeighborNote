@@ -55,6 +55,9 @@ public class MainMenuBar extends QMenuBar {
 	public QAction			noteExportAction;			// Export notes
 	public QAction			noteImportAction;			// Import notes
 	public QAction			noteCopyAsUrlAction;		// Copy the note as a URL
+	// ICHANGED
+	public QAction 			noteOpenNewTab; 			// 新しいタブで開く
+	public QAction			noteAddNewTab;				// 新しいタブでノート追加
 	
 	public QAction			editFind;					// find text in the current note
 	public QAction			editUndo;					// Undo last change
@@ -147,11 +150,18 @@ public class MainMenuBar extends QMenuBar {
 	
 	private QMenu			toolsMenu;					// Tools menu
 	
-	private QMenu			helpMenu;	
+	private QMenu			helpMenu;
+	
+	// ICHANGED
+	private QMenu tableMenu;
+	private QMenu imageMenu;
+	private BrowserWindow prevBW;
 	
 	public MainMenuBar(NeverNote p) {
 		parent = p;
 		
+		// ICHANGED
+		prevBW = parent.browserWindow;
 		
 		fullReindexAction = new QAction(tr("Reindex Database"), this);
 		fullReindexAction.setToolTip(tr("Reindex all notes"));
@@ -250,6 +260,18 @@ public class MainMenuBar extends QMenuBar {
 		noteDelete.setToolTip(tr("Delete this note"));
 		noteDelete.triggered.connect(parent, "deleteNote()");
 		setupShortcut(noteDelete, "File_Note_Delete");
+		
+		// ICHANGED 新しいタブで開くアクション生成
+		noteOpenNewTab = new QAction(tr("Open in New Tab"), this);
+		noteOpenNewTab.setToolTip(tr("Open this note in new tab"));
+		noteOpenNewTab.triggered.connect(parent, "openNewTab()");
+		setupShortcut(noteOpenNewTab, "File_Note_Open_New_Tab");
+		
+		// ICHANGED 新しいタブでノート追加アクション生成
+		noteAddNewTab = new QAction(tr("Add in New Tab"), this);
+		noteAddNewTab.setToolTip(tr("Add a new note in new tab"));
+		noteAddNewTab.triggered.connect(parent, "noteAddNewTab()");
+		setupShortcut(noteAddNewTab, "File_Note_Add_New_Tab");
 	
 		editFind = new QAction(tr("Find In Note"), this);
 		editFind.setToolTip(tr("Find a string in the current note"));
@@ -647,9 +669,11 @@ public class MainMenuBar extends QMenuBar {
 		checkForUpdates.setToolTip(tr("Check for newer versions"));
 		checkForUpdates.triggered.connect(parent, "checkForUpdates()"); 
 		setupShortcut(checkForUpdates, "Help_Check_For_Updates");
+		// ICHANGED TODO とりあえず封印
+		checkForUpdates.setEnabled(false);
 		
 		aboutAction = new QAction(tr("About"), this);
-		aboutAction.setToolTip(tr("About NixNote"));
+		aboutAction.setToolTip(tr("About NeighborNote"));
 		aboutAction.triggered.connect(parent, "about()"); 
 		setupShortcut(aboutAction, "About_About");
 		
@@ -730,6 +754,23 @@ public class MainMenuBar extends QMenuBar {
 		formatMenu.addMenu(parent.browserWindow.browser.tableMenu);
 		formatMenu.addMenu(parent.browserWindow.browser.imageMenu);
 		formatMenu.addSeparator();
+		
+		// ICHANGED
+		// ライブラリにremoveMenu()が存在しないので、removeAction()で消せるようにTable,Imageメニューをここで再定義
+		tableMenu = new QMenu();
+		tableMenu.setTitle(tr("Table"));
+		tableMenu.addAction(parent.browserWindow.browser.insertTableAction);
+		tableMenu.addAction(parent.browserWindow.browser.insertTableRowAction);
+		tableMenu
+				.addAction(parent.browserWindow.browser.insertTableColumnAction);
+		tableMenu.addAction(parent.browserWindow.browser.deleteTableRowAction);
+		tableMenu
+				.addAction(parent.browserWindow.browser.deleteTableColumnAction);
+		imageMenu = new QMenu();
+		imageMenu.setTitle(tr("Image"));
+		imageMenu.addAction(parent.browserWindow.browser.downloadImage);
+		imageMenu.addAction(parent.browserWindow.browser.rotateImageRight);
+		imageMenu.addAction(parent.browserWindow.browser.rotateImageLeft);
 
 		alignMenu = formatMenu.addMenu(tr("Alignment"));
 		alignMenu.addAction(alignLeftAction);
@@ -744,7 +785,13 @@ public class MainMenuBar extends QMenuBar {
 		indentMenu.addAction(outdentAction);
 		
 		noteAttributes.setCheckable(true);
+		// ICHANGED
+		noteMenu.addAction(noteOpenNewTab);
+		
 		noteMenu.addAction(noteAdd);
+		// ICHANGED
+		noteMenu.addAction(noteAddNewTab);
+		
 		noteMenu.addAction(noteDelete);
 		//noteMenu.addAction(noteCopyAsUrlAction);
 		noteMenu.addAction(noteReindex);
@@ -830,6 +877,132 @@ public class MainMenuBar extends QMenuBar {
 		if (!Global.shortcutKeys.containsAction(text))
 			return;
 		action.setShortcut(Global.shortcutKeys.getShortcut(text));
+	}
+	
+	// ICHANGED
+	public void refreshTargetWindow() {
+		// 以前のブラウザウィンドウとの接続を切断
+		noteTags.triggered.disconnect(prevBW, "modifyTags()");
+		editUndo.triggered.disconnect(prevBW, "undoClicked()");
+		editRedo.triggered.disconnect(prevBW, "redoClicked()");
+		editCut.triggered.disconnect(prevBW, "cutClicked()");
+		editCopy.triggered.disconnect(prevBW, "copyClicked()");
+		editPaste.triggered.disconnect(prevBW, "pasteClicked()");
+		editPasteWithoutFormat.triggered.disconnect(prevBW,
+				"pasteWithoutFormattingClicked()");
+
+		alignLeftAction.triggered.disconnect(prevBW, "justifyLeftClicked()");
+		alignRightAction.triggered.disconnect(prevBW, "justifyRightClicked()");
+		alignCenterAction.triggered
+				.disconnect(prevBW, "justifyCenterClicked()");
+		formatBold.triggered.disconnect(prevBW, "boldClicked()");
+		formatItalic.triggered.disconnect(prevBW, "italicClicked()");
+		formatUnderline.triggered.disconnect(prevBW, "underlineClicked()");
+		formatSuperscript.triggered.disconnect(prevBW, "superscriptClicked()");
+		formatSubscript.triggered.disconnect(prevBW, "subscriptClicked()");
+		formatStrikethrough.triggered.disconnect(prevBW,
+				"strikethroughClicked()");
+		horizontalLineAction.triggered.disconnect(prevBW, "hlineClicked()");
+		formatBulletList.triggered.disconnect(prevBW, "bulletListClicked()");
+		formatNumberList.triggered.disconnect(prevBW, "numberListClicked()");
+		indentAction.triggered.disconnect(prevBW, "indentClicked()");
+		outdentAction.triggered.disconnect(prevBW, "outdentClicked()");
+
+		spellCheckAction.triggered.disconnect(prevBW, "spellCheckClicked()");
+
+		// 新たなブラウザウィンドウと接続
+		noteTags.triggered.connect(parent.browserWindow, "modifyTags()");
+		editUndo.triggered.connect(parent.browserWindow, "undoClicked()");
+		editRedo.triggered.connect(parent.browserWindow, "redoClicked()");
+		editCut.triggered.connect(parent.browserWindow, "cutClicked()");
+		editCopy.triggered.connect(parent.browserWindow, "copyClicked()");
+		editPaste.triggered.connect(parent.browserWindow, "pasteClicked()");
+		editPasteWithoutFormat.triggered.connect(parent.browserWindow,
+				"pasteWithoutFormattingClicked()");
+
+		alignLeftAction.triggered.connect(parent.browserWindow,
+				"justifyLeftClicked()");
+		alignRightAction.triggered.connect(parent.browserWindow,
+				"justifyRightClicked()");
+		alignCenterAction.triggered.connect(parent.browserWindow,
+				"justifyCenterClicked()");
+		formatBold.triggered.connect(parent.browserWindow, "boldClicked()");
+		formatItalic.triggered.connect(parent.browserWindow, "italicClicked()");
+		formatUnderline.triggered.connect(parent.browserWindow,
+				"underlineClicked()");
+		formatSuperscript.triggered.connect(parent.browserWindow,
+				"superscriptClicked()");
+		formatSubscript.triggered.connect(parent.browserWindow,
+				"subscriptClicked()");
+		formatStrikethrough.triggered.connect(parent.browserWindow,
+				"strikethroughClicked()");
+		horizontalLineAction.triggered.connect(parent.browserWindow,
+				"hlineClicked()");
+		formatBulletList.triggered.connect(parent.browserWindow,
+				"bulletListClicked()");
+		formatNumberList.triggered.connect(parent.browserWindow,
+				"numberListClicked()");
+		indentAction.triggered.connect(parent.browserWindow, "indentClicked()");
+		outdentAction.triggered.connect(parent.browserWindow,
+				"outdentClicked()");
+
+		spellCheckAction.triggered.connect(parent.browserWindow,
+				"spellCheckClicked()");
+
+		// メニューバーに新しいアクションを挿入
+		fileMenu.insertAction(prevBW.browser.downloadAttachment,
+				parent.browserWindow.browser.downloadAttachment);
+
+		formatMenu.insertAction(prevBW.browser.todoAction,
+				parent.browserWindow.browser.todoAction);
+		formatMenu.insertAction(prevBW.browser.encryptAction,
+				parent.browserWindow.browser.encryptAction);
+		formatMenu.insertAction(prevBW.browser.insertLinkAction,
+				parent.browserWindow.browser.insertLinkAction);
+		formatMenu.insertAction(prevBW.browser.insertQuickLinkAction,
+				parent.browserWindow.browser.insertQuickLinkAction);
+		formatMenu.insertAction(prevBW.browser.insertLatexAction,
+				parent.browserWindow.browser.insertLatexAction);
+
+		tableMenu.insertAction(prevBW.browser.insertTableAction,
+				parent.browserWindow.browser.insertTableAction);
+		tableMenu.insertAction(prevBW.browser.insertTableRowAction,
+				parent.browserWindow.browser.insertTableRowAction);
+		tableMenu.insertAction(prevBW.browser.insertTableColumnAction,
+				parent.browserWindow.browser.insertTableColumnAction);
+		tableMenu.insertAction(prevBW.browser.deleteTableRowAction,
+				parent.browserWindow.browser.deleteTableRowAction);
+		tableMenu.insertAction(prevBW.browser.deleteTableColumnAction,
+				parent.browserWindow.browser.deleteTableColumnAction);
+
+		imageMenu.insertAction(prevBW.browser.downloadImage,
+				parent.browserWindow.browser.downloadImage);
+		imageMenu.insertAction(prevBW.browser.rotateImageRight,
+				parent.browserWindow.browser.rotateImageRight);
+		imageMenu.insertAction(prevBW.browser.rotateImageLeft,
+				parent.browserWindow.browser.rotateImageLeft);
+
+		// メニューバーから古いアクションを削除
+		fileMenu.removeAction(prevBW.browser.downloadAttachment);
+
+		formatMenu.removeAction(prevBW.browser.todoAction);
+		formatMenu.removeAction(prevBW.browser.encryptAction);
+		formatMenu.removeAction(prevBW.browser.insertLinkAction);
+		formatMenu.removeAction(prevBW.browser.insertQuickLinkAction);
+		formatMenu.removeAction(prevBW.browser.insertLatexAction);
+
+		tableMenu.removeAction(prevBW.browser.insertTableAction);
+		tableMenu.removeAction(prevBW.browser.insertTableRowAction);
+		tableMenu.removeAction(prevBW.browser.insertTableColumnAction);
+		tableMenu.removeAction(prevBW.browser.deleteTableRowAction);
+		tableMenu.removeAction(prevBW.browser.deleteTableColumnAction);
+
+		imageMenu.removeAction(prevBW.browser.downloadImage);
+		imageMenu.removeAction(prevBW.browser.rotateImageRight);
+		imageMenu.removeAction(prevBW.browser.rotateImageLeft);
+
+		// prevBWを更新
+		prevBW = parent.browserWindow;
 	}
 
 }

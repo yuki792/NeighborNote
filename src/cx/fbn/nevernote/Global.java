@@ -63,8 +63,10 @@ import cx.fbn.nevernote.utilities.Pair;
 
 public class Global {
 	// Set current version and the known versions.
-	public static String version = "1.5";
-	public static String[] validVersions = {"1.5", "1.4", "1.3", "1.2", "1.1", "1.0", "0.99", "0.98", "0.97", "0.96"};
+	// ICHANGED 自分用に変更
+	public static String version = "0.1";
+	public static String[] validVersions = {"0.1"};
+	
     public static String username = ""; 
     //public static String password = "";     
     
@@ -154,6 +156,10 @@ public class Global {
 	public static String	databaseName = new String("NeverNote");  // database name.  used for multiple databases to separate settings.
 	public static String	indexDatabaseName = new String("Index"); // searchable words database
 	public static String	resourceDatabaseName = new String("Resources");  // attachments database
+	
+	// ICHANGED
+	public static String behaviorDatabaseName = new String("Behavior"); // 操作履歴データベース	
+	
 	public static DateAttributeFilterTable createdSinceFilter;
 	public static DateAttributeFilterTable createdBeforeFilter;
 	public static DateAttributeFilterTable changedSinceFilter;
@@ -189,7 +195,9 @@ public class Global {
 	
     // Do initial setup 
     public static void setup(StartupConfig startupConfig) throws InitializationException  {
-        settings = new QSettings("fbn.cx", startupConfig.getName());
+    	// ICHANGED 設定値の保存先を変更
+        settings = new QSettings("NeighborNote.ini", QSettings.Format.IniFormat);
+        
         disableViewing = startupConfig.getDisableViewing();
         syncOnly = startupConfig.isSyncOnly();
 
@@ -1219,6 +1227,20 @@ public class Global {
 			val = "jdbc:h2:"+Global.getFileManager().getDbDirPath(Global.resourceDatabaseName);
 		return val;
     }
+    
+	// ICHANGED
+	// 操作履歴データベースのURL（フルパス）をゲット
+	public static String getBehaviorDatabaseUrl() {
+		settings.beginGroup("General");
+		String val = (String) settings.value("BehaviorDatabaseURL", "");
+		settings.endGroup();
+		if (val.equals(""))
+			val = "jdbc:h2:"
+					+ Global.getFileManager().getDbDirPath(
+							Global.behaviorDatabaseName);
+		return val;
+	}
+	
     public static void setDatabaseUrl(String value) {
 		settings.beginGroup("General");
 		settings.setValue("DatabaseURL", value);
@@ -1234,6 +1256,14 @@ public class Global {
 		settings.setValue("ResourceDatabaseURL", value);
 		settings.endGroup();
     }
+    
+	// ICHANGED
+	public static void setBehaviorDatabaseUrl(String value) {
+		settings.beginGroup("General");
+		settings.setValue("BehaviorDatabaseURL", value);
+		settings.endGroup();
+	}
+	
     public static String getDatabaseUserid() {
 		settings.beginGroup("General");
 		String val  = (String)settings.value("databaseUserid", "");
@@ -2029,5 +2059,248 @@ public class Global {
 		settings.endGroup();	
 		databaseCache = value;
     }
+    
+    // ICHANGED
+    // 複数ノート同時閲覧操作に対する重み付け
+    public static void setBrowseWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("browseWeight", weight);
+		settings.endGroup();    	
+    }
+    public static int getBrowseWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("browseWeight", 1);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("browseWeight", 1);
+			} catch (Exception e1) {
+				value = 1;
+			}
+		}
+		settings.endGroup();
+		return value;
+    }
+    
+    // ICHANGED
+    // ノート内容のコピー＆ペースト操作に対する重み付け
+    public static void setCopyPasteWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("copyPasteWeight", weight);
+		settings.endGroup();    	
+    }
+    public static int getCopyPasteWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("copyPasteWeight", 3);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("copyPasteWeight", 3);
+			} catch (Exception e1) {
+				value = 3;
+			}
+		}
+		settings.endGroup();
+		return value;
+    }
+    
+    // ICHANGED
+    // 新規ノート追加操作に対する重み付け
+    public static void setAddNewNoteWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("addNewNoteWeight", weight);
+		settings.endGroup();    	
+    }
+	public static int getAddNewNoteWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("addNewNoteWeight", 1);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("addNewNoteWeight", 1);
+			} catch (Exception e1) {
+				value = 1;
+			}
+		}
+		settings.endGroup();
+		return value;
+	}
+	
+	// ICHANGED
+	// 連想ノートクリック操作に対する重み付け
+    public static void setRensoItemClickWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("rensoItemClickWeight", weight);
+		settings.endGroup();    	
+    }
+	public static int getRensoItemClickWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("rensoItemClickWeight", 10);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("rensoItemClickWeight", 10);
+			} catch (Exception e1) {
+				value = 10;
+			}
+		}
+		settings.endGroup();
+		return value;
+	}
+	
+	// ICHANGED
+	// タグ付け操作に対する重み付け
+    public static void setSameTagWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("sameTagWeight", weight);
+		settings.endGroup();    	
+    }
+	public static int getSameTagWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("sameTagWeight", 2);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("sameTagWeight", 2);
+			} catch (Exception e1) {
+				value = 2;
+			}
+		}
+		settings.endGroup();
+		return value;
+	}
+	
+	// ICHANGED
+	// ノートブック変更操作に対する重み付け
+    public static void setSameNotebookWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("sameNotebookWeight", weight);
+		settings.endGroup();    	
+    }
+	public static int getSameNotebookWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("sameNotebookWeight", 2);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("sameNotebookWeight", 2);
+			} catch (Exception e1) {
+				value = 2;
+			}
+		}
+		settings.endGroup();
+		return value;
+	}
+    
+    //*******************
+    // ノートのマージ・複製の関連ノートリストへの適用
+    //*******************
+    // ICHANGED
+    public static void setMergeRensoNote(boolean value) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("mergeRensoNoteList", value);
+		settings.endGroup();	
+    }
+    // ICHANGED
+    public static boolean getMergeRensoNote() {
+		settings.beginGroup("RensoNoteList");
+		try {
+			String value = (String)settings.value("mergeRensoNoteList", "true");
+			settings.endGroup();
+			if (value.equals("true"))
+				return true;
+			else
+				return false;
+		} catch (java.lang.ClassCastException e) {
+			Boolean value = (Boolean) settings.value("mergeRensoNoteList", true);
+			settings.endGroup();
+			return value;
+		}
+    }
+    // ICHANGED
+    public static void setDuplicateRensoNote(boolean value) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("duplicateRensoNoteList", value);
+		settings.endGroup();	
+    }
+    // ICHANGED
+    public static boolean getDuplicateRensoNote() {
+		settings.beginGroup("RensoNoteList");
+		try {
+			String value = (String)settings.value("duplicateRensoNoteList", "true");
+			settings.endGroup();
+			if (value.equals("true"))
+				return true;
+			else
+				return false;
+		} catch (java.lang.ClassCastException e) {
+			Boolean value = (Boolean) settings.value("duplicateRensoNoteList", true);
+			settings.endGroup();
+			return value;
+		}
+    }
+    
+    // ICHANGED
+    // 連想ノートリストからノートを除外するときに確認メッセージを表示するかどうか
+    public static boolean verifyExclude() {
+		settings.beginGroup("RensoNoteList");
+		try {
+			String text = (String)settings.value("verifyExclude", "true");
+			settings.endGroup();
+			if (text.equalsIgnoreCase("true"))
+				return true;
+			else
+				return false;
+		} catch (java.lang.ClassCastException e) {
+			Boolean value = (Boolean) settings.value("verifyExclude", true);
+			settings.endGroup();
+			return value;
+		}
+    }
+    // ICHANGED
+    public static void setVerifyExclude(boolean val) {
+		settings.beginGroup("RensoNoteList");
+		if (val)
+			settings.setValue("verifyExclude", "true");
+		else
+			settings.setValue("verifyExclude", "false");
+		settings.endGroup();
+    }
+    
+	// ICHANGED
+	// 連想ノートリスト最大表示アイテム数
+    public static void setRensoListItemMaximum(int maximum) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("rensoListMaximum", maximum);
+		settings.endGroup();    	
+    }
+	public static int getRensoListItemMaximum() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("rensoListMaximum", 20);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("rensoListMaximum", 20);
+			} catch (Exception e1) {
+				value = 20;
+			}
+		}
+		settings.endGroup();
+		return value;
+	}
 }
 

@@ -89,72 +89,75 @@ import cx.fbn.nevernote.utilities.ApplicationLogger;
 public class SyncRunner extends QObject implements Runnable {
 	
 	private final ApplicationLogger logger;
-		private DatabaseConnection 		conn;
-		private boolean					idle;
-		public boolean 					error;
-		public volatile List<String>	errorSharedNotebooks;
-		public volatile HashMap<String,String>	errorSharedNotebooksIgnored;
-		public volatile boolean			isConnected;
-		public volatile boolean	 		keepRunning;
-		public volatile String			authToken;
-		private long					evernoteUpdateCount;
-		private final String userAgent = "NixNote/" + System.getProperty("os.name")
-								+"/"+System.getProperty("java.vendor") + "/"
-								+ System.getProperty("java.version") +";";
-		
-		public volatile NoteStore.Client 		localNoteStore;
-		private UserStore.Client				userStore;
-		
-		public volatile StatusSignal			status;
-		public volatile TagSignal				tagSignal;
-		public volatile NotebookSignal			notebookSignal;
-		public volatile NoteIndexSignal			noteIndexSignal;
-		public volatile NoteSignal				noteSignal;
-		public volatile SavedSearchSignal		searchSignal;
-		public volatile NoteResourceSignal		resourceSignal;
-		public volatile SyncSignal				syncSignal;
-		public volatile boolean					authRefreshNeeded;
-		public volatile boolean					syncNeeded;
-		public volatile boolean					disableUploads;
-		public volatile boolean 				syncDeletedContent;
-		private volatile List<String>			dirtyNoteGuids;
-		
-	    public volatile String username = ""; 
-	    public volatile String password = ""; 
-		public volatile String userStoreUrl;
+	private DatabaseConnection 		conn;
+	private boolean					idle;
+	public boolean 					error;
+	public volatile List<String>	errorSharedNotebooks;
+	public volatile HashMap<String,String>	errorSharedNotebooksIgnored;
+	public volatile boolean			isConnected;
+	public volatile boolean	 		keepRunning;
+	public volatile String			authToken;
+	private long					evernoteUpdateCount;
+	private final String userAgent = "NeighborNote/" + System.getProperty("os.name")
+							+"/"+System.getProperty("java.vendor") + "/"
+							+ System.getProperty("java.version") +";";
+	
+	public volatile NoteStore.Client 		localNoteStore;
+	private UserStore.Client				userStore;
+	
+	public volatile StatusSignal			status;
+	public volatile TagSignal				tagSignal;
+	public volatile NotebookSignal			notebookSignal;
+	public volatile NoteIndexSignal			noteIndexSignal;
+	public volatile NoteSignal				noteSignal;
+	public volatile SavedSearchSignal		searchSignal;
+	public volatile NoteResourceSignal		resourceSignal;
+	public volatile SyncSignal				syncSignal;
+	public volatile boolean					authRefreshNeeded;
+	public volatile boolean					syncNeeded;
+	public volatile boolean					disableUploads;
+	public volatile boolean 				syncDeletedContent;
+	private volatile List<String>			dirtyNoteGuids;
+	
+    public volatile String username = ""; 
+    public volatile String password = ""; 
+	public volatile String userStoreUrl;
 //	    private final static String consumerKey = "baumgarte"; 
 //	    private final static String consumerSecret = "eb8b5740e17cb55f";
-	    public String noteStoreUrlBase;
-	    private THttpClient userStoreTrans;
-	    private TBinaryProtocol userStoreProt;
-	    //private AuthenticationResult authResult;
-	    private AuthenticationResult linkedAuthResult;
-	    private User user; 
+    public String noteStoreUrlBase;
+    private THttpClient userStoreTrans;
+    private TBinaryProtocol userStoreProt;
+    //private AuthenticationResult authResult;
+    private AuthenticationResult linkedAuthResult;
+    private User user; 
 //	    private long authTimeRemaining;
-	    public long authRefreshTime;
-	    public long failedRefreshes = 0;
-	    public  THttpClient noteStoreTrans;
-	    public TBinaryProtocol noteStoreProt;
-	    public String noteStoreUrl;
-	    public long sequenceDate;
-	    public int updateSequenceNumber;
-	    private boolean refreshNeeded;
-	    private volatile LinkedBlockingQueue<String> workQueue;
-		private static int MAX_QUEUED_WAITING = 1000;
-		String dbuid;
-		String dburl;
-		String indexUrl;
-		String resourceUrl;
-		String dbpswd;
-		String dbcpswd;
-		private final TreeSet<String> ignoreTags;
-		private final TreeSet<String> ignoreNotebooks;
-		private final TreeSet<String> ignoreLinkedNotebooks;
-		private HashMap<String,String> badTagSync;
+    public long authRefreshTime;
+    public long failedRefreshes = 0;
+    public  THttpClient noteStoreTrans;
+    public TBinaryProtocol noteStoreProt;
+    public String noteStoreUrl;
+    public long sequenceDate;
+    public int updateSequenceNumber;
+    private boolean refreshNeeded;
+    private volatile LinkedBlockingQueue<String> workQueue;
+	private static int MAX_QUEUED_WAITING = 1000;
+	String dbuid;
+	String dburl;
+	String indexUrl;
+	String resourceUrl;
+	// ICHANGED
+	String behaviorUrl;
 	
-		
-		
-	public SyncRunner(String logname, String u, String i, String r, String uid, String pswd, String cpswd) {
+	String dbpswd;
+	String dbcpswd;
+	private final TreeSet<String> ignoreTags;
+	private final TreeSet<String> ignoreNotebooks;
+	private final TreeSet<String> ignoreLinkedNotebooks;
+	private HashMap<String,String> badTagSync;
+
+	
+	// ICHANGED String bを追加	
+	public SyncRunner(String logname, String u, String i, String r, String b, String uid, String pswd, String cpswd) {
 		logger = new ApplicationLogger(logname);
 		
 		noteSignal = new NoteSignal();
@@ -168,6 +171,9 @@ public class SyncRunner extends QObject implements Runnable {
 		resourceSignal = new NoteResourceSignal();
 		resourceUrl = r;
 		indexUrl = i;
+		// ICHANGED
+		behaviorUrl = b;
+		
 		dbuid = uid;
 		dburl = u;
 		dbpswd = pswd;
@@ -193,7 +199,8 @@ public class SyncRunner extends QObject implements Runnable {
 		errorSharedNotebooksIgnored = new HashMap<String,String>();
 		try {
 			logger.log(logger.EXTREME, "Starting thread");
-			conn = new DatabaseConnection(logger, dburl, indexUrl, resourceUrl, dbuid, dbpswd, dbcpswd, 200);
+			// ICHANGED behaviorUrlを追加
+			conn = new DatabaseConnection(logger, dburl, indexUrl, resourceUrl, behaviorUrl, dbuid, dbpswd, dbcpswd, 200);
 			while(keepRunning) {
 				logger.log(logger.EXTREME, "Blocking until work is found");
 				String work = workQueue.take();
@@ -1569,7 +1576,7 @@ public class SyncRunner extends QObject implements Runnable {
 		
 	    boolean versionOk = false;
 		try {
-			versionOk = userStore.checkVersion("NixNote", 
+			versionOk = userStore.checkVersion("NeighborNote", 
 	            com.evernote.edam.userstore.Constants.EDAM_VERSION_MAJOR, 
 	              com.evernote.edam.userstore.Constants.EDAM_VERSION_MINOR);
 		} catch (TException e) {

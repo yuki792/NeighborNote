@@ -1,4 +1,4 @@
-Welcome to NixNote
+Welcome to NeighborNote
 
 This is an open source clone of Evernote designed to run on Linux.  It is written in Java so it will also run on Windows & OS-X, but the primary focus has been to try and get a usable environment for Linux.  While this is designed to work with Evernote, it is in no way connectedwith or supported by Evernote.  Any problems you encounter will not be corrected by them and,since this is GPL software, you are using this software at your own risk.
 

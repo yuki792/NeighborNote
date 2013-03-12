@@ -237,7 +237,8 @@ public class NoteTable {
 	// Get a note by Guid
 	public Note getNote(String noteGuid, boolean loadContent, boolean loadResources, boolean loadRecognition, boolean loadBinary, boolean loadTags) {
 
-//		extractMetadata("otherKey:{values};baumgarte:{titleColor=fff;pinned=true;};finalKey:{values1);");
+		// ICHANGED 自分のキーに変更
+//		extractMetadata("otherKey:{values};kimaira792:{titleColor=fff;pinned=true;};finalKey:{values1);");
 		if (noteGuid == null)
 			return null;
 		if (noteGuid.trim().equals(""))
@@ -755,6 +756,7 @@ public class NoteTable {
         NSqlQuery query = new NSqlQuery(db.getConnection());
         NSqlQuery resQuery = new NSqlQuery(db.getResourceConnection());
         NSqlQuery wordQuery = new NSqlQuery(db.getIndexConnection());
+		
 		query.prepare("Update Note set guid=:newGuid, original_guid=:original_guid where guid=:oldGuid");
 
 		query.bindValue(":original_guid", oldGuid);
@@ -779,7 +781,8 @@ public class NoteTable {
 		wordQuery.prepare("Update words set guid=:newGuid where guid=:oldGuid");
 		wordQuery.bindValue(":newGuid", newGuid);
 		wordQuery.bindValue(":oldGuid", oldGuid);
-		wordQuery.exec();
+		// IFIXED check = が抜けていたので修正
+		check = wordQuery.exec();
 		if (!check) {
 			logger.log(logger.MEDIUM, "Note guid update failed for Words.");
 			logger.log(logger.MEDIUM, wordQuery.lastError());
@@ -787,12 +790,21 @@ public class NoteTable {
 		resQuery.prepare("Update noteresources set noteguid=:newGuid where noteguid=:oldGuid");
 		resQuery.bindValue(":newGuid", newGuid);
 		resQuery.bindValue(":oldGuid", oldGuid);
-		resQuery.exec();
+		// IFIXED check = が抜けていたので修正
+		check = resQuery.exec();
 		if (!check) {
 			logger.log(logger.MEDIUM, "Note guid update failed for noteresources.");
 			logger.log(logger.MEDIUM, resQuery.lastError());
 		}
-		logger.log(logger.HIGH, "Leaving NoteTable.updateNoteGuid");
+		
+		// ICHANGED 操作履歴テーブルのguidを更新
+		db.getHistoryTable().updateHistoryGuid(newGuid, oldGuid);
+		
+		// ICHANGED 除外ノートテーブルのguidを更新
+		db.getExcludedTable().updateExcludedNoteGuid(newGuid, oldGuid);
+		
+		// ICHANGED スター付きノートテーブルのguidを更新
+		db.getStaredTable().updateStaredNoteGuid(newGuid, oldGuid);
 	}
 	// Update a note
 	public void updateNote(Note n) {
@@ -954,9 +966,10 @@ public class NoteTable {
 		return notes;	
 	}
 	// Get a list of notes that need to be updated
+	// IFIXED バグで空のリストを返すだけのメソッドになっていたのを修正
 	public List <String> getNotesByNotebook(String notebookGuid) {
 		List<String> notes = new ArrayList<String>();
-		List<String> index = new ArrayList<String>();
+		// IFIXED List<String> index = new ArrayList<String>();
 		
 		boolean check;			
         NSqlQuery query = new NSqlQuery(db.getConnection());
@@ -969,7 +982,8 @@ public class NoteTable {
 		
 		// Get a list of the notes
 		while (query.next()) {
-			index.add(query.valueString(0)); 
+			// IFIXED index.add(query.valueString(0));
+			notes.add(query.valueString(0));
 		}	
 		
 		return notes;	
@@ -1591,7 +1605,9 @@ public class NoteTable {
 
 	// Extract metadata from a note's Note.attributes.sourceApplication
 	private NoteMetadata extractMetadata(String sourceApplication) {
-		String consumerKey = "baumgarte:{";
+		// ICHANGED 自分のキーに変更
+		String consumerKey = "kimaira792:{";
+		
 		int startPos = sourceApplication.indexOf(consumerKey);
 		if (startPos < 0 )
 				return null;
@@ -1651,7 +1667,8 @@ public class NoteTable {
 			if (value.length()>1 && (!value.toString().trim().endsWith(";") || !value.toString().trim().endsWith(";")))   
 				value.append("; ");
 			
-			value.append("baumgarte:{");
+			// ICHANGED 自分のキーに変更
+			value.append("kimaira792:{");
 			value.append(metaString);
 			value.append("};");
 			return value.toString();
@@ -1678,7 +1695,8 @@ public class NoteTable {
 		if (sourceApplication == null) 
 			return "";
 		
-		String consumerKey = "baumgarte:{";
+		// ICHANGED 自分のキーに変更
+		String consumerKey = "kimaira792:{";
 		int startPos = sourceApplication.indexOf(consumerKey);
 		if (startPos < 0 )
 				return sourceApplication;
@@ -1697,9 +1715,52 @@ public class NoteTable {
 		}
 	}
 	
+	// ICHANGED
+	// guidからノートのタイトルをゲット
+	public String getNoteTitle(String noteGuid) {
+
+		if (noteGuid == null)
+			return null;
+		if (noteGuid.trim().equals(""))
+			return null;
+
+		NSqlQuery query = new NSqlQuery(db.getConnection());
+		query.prepare("Select title from Note where guid=:guid and isExpunged=false");
+		query.bindValue(":guid", noteGuid);
+		if (!query.exec()) {
+			logger.log(logger.MEDIUM, "Noteテーブルからタイトルの取得失敗");
+			logger.log(logger.MEDIUM, query.lastError());
+			return null;
+		}
+		if (!query.next()) {
+			logger.log(logger.EXTREME, "SQL Retrieve failed for note guid "
+					+ noteGuid + " in getNoteTitle()");
+			logger.log(logger.EXTREME, " -> " + query.lastError().toString());
+			logger.log(logger.EXTREME, " -> " + query.lastError());
+			return null;
+		}
+
+		String noteTitle = query.valueString(0);
+
+		return noteTitle;
+	}
+
+	/*
+	 * // ICHANGED // ノートがアクティブかどうか調べる public boolean isNoteActive(String guid){
+	 * if(guid == null) return false; if(guid.trim().equals("")) return false;
+	 *
+	 * NSqlQuery query = new NSqlQuery(db.getConnection());
+	 * query.prepare("Select active from Note where guid=:guid");
+	 * query.bindValue(":guid", guid); if(!query.exec()){
+	 * logger.log(logger.EXTREME, "note.isNoteActive SQL retrieve has failed.");
+	 * return false; } if(!query.next()){ logger.log(logger.EXTREME,
+	 * "SQL Retrieve failed for note guid " +guid + " in isNoteActive()");
+	 * return false; }
+	 *
+	 * boolean retVal = query.valueBoolean(0, false); return retVal; }
+	 */
+
 }	
-
-
 
 
 

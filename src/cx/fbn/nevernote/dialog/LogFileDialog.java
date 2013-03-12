@@ -84,7 +84,7 @@ public class LogFileDialog extends QDialog {
 		fileCombo.addItem(tr("Index Log"), "IndexLog");
 		fileCombo.addItem(tr("Database Connection Log"), "DatabaseLog");
 		fileCombo.addItem(tr("Thumbnail Generator Log"), "ThumbnailLog");
-		fileCombo.addItem(tr("NixNote Database SQL Trace File"), "NeverNoteDBLog");
+		fileCombo.addItem(tr("NeighborNote Database SQL Trace File"), "NeverNoteDBLog");
 		fileCombo.addItem(tr("Index Database SQL Trace File"), "IndexDBLog");
 		fileCombo.addItem(tr("Resource Database SQL Trace File"), "ResourceDBLog");
 		

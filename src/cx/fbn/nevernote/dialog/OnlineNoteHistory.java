@@ -44,6 +44,7 @@ import com.trolltech.qt.gui.QVBoxLayout;
 
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.gui.BrowserWindow;
+import cx.fbn.nevernote.neighbornote.ClipBoardObserver;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 import cx.fbn.nevernote.xml.NoteFormatter;
@@ -57,9 +58,12 @@ public class OnlineNoteHistory extends QDialog {
 	private final ApplicationLogger logger;
 	List<QTemporaryFile>	tempFiles;
 	private final String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
-	
+	// ICHANGED
+	private final ClipBoardObserver cbObserver;
+
+	// ICHANGED 引数にcbObserver追加
 	// Constructor
-	public OnlineNoteHistory(ApplicationLogger l, DatabaseConnection c) {
+	public OnlineNoteHistory(ApplicationLogger l, DatabaseConnection c, ClipBoardObserver cbObserver) {
 		setWindowTitle(tr("Online Note History"));
 		setWindowIcon(new QIcon(iconPath+"notebook-green.png"));
 		QVBoxLayout main = new QVBoxLayout();
@@ -74,7 +78,10 @@ public class OnlineNoteHistory extends QDialog {
 		main.addLayout(comboLayout);
 				
 		conn = c;
-		browser = new BrowserWindow(conn);
+		// ICHANGED
+		this.cbObserver = cbObserver;
+		browser = new BrowserWindow(conn, this.cbObserver);
+		
 		main.addWidget(browser);
 		browser.titleLabel.setVisible(false);
 		browser.notebookBox.setVisible(false);

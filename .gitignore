@@ -17,3 +17,6 @@
 
 #Local platform binaries
 /lib/*.dll
+
+#ini file
+NeighborNote.ini

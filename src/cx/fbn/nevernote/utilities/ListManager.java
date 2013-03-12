@@ -130,8 +130,9 @@ public class ListManager  {
 		reloadIndexes();
 		
  		notebookSignal = new NotebookSignal();
+ 		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
  		notebookCounterRunner = new CounterRunner("notebook_counter.log", CounterRunner.NOTEBOOK, 
- 						Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(),
+ 						Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
  						Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
  		notebookCounterRunner.setNoteIndex(getNoteIndex());
  		notebookCounterRunner.notebookSignal.countsChanged.connect(this, "setNotebookCounter(List)");
@@ -139,8 +140,9 @@ public class ListManager  {
 		notebookThread.start();
 		
  		tagSignal = new TagSignal();
+ 		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
  		tagCounterRunner = new CounterRunner("tag_counter.log", CounterRunner.TAG, 
- 				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(),
+ 				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
  				Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
  		tagCounterRunner.setNoteIndex(getNoteIndex());
  		tagCounterRunner.tagSignal.countsChanged.connect(this, "setTagCounter(List)");
@@ -148,8 +150,9 @@ public class ListManager  {
 		tagThread.start();
 		
  		trashSignal = new TrashSignal();
+ 		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
  		trashCounterRunner = new CounterRunner("trash_counter.log", CounterRunner.TRASH, 
- 				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(),
+ 				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
  				Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
  		trashCounterRunner.trashSignal.countChanged.connect(this, "trashSignalReceiver(Integer)");
 		trashThread = new QThread(trashCounterRunner, "Trash Counter Thread");
@@ -160,8 +163,9 @@ public class ListManager  {
 		tagSignal = new TagSignal();
 		
 		logger.log(logger.EXTREME, "Setting save thread");
+		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
 		saveRunner = new SaveRunner("saveRunner.log", 
-				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(),
+				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
 				Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
 		saveThread = new QThread(saveRunner, "Save Runner Thread");
 		saveThread.start();
@@ -484,6 +488,16 @@ public class ListManager  {
 	// Save Note Tags
 	public void saveNoteTags(String noteGuid, List<String> tags, boolean isDirty) {
 		logger.log(logger.HIGH, "Entering ListManager.saveNoteTags");
+		// ICHANGED　同じタグが付けられた履歴を記録（必ずdeleteNoteTagの前にやる）
+		for (int i = 0; i < tags.size(); i++) {
+			String tagName = tags.get(i);
+			for (int j = 0; j < tagIndex.size(); j++) {
+				if (tagIndex.get(j).getName().equalsIgnoreCase(tagName)) {
+					conn.getHistoryTable().addSameTagHistory(noteGuid, tagIndex.get(j).getGuid());
+				}
+			}
+		}
+		
 		String tagName;
 		conn.getNoteTable().noteTagsTable.deleteNoteTag(noteGuid);
 		List<String> tagGuids = new ArrayList<String>();

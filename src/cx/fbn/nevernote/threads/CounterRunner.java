@@ -72,13 +72,16 @@ public class CounterRunner extends QObject implements Runnable {
 	//*********************************************
 	//* Constructor                               *
 	//*********************************************
-	public CounterRunner(String logname, int t, String u, String i, String r, String uid, String pswd, String cpswd) {
+	// ICHANGED String bを追加
+	public CounterRunner(String logname, int t, String u, String i, String r, String b, String uid, String pswd, String cpswd) {
 		type = t;
 
 		threadLock = new QMutex();
 		logger = new ApplicationLogger(logname);
-//		setAutoDelete(false);	
-		conn = new DatabaseConnection(logger, u, i, r, uid, pswd, cpswd, 300);
+//		setAutoDelete(false);
+		// ICHANGED bを追加
+		conn = new DatabaseConnection(logger, u, i, r, b, uid, pswd, cpswd, 300);
+		
 		keepRunning = true;
 		notebookSignal = new NotebookSignal();
 		tagSignal = new TagSignal();

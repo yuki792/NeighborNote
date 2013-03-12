@@ -79,10 +79,11 @@ public class ThumbnailRunner extends QObject implements Runnable {
 	public QMutex								mutex;
 
 
-
-	public ThumbnailRunner(String logname, String u, String i, String r, String uid, String pswd, String cpswd) {
+	// ICHANGED String bを追加
+	public ThumbnailRunner(String logname, String u, String i, String r, String b, String uid, String pswd, String cpswd) {
 		logger = new ApplicationLogger(logname);
-		conn = new DatabaseConnection(logger, u, i, r, uid, pswd, cpswd, 300);
+		// ICHANGED bを追加
+		conn = new DatabaseConnection(logger, u, i, r, b, uid, pswd, cpswd, 300);
 		noteSignal = new NoteSignal();
 		guid = null;
 		keepRunning = true;

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <project default="jar" basedir=".">
   <!-- program name -->
-  <property name="project.name" value="nixnote"/>
+  <property name="project.name" value="neighbornote"/>
   <property name="application.name" value="sandbox"/>
 
   <!-- targeted QtJambi library version  -->
@@ -29,18 +29,18 @@
   <property name="jvm.gcs" value="incgc"/><!-- GC strategy -->
 
   <!-- product jar file -->
-  <property name="jar.name" value="nixnote.jar"/>
+  <property name="jar.name" value="neighbornote.jar"/>
 
   <!-- product exec command -->
-  <property name="shell.command" value="nixnote.sh"/>
-  <property name="bat.command" value="nixnote.bat"/>
+  <property name="shell.command" value="neighbornote.sh"/>
+  <property name="bat.command" value="neighbornote.bat"/>
 
   <!-- qt utils -->
   <property name="linguist.update" value="lupdate"/>
   <property name="linguist.release" value="lrelease"/>
 
   <!-- translations -->
-  <property name="linguist.project" value="nixnote.pro"/>
+  <property name="linguist.project" value="neighbornote.pro"/>
 
   <!-- documents -->
   <property name="doc.changelog" value="changelog.txt"/>
@@ -236,7 +236,7 @@
        <fileset dir="${doc.dir}"/>
      </copy>
      <exec dir="dist" executable="tar">
-         <arg line="czf ../../nixnote-bin.tar.gz ."/>
+         <arg line="czf ../../neighbornote-bin.tar.gz ."/>
      </exec>
   </target>
 

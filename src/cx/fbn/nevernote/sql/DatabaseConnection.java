@@ -43,18 +43,27 @@ public class DatabaseConnection {
 	private InkImagesTable				inkImagesTable;
 	private SyncTable					syncTable;
 	private SystemIconTable				systemIconTable;
+	// ICHANGED
+	private HistoryTable historyTable;
+	private ExcludedTable excludedTable;
+	private StaredTable staredTable;
+	
 	private final ApplicationLogger		logger;
 	private Connection					conn;
 	private Connection					indexConn;
 	private Connection					resourceConn;
+	// ICHANGED
+	private Connection behaviorConn;
+	
 	int throttle;
 	int id;
 
-	
-	public DatabaseConnection(ApplicationLogger l, String url, String iurl, String rurl, String userid, String password, String cypherPassword, int throttle) {
+	// ICHANGED String burlを追加
+	public DatabaseConnection(ApplicationLogger l, String url, String iurl, String rurl, String burl, String userid, String password, String cypherPassword, int throttle) {
 		logger = l;
 		this.throttle = throttle;
-		dbSetup(url, iurl, rurl, userid, password, cypherPassword);
+		// ICHANGED burlを追加
+		dbSetup(url, iurl, rurl, burl, userid, password, cypherPassword);
 	}
 	
 	private void setupTables() {
@@ -71,6 +80,11 @@ public class DatabaseConnection {
 		sharedNotebookTable = new SharedNotebookTable(logger, this);
 		systemIconTable = new SystemIconTable(logger, this);
 		inkImagesTable = new InkImagesTable(logger, this);
+		// ICHANGED
+		historyTable = new HistoryTable(logger, this);
+		excludedTable = new ExcludedTable(logger, this);
+		staredTable = new StaredTable(logger, this);
+		
 	}
 	
 	
@@ -80,7 +94,8 @@ public class DatabaseConnection {
 	}
 	
 	// Initialize the database connection
-	public void dbSetup(String url,String indexUrl, String resourceUrl, String userid, String userPassword, String cypherPassword) {
+	// ICHANGED String behaviorUrlを追加
+	public void dbSetup(String url,String indexUrl, String resourceUrl, String behaviorUrl, String userid, String userPassword, String cypherPassword) {
 		logger.log(logger.HIGH, "Entering DatabaseConnection.dbSetup " +id);
 
 		
@@ -101,6 +116,9 @@ public class DatabaseConnection {
 		boolean indexDbExists = f.exists(); 
 		f = Global.getFileManager().getDbDirFile(Global.resourceDatabaseName + ".h2.db");
 		boolean resourceDbExists = f.exists();
+		// ICHANGED
+		f = Global.getFileManager().getDbDirFile(Global.behaviorDatabaseName + ".h2.db");
+		boolean behaviorDbExists = f.exists();
 		
 		logger.log(logger.HIGH, "Entering RDatabaseConnection.dbSetup");
 		
@@ -121,6 +139,9 @@ public class DatabaseConnection {
 			}
 			indexConn = DriverManager.getConnection(indexUrl,userid,passwordString);
 			resourceConn = DriverManager.getConnection(resourceUrl,userid,passwordString);
+			// ICHANGED
+			behaviorConn = DriverManager.getConnection(behaviorUrl, userid, passwordString);
+			
 //			conn = DriverManager.getConnection(url+";AUTO_SERVER=TRUE",userid,passwordString);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -149,6 +170,14 @@ public class DatabaseConnection {
 		if (!indexDbExists)  {
 			createIndexTables();
 			executeSql("Update note set indexneeded='true'");
+		}
+		
+		// ICHANGED
+		// 操作履歴テーブルと除外ノートテーブルとスター付きノートテーブルを作る
+		if (!behaviorDbExists) {
+			createHistoryTables();
+			createExcludedTables();
+			createStaredTables();
 		}
 		
 		// If we encrypted/decrypted it the last time, we need to reconnect the tables.
@@ -309,6 +338,21 @@ public class DatabaseConnection {
 		noteTable.noteResourceTable.createTable();
 	}
 	
+	// ICHANGED
+	public void createHistoryTables() {
+		historyTable.createTable();
+	}
+	
+	// ICHANGED
+	public void createExcludedTables() {
+		excludedTable.createTable();
+	}
+	
+	// ICHANGED
+	public void createStaredTables() {
+		staredTable.createTable();
+	}
+	
 	public Connection getConnection() {
 		return conn;
 	}
@@ -317,6 +361,11 @@ public class DatabaseConnection {
 	}
 	public Connection getResourceConnection() {
 		return resourceConn;
+	}
+	
+	// ICHANGED
+	public Connection getBehaviorConnection() {
+		return behaviorConn;
 	}
 	
 	//***************************************************************
@@ -360,6 +409,21 @@ public class DatabaseConnection {
 	}
 	public InkImagesTable getInkImagesTable() {
 		return inkImagesTable;
+	}
+	
+	// ICHANGED
+	public HistoryTable getHistoryTable() {
+		return historyTable;
+	}
+	
+	// ICHANGED
+	public ExcludedTable getExcludedTable() {
+		return excludedTable;
+	}
+	
+	// ICHANGED
+	public StaredTable getStaredTable() {
+		return staredTable;
 	}
 
 	//****************************************************************

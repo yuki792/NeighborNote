@@ -112,4 +112,9 @@ public class TrashTreeWidget extends QTreeWidget {
 		event.mimeData().setData("application/x-nevernote-trash", new QByteArray(currentItem().text(1)));
 		event.accept();
 	}
+	
+	// ICHANGED
+	public QTreeWidgetItem getTrashItem() {
+		return trashItem;
+	}
 }

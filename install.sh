@@ -7,8 +7,8 @@ if [ "$(id -u)" != "0" ]; then
    exit 1
 fi
 
-cp $package_dir/usr/share/applications/nixnote.desktop /usr/share/applications/nixnote.desktop
-mkdir /usr/share/nixnote
-cp -r $package_dir/usr/share/nixnote/* /usr/share/nixnote/
+cp $package_dir/usr/share/applications/neighbornote.desktop /usr/share/applications/neighbornote.desktop
+mkdir /usr/share/neighbornote
+cp -r $package_dir/usr/share/neighbornote/* /usr/share/neighbornote/
 
 echo "Install complete"

@@ -49,9 +49,11 @@ public class SaveRunner extends QObject implements Runnable {
 	//*********************************************
 	//* Constructor                               *
 	//*********************************************
-	public SaveRunner(String logname, String u, String i, String r, String uid, String pswd, String cpswd) {
+	// ICHANGED String bを追加
+	public SaveRunner(String logname, String u, String i, String r, String b, String uid, String pswd, String cpswd) {
 		logger = new ApplicationLogger(logname);
-		conn = new DatabaseConnection(logger, u, i, r, uid, pswd, cpswd, 0);
+		// ICHANGED bを追加
+		conn = new DatabaseConnection(logger, u, i, r, b, uid, pswd, cpswd, 0);
 		threadLock = new QMutex();
 		keepRunning = true;
 		noteSignals = new NoteSignal();

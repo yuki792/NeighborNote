@@ -40,8 +40,10 @@ import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
 public class OAuthWindow extends QDialog {
-	private final static String consumerKey = "baumgarr"; 
-	private final static String consumerSecret = "60d4cdedb074b0ac";
+	// ICHANGED 自分のキーに変更
+	private final static String consumerKey = "kimaira792"; 
+	private final static String consumerSecret = "c66706d41e06bf22";
+	
 	public String response;
 
 	private final String temporaryCredUrl;	  
@@ -84,7 +86,7 @@ public class OAuthWindow extends QDialog {
 
 
 		// Build the window
-		setWindowTitle(tr("Please Grant Nixnote Access"));
+		setWindowTitle(tr("Please Grant NeighborNote Access"));
 		setWindowIcon(new QIcon(iconPath+"icons/password.png"));
 		grid = new QGridLayout();
 		setLayout(grid);

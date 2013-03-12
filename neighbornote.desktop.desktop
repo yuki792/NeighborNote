@@ -1,10 +1,12 @@
+
 [Desktop Entry]
-Name=NixNote
+Name=NeighborNote
 Comment=Use with Evernote to remember everything
 GenericName=Evernote-clone
-Exec=/usr/share/nixnote/nixnote.sh
-Icon=/usr/share/nixnote/nixnote.png
+Exec=/usr/share/neighbornote/neighbornote.sh
+Icon=/usr/share/neighbornote/neighbornote.png
 StartupNotify=true
 Terminal=false
 Type=Application
 Categories=Network;
+Name[ja_JP]=neighbornote.desktop

@@ -37,10 +37,10 @@ import com.trolltech.qt.gui.QDropEvent;
 import com.trolltech.qt.gui.QFontMetrics;
 import com.trolltech.qt.gui.QKeyEvent;
 import com.trolltech.qt.gui.QKeySequence.StandardKey;
-import com.trolltech.qt.gui.QMenu;
 import com.trolltech.qt.gui.QTableView;
 
 import cx.fbn.nevernote.Global;
+import cx.fbn.nevernote.NeverNote;
 import cx.fbn.nevernote.evernote.NoteMetadata;
 import cx.fbn.nevernote.filters.NoteSortFilterProxyModel;
 import cx.fbn.nevernote.signals.NoteSignal;
@@ -57,6 +57,9 @@ public class TableView extends QTableView {
     private QAction noteHistoryAction;
     private QAction duplicateAction;
     private QAction	mergeNotesAction;
+	// ICHANGED
+	private QAction openNewTabAction;
+	private QAction addNoteNewTabAction;
     
     // Note title colors
     private QAction	noteTitleColorWhite;
@@ -79,7 +82,14 @@ public class TableView extends QTableView {
     public Signal0	resetViewport;
     public NoteSignal noteSignal;
 	
-	public TableView(ApplicationLogger l, ListManager m) {
+	// ICHANGED
+	private final NeverNote parent;
+	
+	// ICHANGED parent引数を追加
+	public TableView(ApplicationLogger l, ListManager m, NeverNote parent) {
+		// ICHANGED
+		this.parent = parent;
+		
 		logger = l;
 		header = new TableViewHeader(Orientation.Horizontal,this);
 		setHorizontalHeader(header);
@@ -361,6 +371,16 @@ public class TableView extends QTableView {
 		duplicateAction = d;
 	}
 	
+	// ICHANGED
+	public void setOpenNewTabAction(QAction t) {
+		openNewTabAction = t;
+	}
+	
+	// ICHANGED
+	public void setAddNoteNewTabAction(QAction t) {
+		addNoteNewTabAction = t;
+	}
+	
 	@Override
 	public void keyPressEvent(QKeyEvent e) {
 		if (e.matches(StandardKey.MoveToStartOfDocument)) {
@@ -380,12 +400,22 @@ public class TableView extends QTableView {
 	
 	@Override
 	public void contextMenuEvent(QContextMenuEvent event) {
-		QMenu menu = new QMenu(this);
+		// ICHANGED QMenu から NoteTableContextMenu へ
+		NoteTableContextMenu menu = new NoteTableContextMenu(this);
+		
+		// ICHANGED
+		menu.addAction(openNewTabAction);
+		
+		// ICHANGED
+		menu.addSeparator();
 		if (Global.showDeleted) {
 			menu.addAction(restoreAction);
 		} else {
 			menu.addAction(addAction);
+			menu.addAction(addNoteNewTabAction);
 		}
+		menu.addSeparator();
+		
 		menu.addAction(deleteAction);
 		menu.addSeparator();
 		menu.addAction(duplicateAction);
@@ -394,7 +424,9 @@ public class TableView extends QTableView {
 		menu.addAction(noteHistoryAction);
 		menu.addAction(mergeNotesAction);
 		
-		QMenu titleColorMenu = new QMenu();
+		// ICHANGED QMenu から NoteTableContextMenu へ
+		NoteTableContextMenu titleColorMenu = new NoteTableContextMenu(this);
+		
 		titleColorMenu.setTitle(tr("Title Color"));
 		menu.addMenu(titleColorMenu);
 		noteTitleColorWhite = new QAction(titleColorMenu);
@@ -570,6 +602,11 @@ public class TableView extends QTableView {
 		}
 			
 		setColumnHidden(Global.noteTableThumbnailPosition, !toggle);
+	}
+	
+	// ICHANGED
+	public void restoreSelectedNoteInfo(){
+		parent.restoreSelectedNoteInfo();
 	}
 	
 }

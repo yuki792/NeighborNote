@@ -33,6 +33,7 @@ import com.trolltech.qt.gui.QPrinter;
 
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.dialog.FindDialog;
+import cx.fbn.nevernote.neighbornote.ClipBoardObserver;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 
 public class ExternalBrowse extends QMdiSubWindow {
@@ -46,14 +47,23 @@ public class ExternalBrowse extends QMdiSubWindow {
 //	ExternalBrowserMenuBar		menu;
 	ExternalBrowserMenuBar	menu;
 	
+	// ICHANGED
+	private final ClipBoardObserver cbObserver;
+	
 	// Constructor
-	public ExternalBrowse(DatabaseConnection c) {
+	// ICHANGED cbObserver引数を追加
+	public ExternalBrowse(DatabaseConnection c, ClipBoardObserver cbObserver) {
 		setAttribute(WidgetAttribute.WA_QuitOnClose, false);
-		setWindowTitle(tr("NixNote"));
+		setWindowTitle(tr("NeighborNote"));
 		conn = c;
+		// ICHANGED
+		this.cbObserver = cbObserver;  
+		
 		contentsChanged = new Signal4<String, String, Boolean, BrowserWindow>();
 		windowClosing = new Signal1<String>();
-		browser = new BrowserWindow(conn);
+		// ICHANGED
+		browser = new BrowserWindow(conn, this.cbObserver);
+		
 		menu = new ExternalBrowserMenuBar(this);
 		for (int i=0; i<menu.actions().size(); i++) {
 			addAction(menu.actions().get(i));
@@ -87,7 +97,7 @@ public class ExternalBrowse extends QMdiSubWindow {
     
     @SuppressWarnings("unused")
 	private void titleChanged(String value) {
-    	setWindowTitle(tr("NixNote - ") +value);
+    	setWindowTitle(tr("NeighborNote - ") +value);
     }
     
 	@SuppressWarnings("unused")
