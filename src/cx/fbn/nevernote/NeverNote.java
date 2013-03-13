@@ -362,11 +362,7 @@ public class NeverNote extends QMainWindow{
 	private final HashMap<Integer, TabBrowse> tabWindows; // タブウィンドウ
 	private final RensoNoteList rensoNoteList; // 連想ノートリスト
 	private final QDockWidget rensoNoteListDock; // 連想ノートリストドックウィジェット
-	
-	// ICHANGED
 	ClipBoardObserver cbObserver;
-	
-	// ICHANGED
 	String rensoNotePressedItemGuid;
 	
     String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
@@ -3882,16 +3878,9 @@ public class NeverNote extends QMainWindow{
 		saveNote();
 		
 		// ICHANGED
-		// Ctrｌを押しながらノートテーブルを選択した時に選択ノート数0になってしまうのを止める
-		if (noteTableView.selectionModel().selectedRows().size() == 0) {
-			scrollToGuid(currentNoteGuid);
-			return;
-		}
-		
-		// ICHANGED
 		// 右クリックだったときの処理
 		if (QApplication.mouseButtons().isSet(MouseButton.RightButton)) {
-			// 選択されたノート（current）のguidをcurrentnoteguidにセット
+			// 選択されたノートのguidをselectedNoteGUIDsにセット
 			List<QModelIndex> selections = noteTableView.selectionModel().selectedRows();
 			if(selections.size() > 0){
 				selectedNoteGUIDs.clear();
@@ -3899,8 +3888,7 @@ public class NeverNote extends QMainWindow{
 					int row = selections.get(i).row();
 					QModelIndex index = noteTableView.proxyModel.index(row, Global.noteTableGuidPosition);
 					SortedMap<Integer, Object> ix = noteTableView.proxyModel.itemData(index);
-					currentNoteGuid = (String) ix.values().toArray()[0];
-					selectedNoteGUIDs.add(currentNoteGuid);
+					selectedNoteGUIDs.add((String) ix.values().toArray()[0]);
 				}
 			}
 			return;
@@ -3916,7 +3904,9 @@ public class NeverNote extends QMainWindow{
 		// If the ctrl key is pressed, then they are selecting multiple 
 		// entries and we don't want to change the currently viewed note.
 		// ICHANGED
-		if (QApplication.keyboardModifiers().isSet(KeyboardModifier.ControlModifier) &&
+		// Shiftキーを押しながらの場合の処理も追加
+		if ((QApplication.keyboardModifiers().isSet(KeyboardModifier.ControlModifier) ||
+				QApplication.keyboardModifiers().isSet(KeyboardModifier.ShiftModifier)) &&
 				QApplication.mouseButtons().isSet(MouseButton.LeftButton)){
 			selectedNoteGUIDs.clear();
     		for (int i=0; i<selections.size(); i++) {
@@ -3968,7 +3958,7 @@ public class NeverNote extends QMainWindow{
     			index = noteTableView.proxyModel.index(row, Global.noteTableGuidPosition);
     			SortedMap<Integer, Object> ix = noteTableView.proxyModel.itemData(index);
 				
-        		currentNoteGuid = (String)ix.values().toArray()[0];
+        		currentNoteGuid = (String)ix.values().toArray()[0];        		
         		selectedNoteGUIDs.add(currentNoteGuid);
     		}
     	}
@@ -4522,10 +4512,6 @@ public class NeverNote extends QMainWindow{
     			}
     		}
     	}
-    	
-    	// ICHANGED
-    	restoreSelectedNoteInfo();
-    	
     	logger.log(logger.HIGH, "Leaving NeverNote.titleColorChanged");
     }
     // A note has been pinned or unpinned
@@ -4543,10 +4529,6 @@ public class NeverNote extends QMainWindow{
     		listManager.updateNoteMetadata(meta);	
     		noteTableView.proxyModel.addGuid(selectedNoteGUIDs.get(j), meta);
     	}
-   	
-    	// ICHANGED
-    	restoreSelectedNoteInfo();
-
 		logger.log(logger.EXTREME, "Leaving NeverNote.notePinned()");
     }
     // Wide list was chosen
@@ -5322,9 +5304,6 @@ public class NeverNote extends QMainWindow{
     			if (QMessageBox.question(this, tr("Confirmation"), msg,
     					QMessageBox.StandardButton.Yes, 
     					QMessageBox.StandardButton.No)==StandardButton.No.value() && Global.verifyDelete() == true) {
-						// ICHANGED
-						restoreSelectedNoteInfo();
-						
     					return;
     			}
     		}
@@ -5347,10 +5326,7 @@ public class NeverNote extends QMainWindow{
     			}
     			if (QMessageBox.question(this, "Confirmation", msg,
     				QMessageBox.StandardButton.Yes, 
-					QMessageBox.StandardButton.No)==StandardButton.No.value()) {
-	    				// ICHANGED
-						restoreSelectedNoteInfo();
-						
+					QMessageBox.StandardButton.No)==StandardButton.No.value()) {						
     					return;
     			}
     		}
@@ -5427,9 +5403,6 @@ public class NeverNote extends QMainWindow{
 			tabWindowClosing(closeIndexes.get(i));
 		}
 		// ICHANGED ↑↑↑ここまで↑↑↑		
-		
-    	// ICHANGED
-    	restoreSelectedNoteInfo();
     	
     	listManager.loadNotesIndex();
     	noteIndexUpdated(false);
@@ -7463,10 +7436,10 @@ public class NeverNote extends QMainWindow{
 	private void rensoNoteItemPressed(QListWidgetItem current) {
 		logger.log(logger.HIGH, "Nevernote.rensoNoteSelectionChangeに入った");
 
-		rensoNotePressedItemGuid = null;
-		// 右クリックだったときの処理
+		rensoNotePressedItemGuid = rensoNoteList.getNoteGuid(current);
+		
+		// 右クリックだったら終了
 		if (QApplication.mouseButtons().isSet(MouseButton.RightButton)) {
-			rensoNotePressedItemGuid = rensoNoteList.getNoteGuid(current);
 			return;
 		}
 		
@@ -7474,79 +7447,24 @@ public class NeverNote extends QMainWindow{
 
 		String prevCurrentNoteGuid = new String(currentNoteGuid);
 		
-		// 選択されたノート（current）のguidをcurrentnoteguidにセット
-		currentNoteGuid = rensoNoteList.getNoteGuid(current);
-
-		// 選択ノートを更新
-		selectedNoteGUIDs.clear();
-		selectedNoteGUIDs.add(currentNoteGuid);
-
-		nextButton.setEnabled(true);
-		prevButton.setEnabled(true);
-
-		int currentIndex = tabBrowser.currentIndex();
-		ArrayList<String> histGuids = historyGuids.get(currentIndex);
-		int histPosition = historyPosition.get(currentIndex);
-		boolean fromHist = fromHistory.get(currentIndex);
-
-		int endPosition = histGuids.size() - 1;
-		for (int j = histPosition; j <= endPosition; j++) {
-			histGuids.remove(histGuids.size() - 1);
+		for (int i = 0; i < noteTableView.model().rowCount(); i++) {
+			QModelIndex modelIndex = noteTableView.model().index(i,
+					Global.noteTableGuidPosition);
+			if (modelIndex != null) {
+				SortedMap<Integer, Object> ix = noteTableView.model().itemData(
+						modelIndex);
+				String tableGuid = (String) ix.values().toArray()[0];
+				if (tableGuid.equals(rensoNotePressedItemGuid)) {
+					noteTableView.selectRow(i);
+					return;
+				}
+			}
 		}
-		
-		histGuids.add(currentNoteGuid);
-		historyPosition.put(currentIndex, histGuids.size());
-		histPosition = histGuids.size();
-
-		if (histPosition <= 1)
-			prevButton.setEnabled(false);
-		if (histPosition == histGuids.size())
-			nextButton.setEnabled(false);
-
-		// noteTableViewの選択を変更するとselectionChangedが発生してしまうので一度切断
-		noteTableView.selectionModel().selectionChanged.disconnect(this, "noteTableSelection()");
-		scrollToGuid(currentNoteGuid);
-		// 再接続
-		noteTableView.selectionModel().selectionChanged.connect(this, "noteTableSelection()");
-		
-		refreshEvernoteNote(true); // Evernoteからノートをゲット（そしてブラウザに表示）
-		
-		// upButton, downButton, 選択リストア用のprevRowを設定
-		int row = noteTableView.selectionModel().selectedRows().get(0).row();
-		if (row == 0)
-			upButton.setEnabled(false);
-		else
-			upButton.setEnabled(true);
-		if (row < listManager.getNoteTableModel().rowCount() - 1)
-			downButton.setEnabled(true);
-		else
-			downButton.setEnabled(false);
 		
 		// 連想ノートリストアイテムクリック操作を記録
 		conn.getHistoryTable().addHistory("rensoItemClick", prevCurrentNoteGuid, currentNoteGuid);
 
-		// 連想ノートリストを更新
-		rensoNoteList.refreshRensoNoteList(currentNoteGuid);
-
 		logger.log(logger.HIGH, "Nevernote.rensoNoteSelectionChangeを出た");
-	}
-	
-	// ICHANGED
-	public void restoreSelectedNoteInfo(){		
-		// 現在のタブからguid取得
-    	// currentNoteGuid = browserWindow.getNote().getGuid();	↓と同じはずだけど敢えて使わない
-		int currentTabIndex = tabBrowser.currentIndex();
-		TabBrowse currentTab = tabWindows.get(currentTabIndex);
-		currentNoteGuid = currentTab.getBrowserWindow().getNote().getGuid();
-		
-		selectedNoteGUIDs.clear();
-		selectedNoteGUIDs.add(currentNoteGuid);
-
-		// noteTableViewの選択を変更するとselectionChangedが発生してしまうので一度切断
-		noteTableView.selectionModel().selectionChanged.disconnect(this, "noteTableSelection()");
-		scrollToGuid(currentNoteGuid);
-		// 再接続
-		noteTableView.selectionModel().selectionChanged.connect(this, "noteTableSelection()");
 	}
 	
 	// ICHANGED

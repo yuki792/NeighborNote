@@ -37,6 +37,7 @@ import com.trolltech.qt.gui.QDropEvent;
 import com.trolltech.qt.gui.QFontMetrics;
 import com.trolltech.qt.gui.QKeyEvent;
 import com.trolltech.qt.gui.QKeySequence.StandardKey;
+import com.trolltech.qt.gui.QMenu;
 import com.trolltech.qt.gui.QTableView;
 
 import cx.fbn.nevernote.Global;
@@ -401,7 +402,7 @@ public class TableView extends QTableView {
 	@Override
 	public void contextMenuEvent(QContextMenuEvent event) {
 		// ICHANGED QMenu から NoteTableContextMenu へ
-		NoteTableContextMenu menu = new NoteTableContextMenu(this);
+		QMenu menu = new QMenu(this);
 		
 		// ICHANGED
 		menu.addAction(openNewTabAction);
@@ -425,7 +426,7 @@ public class TableView extends QTableView {
 		menu.addAction(mergeNotesAction);
 		
 		// ICHANGED QMenu から NoteTableContextMenu へ
-		NoteTableContextMenu titleColorMenu = new NoteTableContextMenu(this);
+		QMenu titleColorMenu = new QMenu(this);
 		
 		titleColorMenu.setTitle(tr("Title Color"));
 		menu.addMenu(titleColorMenu);
@@ -603,10 +604,4 @@ public class TableView extends QTableView {
 			
 		setColumnHidden(Global.noteTableThumbnailPosition, !toggle);
 	}
-	
-	// ICHANGED
-	public void restoreSelectedNoteInfo(){
-		parent.restoreSelectedNoteInfo();
-	}
-	
 }
