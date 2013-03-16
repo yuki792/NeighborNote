@@ -222,13 +222,18 @@ public class ListManager  {
  	//* Refresh lists after a db sync
  	//***************************************************************
  	//***************************************************************
- 	public void refreshLists(Note n, boolean dirty, String content) {
- 		if (dirty) {
-// 			conn.getNoteTable().updateNoteContent(n.getGuid(), n.getContent());
+ 	// ICHANGED
+ 	public void saveUpdatedNotes(HashMap<Integer, Note> notes, HashMap<Integer, String> contents) {
+ 		for (int i = 0; i < notes.size(); i++) {
+ 			Note n = notes.get(i);
+ 			String content = contents.get(i);
  			saveRunner.addWork(n.getGuid(), content);
  			conn.getNoteTable().updateNoteTitle(n.getGuid(), n.getTitle());
  		}
- 		
+ 	}
+ 	
+ 	// ICHANGED
+ 	public void refreshLists() {
  		setSavedSearchIndex(conn.getSavedSearchTable().getAll());
  		setTagIndex(conn.getTagTable().getAll());
  		setNotebookIndex(conn.getNotebookTable().getAll());

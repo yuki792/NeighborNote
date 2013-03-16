@@ -1340,7 +1340,7 @@ public class NoteTable {
 	// Get note meta information
 	public void updateNoteMetadata(NoteMetadata meta) {
         NSqlQuery query = new NSqlQuery(db.getConnection());
-		if (!query.prepare("Update Note set titleColor=:color, pinned=:pinned, attributeSourceApplication=:metaString where guid=:guid"))
+		if (!query.prepare("Update Note set titleColor=:color, pinned=:pinned, attributeSourceApplication=:metaString, isDirty=true where guid=:guid"))
 			logger.log(logger.EXTREME, "Note SQL prepare has failed on updateNoteMetadata.");
 		query.bindValue(":color", meta.getColor());
 		query.bindValue(":pinned", meta.isPinned());

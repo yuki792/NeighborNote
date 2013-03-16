@@ -248,7 +248,8 @@ public class NeverNote extends QMainWindow{
     NoteFilter				filter;						// Note filter
     String					currentNoteGuid;			// GUID of the current note 
     Note 					currentNote;				// The currently viewed note
-    boolean					noteDirty;					// Has the note been changed?
+    // ICHANGED
+    HashMap<Integer, Boolean>	noteDirty;				// Has the note been changed?
     boolean 				inkNote;                   // if this is an ink note, it is read only
     boolean					readOnly;					// Is this note read-only?
 	
@@ -603,6 +604,9 @@ public class NeverNote extends QMainWindow{
 		tabBrowser.setTabsClosable(true);
 		tabBrowser.currentChanged.connect(this, "tabWindowChanged(int)");
 		tabBrowser.tabCloseRequested.connect(this, "tabWindowClosing(int)");
+		
+		noteDirty = new HashMap<Integer, Boolean>();
+		noteDirty.put(index, false);
 
 		// ICHANGED
 		// 履歴記録のハッシュマップを初期化
@@ -787,7 +791,6 @@ public class NeverNote extends QMainWindow{
 		fromHistory = false;
 		*/
 		
-		noteDirty = false;
 		if (!currentNoteGuid.trim().equals("")) {
 			currentNote = conn.getNoteTable().getNote(currentNoteGuid, true,true,false,false,true);
 		}
@@ -2518,7 +2521,15 @@ public class NeverNote extends QMainWindow{
 			}
 		}
 		browserWindow.setTag(names.toString());
-		noteDirty = true;
+		
+		// ICHANGED
+		for (TabBrowse tab: tabWindows.values()) {
+			if (tab.getBrowserWindow().getNote().getGuid().equals(guid)) {
+				int index = tabBrowser.indexOf(tab);
+				noteDirty.put(index, true);
+				break;
+			}
+		}
 		
 		// Now, we need to add any new tags to the tag tree
 		for (int i=0; i<newTags.size(); i++) 
@@ -4756,6 +4767,7 @@ public class NeverNote extends QMainWindow{
 		String noteTitle = note.getTitle();
 		int index = tabBrowser.addNewTab(newBrowser, noteTitle);
 		tabWindows.put(index, newBrowser);
+		noteDirty.put(index, false);
 		
 		// ExtendedInformationを必要があれば表示する
 		toggleNoteInformation();
@@ -4810,6 +4822,7 @@ public class NeverNote extends QMainWindow{
 		// ノートを削除
 		tabWindows.remove(index);
 		tabBrowser.removeTab(index);
+		noteDirty.remove(index);
 
 		// 履歴記録のハッシュマップを削除
 		historyGuids.remove(index);
@@ -4822,6 +4835,10 @@ public class NeverNote extends QMainWindow{
 			TabBrowse tab = tabWindows.get(i + 1);
 			tabWindows.put(i, tab);
 			tabWindows.remove(i + 1);
+			// noteDirty
+			boolean isNoteDirty = noteDirty.get(i + 1);
+			noteDirty.put(i, isNoteDirty);
+			noteDirty.remove(i + 1);
 			// historyGuids
 			ArrayList<String> histGuids = historyGuids.get(i + 1);
 			historyGuids.put(i, histGuids);
@@ -4873,6 +4890,7 @@ public class NeverNote extends QMainWindow{
 		
 		int index = tabBrowser.addNewTab(newBrowser, "");
 		tabWindows.put(index, newBrowser);
+		noteDirty.put(index, false);
 		
 		// ExtendedInformationを必要があれば表示する
 		toggleNoteInformation();
@@ -4895,61 +4913,79 @@ public class NeverNote extends QMainWindow{
     //** These functions deal with Note specific things
     //***************************************************************
     //***************************************************************    
+	// ICHANGED
 	private void setNoteDirty() {
+		for (String guid: selectedNoteGUIDs) {
+			setNoteDirty(guid);
+		}
+	}
+	
+	// ICHANGED
+	private void setNoteDirty(String targetGuid) {
 		logger.log(logger.EXTREME, "Entering NeverNote.setNoteDirty()");
 		
 		// Find if the note is being edited externally.  If it is, update it.
-		if (externalWindows.containsKey(currentNoteGuid)) {
+		if (externalWindows.containsKey(targetGuid)) {
 			QTextCodec codec = QTextCodec.codecForName("UTF-8");
 	        QByteArray unicode =  codec.fromUnicode(browserWindow.getContent());
-			ExternalBrowse window = externalWindows.get(currentNoteGuid);
+			ExternalBrowse window = externalWindows.get(targetGuid);
     		window.getBrowserWindow().setContent(unicode);
 		}
 		
-		// ICHANGED ↓↓↓ここから↓↓↓
 		// 他のタブで同じノートを開いていないか探す。もしあったら、内容を更新する。
-		Collection<TabBrowse> tabBrowsers = tabWindows.values();
-		Iterator<TabBrowse> tabIterator = tabBrowsers.iterator();
 		Collection<Integer> tabIndexes = tabWindows.keySet();
 		Iterator<Integer>	indexIterator = tabIndexes.iterator();
 		
-		while (tabIterator.hasNext()) {
-			TabBrowse tab = tabIterator.next();
+		for (TabBrowse tab: tabWindows.values()) {
 			int index = indexIterator.next();
 			String guid = tab.getBrowserWindow().getNote().getGuid();
 			
 			QTextCodec codec = QTextCodec.codecForName("UTF-8");
 			QByteArray unicode = codec.fromUnicode(browserWindow.getContent());
 			
-			if (guid.equals(currentNoteGuid)) {
+			if (guid.equals(guid)) {
 				if (index != tabBrowser.currentIndex()) {
 					TabBrowse window = tabWindows.get(index);
 					window.getBrowserWindow().setContent(unicode);
 				}
 			}
 		}
-		// ICHANGED ↑↑↑ここまで↑↑↑
 		
+		// ターゲットノートがタブで開かれていて、かつDirty = trueかどうかを取得する
 		// If the note is dirty, then it is unsynchronized by default.
-		if (noteDirty) 
+		int index = -1;
+		boolean isNoteDirty = false;
+		for (TabBrowse tab: tabWindows.values()) {
+			if (tab.getBrowserWindow().getNote().getGuid().equals(targetGuid)) {
+				index = tabBrowser.indexOf(tab);
+				isNoteDirty = noteDirty.get(index);
+				break;
+			}
+		}
+		if (isNoteDirty) {
 			return;
+		}
 		
 		// Set the note as dirty and check if its status is synchronized in the display table
-		noteDirty = true;
-		if (listManager.getNoteMetadata().containsKey(currentNoteGuid) && 
-				listManager.getNoteMetadata().get(currentNoteGuid).isDirty()) {
+		// まだダーティでなく、かつタブで開かれている場合にnoteDirty = trueにする
+		if (index >= 0) {
+			noteDirty.put(index, true);
+		}
+
+		if (listManager.getNoteMetadata().containsKey(targetGuid) &&
+				listManager.getNoteMetadata().get(targetGuid).isDirty()) {
 				return;
 		}
 		
 		// If this wasn't already marked as unsynchronized, then we need to update the table
-		listManager.getNoteTableModel().updateNoteSyncStatus(currentNoteGuid, false);
-//    	listManager.getUnsynchronizedNotes().add(currentNoteGuid);
+		listManager.getNoteTableModel().updateNoteSyncStatus(targetGuid, false);
+//    	listManager.getUnsynchronizedNotes().add(targetGuid);
     	for (int i=0; i<listManager.getNoteTableModel().rowCount(); i++) {
     		QModelIndex modelIndex =  listManager.getNoteTableModel().index(i, Global.noteTableGuidPosition);
     		if (modelIndex != null) {
     			SortedMap<Integer, Object> ix = listManager.getNoteTableModel().itemData(modelIndex);
     			String tableGuid =  (String)ix.values().toArray()[0];
-    			if (tableGuid.equals(currentNoteGuid)) {
+    			if (tableGuid.equals(targetGuid)) {
     				listManager.getNoteTableModel().proxyModel.setData(i, Global.noteTableSynchronizedPosition, "false");
     				return;
     			}
@@ -4965,7 +5001,9 @@ public class NeverNote extends QMainWindow{
     	noteCache.remove(guid);
 		noteCache.put(guid, unicode.toString());
     	if (guid.equals(currentNoteGuid)) {
-    		noteDirty = true;
+    		// ICHANGED
+    		int index = tabBrowser.currentIndex();
+    		noteDirty.put(index, true);
     		browserWindow.setContent(unicode);
     	} 
     	if (save) {
@@ -4989,11 +5027,23 @@ public class NeverNote extends QMainWindow{
 	}
 	
     private void saveNote() {
-    	if (noteDirty) {
-    		saveNote(currentNoteGuid, browserWindow);
-    		thumbnailRunner.addWork("GENERATE "+ currentNoteGuid);
-    		noteDirty = false;
-    	} 
+    	// ICHANGED
+    	// すべてのタブに対して、Dirtyを確認し、trueならセーブする
+    	Collection<Integer> dirtyIndex = noteDirty.keySet();
+    	Iterator<Integer> indexIterator = dirtyIndex.iterator();
+    	for (boolean isNoteDirty: noteDirty.values()) {
+    		int index = indexIterator.next();
+    		if (isNoteDirty) {
+    			if (index < 0) {
+    				return;
+    			}
+    			BrowserWindow b = tabWindows.get(index).getBrowserWindow();
+    			String guid = b.getNote().getGuid();
+    			saveNote(guid, b);
+    			thumbnailRunner.addWork("GENERATE "+ guid);
+        		noteDirty.put(index, false);
+    		}
+    	}
     }
     private void saveNote(String guid, BrowserWindow window) {
 		logger.log(logger.EXTREME, "Inside NeverNote.saveNote()");
@@ -5162,7 +5212,15 @@ public class NeverNote extends QMainWindow{
 		browser.setAllTags(tagList);
 		
 		browser.setCurrentTags(note.getTagNames());
-		noteDirty = false;
+		// ICHANGED
+		for (TabBrowse tab: tabWindows.values()) {
+			if (tab.getBrowserWindow().getNote().getGuid().equals(guid)) {
+				int index = tabBrowser.indexOf(tab);
+				noteDirty.put(index, false);
+				break;
+			}
+		}
+		
 		scrollToGuid(guid);
 		
 		browser.loadingData(false);
@@ -6421,7 +6479,23 @@ public class NeverNote extends QMainWindow{
 	public void refreshLists() {
 		logger.log(logger.EXTREME, "Entering NeverNote.refreshLists");
 		updateQuotaBar();
-		listManager.refreshLists(currentNote, noteDirty, browserWindow.getContent());
+		// ICHANGED
+		// すべてのタブのノートを調べて、Dirtyならばセーブする。その後refreshListsする。
+		Collection<Integer> tabIndex = noteDirty.keySet();
+		Iterator<Integer> indexIterator = tabIndex.iterator();
+		HashMap<Integer, Note> saveNotes = new HashMap<Integer, Note>();
+		HashMap<Integer, String> saveContents = new HashMap<Integer, String>();
+		for (boolean isNoteDirty: noteDirty.values()) {
+			int index = indexIterator.next();
+			if (isNoteDirty) {
+				saveNotes.put(index, tabWindows.get(index).getBrowserWindow().getNote());
+				saveContents.put(index, tabWindows.get(index).getBrowserWindow().getContent());
+			}
+		}
+		
+		listManager.saveUpdatedNotes(saveNotes, saveContents);
+		listManager.refreshLists();
+
 		tagIndexUpdated(true);
 		notebookIndexUpdated();
 		savedSearchIndexUpdated();
