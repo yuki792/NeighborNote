@@ -251,7 +251,7 @@ public class NeverNote extends QMainWindow{
     // ICHANGED
     HashMap<Integer, Boolean>	noteDirty;				// Has the note been changed?
     HashMap<Integer, Boolean>	inkNote;                // if this is an ink note, it is read only
-    boolean					readOnly;					// Is this note read-only?
+    HashMap<Integer, Boolean>	readOnly;				// Is this note read-only?
 	
   
     ListManager				listManager;					// DB runnable task
@@ -609,6 +609,7 @@ public class NeverNote extends QMainWindow{
 		noteDirty.put(index, false);
 		
 		inkNote = new HashMap<Integer, Boolean>();
+		readOnly = new HashMap<Integer, Boolean>();
 
 		// ICHANGED
 		// 履歴記録のハッシュマップを初期化
@@ -5083,12 +5084,13 @@ public class NeverNote extends QMainWindow{
 		}
 		// ICHANGED
 		inkNote.put(tabBrowser.currentIndex(), false);
+		readOnly.put(tabBrowser.currentIndex(), false);
 		
-		readOnly = false;
-		if (Global.showDeleted || currentNoteGuid == null || currentNoteGuid.equals(""))
-			readOnly = true;
+		if (Global.showDeleted || currentNoteGuid == null || currentNoteGuid.equals("")) {
+			readOnly.put(tabBrowser.currentIndex(), true);
+		}
 		Global.cryptCounter =0;
-		if (readOnly) {
+		if (readOnly.get(tabBrowser.currentIndex())) {
 			browserWindow.setReadOnly(true);
 		}
 		
@@ -5158,14 +5160,15 @@ public class NeverNote extends QMainWindow{
 						" To protect your data this note is being marked as read-only."));	
 			     waitCursor(true);
 			}
-			readOnly = formatter.readOnly;
 			
 			if (tabIndex >= 0) {
+				readOnly.put(tabIndex, formatter.readOnly);
 				inkNote.put(tabIndex, formatter.inkNote);
 			} 
 			
-			if (readOnly)
+			if (tabIndex >= 0 && readOnly.get(tabIndex)) {
 				readOnlyCache.put(guid, true);
+			}
 			if (tabIndex >= 0 && inkNote.get(tabIndex)) {
 				inkNoteCache.put(guid, true);
 			}
@@ -5175,8 +5178,11 @@ public class NeverNote extends QMainWindow{
 			String cachedContent = formatter.modifyCachedTodoTags(noteCache.get(guid));
 			js = new QByteArray(cachedContent);
 			browser.setContent(js);
-			if (readOnlyCache.containsKey(guid))
-					readOnly = true;
+			if (readOnlyCache.containsKey(guid) && tabIndex >= 0) {
+				readOnly.put(tabIndex, true);
+			} else {
+				readOnly.put(tabIndex, false);
+			}
 			if (inkNoteCache.containsKey(guid) && tabIndex >= 0) {
 				inkNote.put(tabIndex, true);
 			} else {
@@ -5186,16 +5192,18 @@ public class NeverNote extends QMainWindow{
 		if (conn.getNoteTable().isThumbnailNeeded(guid)) {
 			thumbnailHTMLReady(guid, js, Global.calculateThumbnailZoom(js.toString()));
 		}
-		if (tabIndex >= 0 && (readOnly || inkNote.get(tabIndex) || 
+		if (tabIndex >= 0 && (readOnly.get(tabIndex) || inkNote.get(tabIndex) || 
 				(note.getAttributes() != null && note.getAttributes().getContentClass() != null && note.getAttributes().getContentClass() != "")))
 			browser.getBrowser().page().setContentEditable(false);  // We don't allow editing of ink notes
 		else
 			browser.getBrowser().page().setContentEditable(true);
-		browser.setReadOnly(readOnly);
-		deleteButton.setEnabled(!readOnly);
-		tagButton.setEnabled(!readOnly);
-		menuBar.noteDelete.setEnabled(!readOnly);
-		menuBar.noteTags.setEnabled(!readOnly);
+		if (tabIndex >= 0) {
+			browser.setReadOnly(readOnly.get(tabIndex));
+			deleteButton.setEnabled(!readOnly.get(tabIndex));
+			tagButton.setEnabled(!readOnly.get(tabIndex));
+			menuBar.noteDelete.setEnabled(!readOnly.get(tabIndex));
+			menuBar.noteTags.setEnabled(!readOnly.get(tabIndex));
+		}
 		browser.setNote(note);
 		
 		if (note != null && note.getNotebookGuid() != null && 
