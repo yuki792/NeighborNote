@@ -250,7 +250,7 @@ public class NeverNote extends QMainWindow{
     Note 					currentNote;				// The currently viewed note
     // ICHANGED
     HashMap<Integer, Boolean>	noteDirty;				// Has the note been changed?
-    boolean 				inkNote;                   // if this is an ink note, it is read only
+    HashMap<Integer, Boolean>	inkNote;                // if this is an ink note, it is read only
     boolean					readOnly;					// Is this note read-only?
 	
   
@@ -607,6 +607,8 @@ public class NeverNote extends QMainWindow{
 		
 		noteDirty = new HashMap<Integer, Boolean>();
 		noteDirty.put(index, false);
+		
+		inkNote = new HashMap<Integer, Boolean>();
 
 		// ICHANGED
 		// 履歴記録のハッシュマップを初期化
@@ -4756,6 +4758,11 @@ public class NeverNote extends QMainWindow{
 		TabBrowse newBrowser = new TabBrowse(conn, tabBrowser, cbObserver);
 		showEditorButtons(newBrowser.getBrowserWindow());
 		
+		String noteTitle = note.getTitle();
+		int index = tabBrowser.addNewTab(newBrowser, noteTitle);
+		tabWindows.put(index, newBrowser);
+		noteDirty.put(index, false);
+		
 		// noteTableViewの選択を変更するとselectionChangedが発生してしまうので一度切断
 		noteTableView.selectionModel().selectionChanged.disconnect(this, "noteTableSelection()");
 		loadNoteBrowserInformation(newBrowser.getBrowserWindow(), guid, note);
@@ -4763,11 +4770,6 @@ public class NeverNote extends QMainWindow{
 		noteTableView.selectionModel().selectionChanged.connect(this, "noteTableSelection()");
 		
 		setupBrowserWindowListeners(newBrowser.getBrowserWindow(), false);
-		
-		String noteTitle = note.getTitle();
-		int index = tabBrowser.addNewTab(newBrowser, noteTitle);
-		tabWindows.put(index, newBrowser);
-		noteDirty.put(index, false);
 		
 		// ExtendedInformationを必要があれば表示する
 		toggleNoteInformation();
@@ -5079,7 +5081,9 @@ public class NeverNote extends QMainWindow{
 			browserWindow.setEnabled(false);
 			return;
 		}
-		inkNote = false;
+		// ICHANGED
+		inkNote.put(tabBrowser.currentIndex(), false);
+		
 		readOnly = false;
 		if (Global.showDeleted || currentNoteGuid == null || currentNoteGuid.equals(""))
 			readOnly = true;
@@ -5106,11 +5110,22 @@ public class NeverNote extends QMainWindow{
 		loadNoteBrowserInformation(browserWindow, currentNoteGuid, currentNote);
 	}
 
+	// ICHANGED
 	private void loadNoteBrowserInformation(BrowserWindow browser, String guid, Note note) {
 		NoteFormatter	formatter = new NoteFormatter(logger, conn, tempFiles);
 		formatter.setNote(note, Global.pdfPreview());
 		formatter.setHighlight(listManager.getEnSearch());
 		QByteArray js;
+		int tabIndex = -1;
+		
+		// 対象のタブインデックスを取得
+		for (TabBrowse tab: tabWindows.values()) {
+			if (tab.getBrowserWindow() == browser) {
+				tabIndex = tabBrowser.indexOf(tab);
+				break;
+			}
+		}
+		
 		if (!noteCache.containsKey(guid)) {
 			js = new QByteArray();
 			// We need to prepend the note with <HEAD></HEAD> or encoded characters are ugly 
@@ -5135,7 +5150,7 @@ public class NeverNote extends QMainWindow{
 			noteCache.put(guid, js.toString());
 
 			if (formatter.resourceError)
-				resourceErrorMessage();
+				resourceErrorMessage(tabIndex);
 			if (formatter.formatError) {
 				waitCursor(false);
 			     QMessageBox.information(this, tr("Error"),
@@ -5144,11 +5159,17 @@ public class NeverNote extends QMainWindow{
 			     waitCursor(true);
 			}
 			readOnly = formatter.readOnly;
-			inkNote = formatter.inkNote;
+			
+			if (tabIndex >= 0) {
+				inkNote.put(tabIndex, formatter.inkNote);
+			} 
+			
 			if (readOnly)
 				readOnlyCache.put(guid, true);
-			if (inkNote)
+			if (tabIndex >= 0 && inkNote.get(tabIndex)) {
 				inkNoteCache.put(guid, true);
+			}
+			
 		} else {
 			logger.log(logger.HIGH, "Note content is being pulled from the cache");
 			String cachedContent = formatter.modifyCachedTodoTags(noteCache.get(guid));
@@ -5156,14 +5177,17 @@ public class NeverNote extends QMainWindow{
 			browser.setContent(js);
 			if (readOnlyCache.containsKey(guid))
 					readOnly = true;
-			if (inkNoteCache.containsKey(guid))
-					inkNote = true;
+			if (inkNoteCache.containsKey(guid) && tabIndex >= 0) {
+				inkNote.put(tabIndex, true);
+			} else {
+				inkNote.put(tabIndex, false);
+			}
 		}
 		if (conn.getNoteTable().isThumbnailNeeded(guid)) {
 			thumbnailHTMLReady(guid, js, Global.calculateThumbnailZoom(js.toString()));
 		}
-		if (readOnly || inkNote || 
-				(note.getAttributes() != null && note.getAttributes().getContentClass() != null && note.getAttributes().getContentClass() != ""))
+		if (tabIndex >= 0 && (readOnly || inkNote.get(tabIndex) || 
+				(note.getAttributes() != null && note.getAttributes().getContentClass() != null && note.getAttributes().getContentClass() != "")))
 			browser.getBrowser().page().setContentEditable(false);  // We don't allow editing of ink notes
 		else
 			browser.getBrowser().page().setContentEditable(true);
@@ -6359,8 +6383,12 @@ public class NeverNote extends QMainWindow{
 	//**********************************************************
 	//**********************************************************
 	// An error has happended fetching a resource.  let the user know
-	private void resourceErrorMessage() {
-		if (inkNote)
+    // ICHANGED
+	private void resourceErrorMessage(int tabIndex) {
+		if (tabIndex < 0) {
+			return;
+		}
+		if (inkNote.get(tabIndex))
 			return;
 		waitCursor(false);
 		QMessageBox.information(this, tr("DOUGH!!!"), tr("Well, this is embarrassing."+
@@ -6373,7 +6401,7 @@ public class NeverNote extends QMainWindow{
 		"Don't get angry.  I'm doing it to prevent you from messing up\n"+
 		"this note on the Evernote servers.  Sorry."+
 		"\n\nP.S. You might want to re-synchronize to see if it corrects this problem.\nWho knows, you might get lucky."));
-		inkNote = true;
+		inkNote.put(tabIndex, true);
 		browserWindow.setReadOnly(true);
 		waitCursor(true);
 	}
