@@ -4826,6 +4826,8 @@ public class NeverNote extends QMainWindow{
 		tabWindows.remove(index);
 		tabBrowser.removeTab(index);
 		noteDirty.remove(index);
+		inkNote.remove(index);
+		readOnly.remove(index);
 
 		// 履歴記録のハッシュマップを削除
 		historyGuids.remove(index);
@@ -4842,6 +4844,14 @@ public class NeverNote extends QMainWindow{
 			boolean isNoteDirty = noteDirty.get(i + 1);
 			noteDirty.put(i, isNoteDirty);
 			noteDirty.remove(i + 1);
+			// inkNote
+			boolean isInkNote = inkNote.get(i + 1);
+			inkNote.put(i, isInkNote);
+			inkNote.remove(i + 1);
+			// readOnly
+			boolean isReadOnly = readOnly.get(i + 1);
+			readOnly.put(i, isReadOnly);
+			readOnly.remove(i + 1);
 			// historyGuids
 			ArrayList<String> histGuids = historyGuids.get(i + 1);
 			historyGuids.put(i, histGuids);
