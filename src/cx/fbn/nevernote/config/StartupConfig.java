@@ -12,7 +12,7 @@ import java.io.File;
 public class StartupConfig {
 
     // Init to default values
-    private String name = "NeverNote";
+    private String name = "NeighborNote";
     private String homeDirPath;
     private String programDirPath;
     private boolean disableViewing = false;
@@ -25,7 +25,7 @@ public class StartupConfig {
 
     public void setName(String n) {
         if (isNonEmpty(n)) {
-            name = "NeverNote-" + n;
+            name = "NeighborNote-" + n;
         }
     }
 
