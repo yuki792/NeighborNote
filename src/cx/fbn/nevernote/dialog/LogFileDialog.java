@@ -87,6 +87,8 @@ public class LogFileDialog extends QDialog {
 		fileCombo.addItem(tr("NeighborNote Database SQL Trace File"), "NeverNoteDBLog");
 		fileCombo.addItem(tr("Index Database SQL Trace File"), "IndexDBLog");
 		fileCombo.addItem(tr("Resource Database SQL Trace File"), "ResourceDBLog");
+		// ICHANGED
+		fileCombo.addItem(tr("RensoNoteList Log"), "RensoNoteList Log");
 		
 		
 	}
@@ -183,6 +185,11 @@ public class LogFileDialog extends QDialog {
 			loadTraceFile("Resources.trace.db");
 			return;
 		}	
+		// ICHANGED
+		if (value.equals("RensoNoteList Log")) {
+			loadFile("rensoNoteList.log");
+			return;
+		}
 	}
 	
 	private void loadFile(String file) {
