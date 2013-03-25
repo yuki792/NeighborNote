@@ -5716,7 +5716,9 @@ public class NeverNote extends QMainWindow{
 		// ICHANGED
 		for(int i = 0; i < tabBrowser.count(); i++){
 			TabBrowse b = (TabBrowse)tabBrowser.widget(i);
-			b.getBrowserWindow().getNote().setGuid(newGuid);
+			if (b.getBrowserWindow().getNote().getGuid().equals(oldGuid)) {
+				b.getBrowserWindow().getNote().setGuid(newGuid);
+			}
 		}
 
     	for (int i=0; i<listManager.getNoteIndex().size(); i++) {
