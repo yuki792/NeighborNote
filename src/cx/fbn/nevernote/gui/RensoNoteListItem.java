@@ -92,12 +92,12 @@ public class RensoNoteListItem extends QWidget{
 		
 		// タイトル
 		painter.setFont(titleFont);
-		painter.drawText(85, 3, size().width() - 130, 20, Qt.AlignmentFlag.AlignLeft.value(), noteTitle);
+		painter.drawText(85, 3, size().width() - 135, 20, Qt.AlignmentFlag.AlignLeft.value(), noteTitle);
 		// 関連度
 		double ratio = (double)relationPoints / allPointSum;
 		int green = (int) (255 * (1.0 - ratio));
 		painter.setPen(new QColor(255, green, 0));
-		painter.drawText(size().width() - 40, 3, 40, 20, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
+		painter.drawText(size().width() - 45, 3, 45, 20, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
 		// ノート作成日時
 		painter.setFont(normalFont);
 		painter.setPen(new QColor(60, 65, 255));
