@@ -241,6 +241,10 @@ public class RensoNoteList extends QListWidget {
 	// 関連ノートリストの右クリックメニュー
 	@Override
 	public void contextMenuEvent(QContextMenuEvent event){
+		if (rensoNotePressedItemGuid == null || rensoNotePressedItemGuid.equals("")) {
+			return;
+		}
+		
 		// STAR, UNSTARがあれば、一度消す
 		List<QAction> menuActions = new ArrayList<QAction>(menu.actions());
 		if (menuActions.contains(starAction)) {
@@ -261,6 +265,8 @@ public class RensoNoteList extends QListWidget {
 		
 		// コンテキストメニューを表示
 		menu.exec(event.globalPos());
+		
+		rensoNotePressedItemGuid = null;
 	}
 	
 	// コンテキストメニューが表示されているかどうか
