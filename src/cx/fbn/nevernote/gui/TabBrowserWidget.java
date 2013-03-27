@@ -4,13 +4,18 @@ package cx.fbn.nevernote.gui;
 import com.trolltech.qt.gui.QTabWidget;
 import com.trolltech.qt.gui.QWidget;
 
+import cx.fbn.nevernote.NeverNote;
+
 public class TabBrowserWidget extends QTabWidget {
-	TabBrowserBar bar;
+	private final TabBrowserBar bar;
+	private final NeverNote parent;
 	
-	public TabBrowserWidget(QWidget parent) {
+	public TabBrowserWidget(NeverNote parent) {
 		super(parent);
+		this.parent = parent;
 		bar = new TabBrowserBar();
 		this.setTabBar(bar);
+		bar.tabMoved.connect(parent, "tabIndexChanged(int, int)");
 	}
 	
 	public int addNewTab(QWidget widget, String title){

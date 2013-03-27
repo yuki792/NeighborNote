@@ -597,6 +597,7 @@ public class NeverNote extends QMainWindow{
 		tabWindows = new HashMap<Integer, TabBrowse>();
 		tabBrowser = new TabBrowserWidget(this);
 		tabBrowser.setStyleSheet("QTabBar::tab{width:150px;}");
+		tabBrowser.setMovable(true);
 		TabBrowse tab = new TabBrowse(conn, tabBrowser, cbObserver);
 		browserWindow = tab.getBrowserWindow();
 		int index = tabBrowser.addNewTab(tab, "");
@@ -7670,5 +7671,38 @@ public class NeverNote extends QMainWindow{
 	// currentNoteGuidを返す
 	public String getCurrentNoteGuid() {
 		return currentNoteGuid;
+	}
+	
+	@SuppressWarnings("unused")
+	// タブ入れ替えによってタブインデックスが変わったので、インデックスで管理しているハッシュマップ達も入れ替える
+	private void tabIndexChanged(int from, int to) {
+		// tabWindows
+		TabBrowse tab = tabWindows.get(from);
+		tabWindows.put(from, tabWindows.get(to));
+		tabWindows.put(to, tab);
+		// noteDirty
+		boolean isNoteDirty = noteDirty.get(from);
+		noteDirty.put(from, noteDirty.get(to));
+		noteDirty.put(to, isNoteDirty);
+		// inkNote
+		boolean isInkNote = inkNote.get(from);
+		inkNote.put(from, inkNote.get(to));
+		inkNote.put(to, isInkNote);
+		// readOnly
+		boolean isReadOnly = readOnly.get(from);
+		readOnly.put(from, readOnly.get(to));
+		readOnly.put(to, isReadOnly);
+		// historyGuids
+		ArrayList<String> histGuids = historyGuids.get(from);
+		historyGuids.put(from, historyGuids.get(to));
+		historyGuids.put(to, histGuids);
+		// historyPosition
+		int histPosition = historyPosition.get(from);
+		historyPosition.put(from, historyPosition.get(to));
+		historyPosition.put(to, histPosition);
+		// fromHistory
+		boolean fromHist = fromHistory.get(from);
+		fromHistory.put(from,  fromHistory.get(to));
+		fromHistory.put(to, fromHist);
 	}
 }
