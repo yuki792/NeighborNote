@@ -82,6 +82,7 @@ import com.trolltech.qt.core.QModelIndex;
 import com.trolltech.qt.core.QSize;
 import com.trolltech.qt.core.QTemporaryFile;
 import com.trolltech.qt.core.QTextCodec;
+import com.trolltech.qt.core.QTextStream;
 import com.trolltech.qt.core.QThreadPool;
 import com.trolltech.qt.core.QTimer;
 import com.trolltech.qt.core.QTranslator;
@@ -2990,7 +2991,12 @@ public class NeverNote extends QMainWindow{
 		if (!file.open(new QIODevice.OpenMode(QIODevice.OpenModeFlag.ReadOnly,
                 QIODevice.OpenModeFlag.Text)))
 			return;
-		textBox.setText(file.readAll().toString());
+		// ICHANGED 日本語文字化け対策
+		QTextCodec codec = QTextCodec.codecForName("UTF-8");
+		QTextStream textStream = new QTextStream(file);
+		textStream.setCodec(codec);
+		textBox.setText(textStream.readAll().toString());
+		
 		file.close();
 		dialog.setWindowTitle(tr("Release Notes"));
 		dialog.setLayout(layout);
