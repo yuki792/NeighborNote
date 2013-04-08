@@ -1,14 +1,19 @@
 NeighborNote
 ============
 
-NixNoteにタブブラウザ機能と連想ノート機能を付けました。連想ノート機能はユーザの操作履歴に基づいて関連するノートを算出して提示します。
+Randy Baumgarte氏が開発したNixNoteにタブブラウザ機能と連想ノート機能を付けました。連想ノート機能はユーザの操作履歴に基づいて関連するノートを算出して提示します。
 
-Building
+Getting Started
 ============
 
 ダウンロード
 ------------
 NeighborNoteは[SourceForge.jp](http://sourceforge.jp/users/yuki792/pf/NeighborNote/files/)からダウンロード出来ます。
+
+起動方法
+------------
+neighbornote.batを実行して下さい。
+
 
 要件
 ------------
@@ -17,6 +22,10 @@ OpenSSLが必要です。Windowsを使っているのであれば、[Shining Lig
 Download
 ------------
 NeighborNote is available on [SourceForge.jp](http://sourceforge.jp/users/yuki792/pf/NeighborNote/files/).
+
+How to Run
+------------
+Please run the neighbornote.bat.
 
 Requirements
 ------------
