@@ -1,6 +1,7 @@
 /*
-  * This file is part of NixNote 
+  * This file is part of NixNote/NeighborNote 
  * Copyright 2009 Randy Baumgarte
+ * Copyright 2013 Yuki Takahashi
  * 
  * This file may be licensed under the terms of of the
  * GNU General Public License Version 2 (the ``GPL'').

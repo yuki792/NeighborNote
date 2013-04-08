@@ -1,5 +1,5 @@
 /*
- * This file is part of NixNote 
+ * This file is part of NixNote/NeighborNote 
  * Copyright 2009,2010 Randy Baumgarte
  * Copyright 2010 Hiroshi Miura 
  * 
