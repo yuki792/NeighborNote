@@ -1,13 +1,18 @@
+NeighborNoteへようこそ
+ 
+NeighborNoteはNixNote（Randy Baumgarte氏が開発したオープンソースEvernoteクローン）にいくつかの機能を追加して開発されたソフトウェアです。主な追加機能は以下のとおりです。
+・関連ノート表示（連想ノートリスト）
+・タブブラウザ
+NeighborNoteはWindows, OS-X, Linux上で動作します。
+このソフトウェアの使用で発生した問題に関してEvernote社のサポートを受けることはできません。また、このソフトウェアはGPLソフトウェアなので、あなたが遭遇したいかなる問題 に対しても保証されません。自己責任で使用してください。
+
+------------
+
 Welcome to NeighborNote
 
-This is an open source clone of Evernote designed to run on Linux.  It is written in Java so it will also run on Windows & OS-X, but the primary focus has been to try and get a usable environment for Linux.  While this is designed to work with Evernote, it is in no way connectedwith or supported by Evernote.  Any problems you encounter will not be corrected by them and,since this is GPL software, you are using this software at your own risk.
+NeighborNote is a software developed to add some features to NixNote(An open source clone of Evernote developed by Mr. Randy Baumgarte). The main additional features are as follows.
+・Display Related Notes (Renso Note List)
+・Tab Browser
 
-People have used this with both 64 & 32 bit versions of Linux as well as OpenJDK & Sun's Java and(so far) have not encountered any problems with these different environments.You can download NeverNote from http://www.nevernote.org.  
-
-All the installation information as well as known problemsand currently supported features are located at www.nevernote.org.
-
-Please see license.txt for licensing information.
-
-Please see the changelog.txt for changes since the last release.
-
-Please see install.txt for help on installing.
+NeighborNote can be run on Windows, Mac OS-X, Linux.
+It is in no way connected with or supported by Evernote. Any problems you encounter will not be corrected by them and, since this is GPL software, you are using this software at your own risk.
