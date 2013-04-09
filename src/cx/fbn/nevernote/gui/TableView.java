@@ -414,7 +414,9 @@ public class TableView extends QTableView {
 			menu.addAction(restoreAction);
 		} else {
 			menu.addAction(addAction);
-			menu.addAction(addNoteNewTabAction);
+			if (parent.getCurrentNoteGuid() != null && !parent.getCurrentNoteGuid().equals("")) {
+				menu.addAction(addNoteNewTabAction);
+			}
 		}
 		menu.addSeparator();
 		

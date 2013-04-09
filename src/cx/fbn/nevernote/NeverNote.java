@@ -919,6 +919,11 @@ public class NeverNote extends QMainWindow{
 			// ICHANGED TODO とりあえず封印
 			// checkForUpdates();
 		}
+		
+		// ICHANGED
+		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+			menuBar.noteAddNewTab.setEnabled(false);
+		}
 	}
 	
 	
@@ -3563,6 +3568,10 @@ public class NeverNote extends QMainWindow{
     	// toggle the add buttons
     	newButton.setEnabled(!newButton.isEnabled());
     	menuBar.noteAdd.setEnabled(newButton.isEnabled());
+    	menuBar.noteAddNewTab.setEnabled(newButton.isEnabled());
+		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+			menuBar.noteAddNewTab.setEnabled(false);
+		}
     	menuBar.noteAdd.setVisible(true);
     	
     	List<QTreeWidgetItem> selections = trashTree.selectedItems();
@@ -3604,6 +3613,10 @@ public class NeverNote extends QMainWindow{
         	listManager.setSelectedSavedSearch("");
         	newButton.setEnabled(!newButton.isEnabled());
         	menuBar.noteAdd.setEnabled(newButton.isEnabled());
+        	menuBar.noteAddNewTab.setEnabled(newButton.isEnabled());
+    		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+    			menuBar.noteAddNewTab.setEnabled(false);
+    		}
         	menuBar.noteAdd.setVisible(true);
         	browserWindow.clear();
         	
@@ -3642,6 +3655,12 @@ public class NeverNote extends QMainWindow{
 		Global.showDeleted = false;
     	newButton.setEnabled(true);
     	menuBar.noteAdd.setEnabled(true);
+		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+			menuBar.noteAddNewTab.setEnabled(false);
+		} else {
+			menuBar.noteAddNewTab.setEnabled(true);
+		}
+		System.out.println("currentNoteGuid = " + currentNoteGuid);
     	menuBar.noteAdd.setVisible(true);
 		trashTree.blockSignals(true);
 		trashTree.clearSelection();
@@ -3966,6 +3985,9 @@ public class NeverNote extends QMainWindow{
     		menuBar.noteOnlineHistoryAction.setEnabled(true);
     		menuBar.noteMergeAction.setEnabled(true);
     		selectedNoteGUIDs.clear();
+    		if (currentNoteGuid != null && !currentNoteGuid.equals("") && !Global.showDeleted) {
+    			menuBar.noteAddNewTab.setEnabled(true);
+    		}
     		if (selections.size() != 1 || Global.showDeleted) {
     			menuBar.noteDuplicateAction.setEnabled(false);
     		}
@@ -4892,15 +4914,18 @@ public class NeverNote extends QMainWindow{
 		
 		// ノート追加前に開いていたノートとの関連性を記録するためにguidをとっておく
 		TabBrowse prevTab = (TabBrowse)tabBrowser.currentWidget();
-		String prevTabGuid = prevTab.getBrowserWindow().getNote().getGuid();
+		String prevTabGuid = null;
+		if (prevTab.getBrowserWindow() != null && prevTab.getBrowserWindow().getNote() != null) {
+			prevTabGuid = prevTab.getBrowserWindow().getNote().getGuid();
+		}
 		
 		openEmptyTabEditor();
 		addNote();
 		
 		// 追加されたノートのguidを取得し、ノート追加操作履歴としてデータベースに登録
-		TabBrowse addedTab = (TabBrowse)tabBrowser.currentWidget();
-		String addedTabGuid = addedTab.getBrowserWindow().getNote().getGuid();
 		if (prevTabGuid != null && !prevTabGuid.equals("")) {
+			TabBrowse addedTab = (TabBrowse)tabBrowser.currentWidget();
+			String addedTabGuid = addedTab.getBrowserWindow().getNote().getGuid();
 			if (addedTabGuid != null && !addedTabGuid.equals("")) {
 				if (!prevTabGuid.equals(addedTabGuid)) {
 					conn.getHistoryTable().addHistory("addNewNote", prevTabGuid, addedTabGuid);
@@ -5520,6 +5545,10 @@ public class NeverNote extends QMainWindow{
 		}
 		// ICHANGED ↑↑↑ここまで↑↑↑		
     	
+		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+			menuBar.noteAddNewTab.setEnabled(false);
+		}
+		
     	listManager.loadNotesIndex();
     	noteIndexUpdated(false);
     	refreshEvernoteNote(true);
@@ -7536,6 +7565,10 @@ public class NeverNote extends QMainWindow{
     	// toggle the add buttons
     	newButton.setEnabled(!newButton.isEnabled());
     	menuBar.noteAdd.setEnabled(newButton.isEnabled());
+    	menuBar.noteAddNewTab.setEnabled(newButton.isEnabled());
+		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+			menuBar.noteAddNewTab.setEnabled(false);
+		}
     	menuBar.noteAdd.setVisible(true);
     	
     	if (!toDeleted) {	// 生存ノートテーブルへ
