@@ -738,13 +738,21 @@ public class NeverNote extends QMainWindow{
 		noteTableView.setVisible(Global.isWindowVisible("noteList"));
 		menuBar.hideNoteList.setChecked(Global.isWindowVisible("noteList"));
 		
-		if (!Global.isWindowVisible("editorButtonBar"))
+		// ICHANGED
+		if (!Global.isWindowVisible("editorButtonBar")) {
+			menuBar.showEditorBar.setChecked(false);
 			toggleEditorButtonBar();
+		}
 		
 		if (!Global.isWindowVisible("leftPanel"))
 			menuBar.hideLeftSide.setChecked(true);
-		if (Global.isWindowVisible("noteInformation"))
+		
+		// ICHANGED
+		if (Global.isWindowVisible("noteInformation")) {
+			menuBar.noteAttributes.setChecked(true);
 			toggleNoteInformation();
+		}
+		
 		quotaBar.setVisible(Global.isWindowVisible("quota"));
 		// IFIXED quotaBar.isVisible() → Global.isWindowVisible("quota")
 		// なぜかquotaBar.isVisible()が常にfalseを返すようなので修正
