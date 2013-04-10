@@ -3568,10 +3568,6 @@ public class NeverNote extends QMainWindow{
     	// toggle the add buttons
     	newButton.setEnabled(!newButton.isEnabled());
     	menuBar.noteAdd.setEnabled(newButton.isEnabled());
-    	menuBar.noteAddNewTab.setEnabled(newButton.isEnabled());
-		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
-			menuBar.noteAddNewTab.setEnabled(false);
-		}
     	menuBar.noteAdd.setVisible(true);
     	
     	List<QTreeWidgetItem> selections = trashTree.selectedItems();
@@ -3594,6 +3590,12 @@ public class NeverNote extends QMainWindow{
     					
     		Global.showDeleted = true;
     	}
+    	
+    	menuBar.noteAddNewTab.setEnabled(newButton.isEnabled());
+		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+			menuBar.noteAddNewTab.setEnabled(false);
+		}
+    	
     	listManager.loadNotesIndex();
     	noteIndexUpdated(false);
 ////    	browserWindow.setEnabled(newButton.isEnabled());
@@ -3660,7 +3662,6 @@ public class NeverNote extends QMainWindow{
 		} else {
 			menuBar.noteAddNewTab.setEnabled(true);
 		}
-		System.out.println("currentNoteGuid = " + currentNoteGuid);
     	menuBar.noteAdd.setVisible(true);
 		trashTree.blockSignals(true);
 		trashTree.clearSelection();
@@ -5450,6 +5451,7 @@ public class NeverNote extends QMainWindow{
     		}
     		if (selectedNoteGUIDs.size() == 0 && !currentNoteGuid.equals("")) 
     			selectedNoteGUIDs.add(currentNoteGuid);
+    		closeTabs(selectedNoteGUIDs);
     		for (int i=0; i<selectedNoteGUIDs.size(); i++) {
     			listManager.deleteNote(selectedNoteGUIDs.get(i));
     		}
@@ -5485,6 +5487,7 @@ public class NeverNote extends QMainWindow{
     	    			}
     	    		}
     	    	}
+    			closeTabs(selectedNoteGUIDs);
     			listManager.expungeNote(selectedNoteGUIDs.get(i));
     			
     			// ICHANGED
@@ -5495,33 +5498,20 @@ public class NeverNote extends QMainWindow{
     		}
     	}
     	currentNoteGuid = "";
-    	
-    	// ICHANGED　↓↓↓ここから↓↓↓
-		// 削除したノートを外部ウィンドウで開いていたら、閉じる
-		Collection<ExternalBrowse> 	windows = externalWindows.values();
-		Iterator<ExternalBrowse> 	windowIterator = windows.iterator();
-		Collection<String> 			guids = externalWindows.keySet();
-		Iterator<String> 			guidIterator = guids.iterator();
-		List<ExternalBrowse>		closeWindows = new ArrayList<ExternalBrowse>();	// イテレータ操作中に中身をいじっちゃダメなので
-		
-		while (windowIterator.hasNext()) {
-			ExternalBrowse browser = windowIterator.next();
-			String guid = guidIterator.next();
-			
-			for (int i = 0; i < selectedNoteGUIDs.size(); i++) {
-				if (guid.equals(selectedNoteGUIDs.get(i))) {
-					closeWindows.add(browser);
-				}
-			}
+    	closeExternalWindows(selectedNoteGUIDs);
+		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+			menuBar.noteAddNewTab.setEnabled(false);
 		}
 		
-		for (int i = closeWindows.size() - 1; i >= 0; i--) {
-			closeWindows.get(i).close();
-		}
-		// ICHANGED ↑↑↑ここまで↑↑↑
-		
-    	// ICHANGED　↓↓↓ここから↓↓↓
-    	// 削除したノートをタブで開いていたら、閉じる
+    	listManager.loadNotesIndex();
+    	noteIndexUpdated(false);
+    	refreshEvernoteNote(true);
+    	scrollToGuid(currentNoteGuid);
+    	logger.log(logger.HIGH, "Leaving NeverNote.deleteNote");
+    }
+    
+    // 対象ノートをタブで開いていたら閉じる
+    private void closeTabs(List<String> noteGUIDs) {
 		Collection<TabBrowse> tabBrowsers = tabWindows.values();
 		Iterator<TabBrowse> tabIterator = tabBrowsers.iterator();
 		Collection<Integer> tabIndexes = tabWindows.keySet();
@@ -5533,8 +5523,8 @@ public class NeverNote extends QMainWindow{
 			int index = indexIterator.next();
 			String guid = tab.getBrowserWindow().getNote().getGuid();
 			
-			for(int i = 0; i < selectedNoteGUIDs.size(); i++){
-				if(guid.equals(selectedNoteGUIDs.get(i))){
+			for(int i = 0; i < noteGUIDs.size(); i++){
+				if(guid.equals(noteGUIDs.get(i))){
 					closeIndexes.add(index);
 				}
 			}
@@ -5543,20 +5533,33 @@ public class NeverNote extends QMainWindow{
 		for(int i = closeIndexes.size() - 1; i >= 0; i--){
 			tabWindowClosing(closeIndexes.get(i));
 		}
-		// ICHANGED ↑↑↑ここまで↑↑↑		
-    	
-		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
-			menuBar.noteAddNewTab.setEnabled(false);
+    }
+    
+    // 対象ノートを外部ウィンドウで開いていたら閉じる
+    private void closeExternalWindows(List<String> noteGUIDs) {
+		Collection<ExternalBrowse> 	windows = externalWindows.values();
+		Iterator<ExternalBrowse> 	windowIterator = windows.iterator();
+		Collection<String> 			guids = externalWindows.keySet();
+		Iterator<String> 			guidIterator = guids.iterator();
+		List<ExternalBrowse>		closeWindows = new ArrayList<ExternalBrowse>();	// イテレータ操作中に中身をいじっちゃダメなので
+		
+		while (windowIterator.hasNext()) {
+			ExternalBrowse browser = windowIterator.next();
+			String guid = guidIterator.next();
+			
+			for (int i = 0; i < noteGUIDs.size(); i++) {
+				if (guid.equals(noteGUIDs.get(i))) {
+					closeWindows.add(browser);
+				}
+			}
 		}
 		
-    	listManager.loadNotesIndex();
-    	noteIndexUpdated(false);
-    	refreshEvernoteNote(true);
-    	scrollToGuid(currentNoteGuid);
-    	logger.log(logger.HIGH, "Leaving NeverNote.deleteNote");
+		for (int i = closeWindows.size() - 1; i >= 0; i--) {
+			closeWindows.get(i).close();
+		}
     }
+    
     // Add a new note
-    // ICHANGED @SuppressWarnings("unused") を削除
 	private void addNote() {
     	logger.log(logger.HIGH, "Inside NeverNote.addNote");
 //    	browserWindow.setEnabled(true);

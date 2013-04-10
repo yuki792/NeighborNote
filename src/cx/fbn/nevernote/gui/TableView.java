@@ -402,7 +402,6 @@ public class TableView extends QTableView {
 	
 	@Override
 	public void contextMenuEvent(QContextMenuEvent event) {
-		// ICHANGED QMenu から NoteTableContextMenu へ
 		QMenu menu = new QMenu(this);
 		
 		// ICHANGED
@@ -428,7 +427,6 @@ public class TableView extends QTableView {
 		menu.addAction(noteHistoryAction);
 		menu.addAction(mergeNotesAction);
 		
-		// ICHANGED QMenu から NoteTableContextMenu へ
 		QMenu titleColorMenu = new QMenu(this);
 		
 		titleColorMenu.setTitle(tr("Title Color"));
