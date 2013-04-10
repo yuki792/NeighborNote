@@ -2303,5 +2303,27 @@ public class Global {
 		settings.endGroup();
 		return value;
 	}
+	
+	// 最後に開いていたノート群を取得
+	public static HashMap<Integer, String> getLastViewedTabs() {
+		settings.beginGroup("General");
+		
+		@SuppressWarnings("unchecked")
+		HashMap<Integer, String> tabWindows = (HashMap<Integer, String>) settings.value("lastViewedTabs", null);
+		
+		settings.endGroup();
+		return tabWindows;
+	}
+	
+	// 最後に開いていたノート群をセット
+	public static void setLastViewedTabs(HashMap<Integer, String> tabs) {
+		settings.beginGroup("General");
+		if (tabs != null) {
+			settings.setValue("lastViewedTabs", tabs);
+		} else {
+			settings.setValue("lastViewedTabs", "");
+		}
+		settings.endGroup();
+	}
 }
 
