@@ -103,7 +103,7 @@ public class RensoNoteListItem extends QWidget{
 		// 項目の中身
 		// フォント設定
 		QFont relationFont = new QFont();
-		relationFont.setPixelSize(35);
+		relationFont.setPixelSize(25);
 		relationFont.setBold(true);
 		QFont titleFont = new QFont();
 		titleFont.setPixelSize(15);
@@ -114,9 +114,9 @@ public class RensoNoteListItem extends QWidget{
 		// 関連度
 		double ratio = (double)relationPoints / allPointSum;
 		int green = (int) (255 * (1.0 - ratio));
-		painter.setPen(new QColor(255, green, 0, 120));
+		painter.setPen(new QColor(255, green, 0));
 		painter.setFont(relationFont);
-		painter.drawText(85, size().height() - 40, size().width() - 85, 40, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
+		painter.drawText(70, size().height() - 30, size().width() - 70, 30, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
 		// タイトル
 		painter.setPen(QColor.black);
 		painter.setFont(titleFont);
