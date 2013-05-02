@@ -2315,8 +2315,8 @@ public class Global {
 		return tabWindows;
 	}
 	
-	// 最後に開いていたノート群をセット
-	public static void setLastViewedTabs(HashMap<Integer, String> tabs) {
+	// 最後に開いていたノート群を保存
+	public static void saveLastViewedTabs(HashMap<Integer, String> tabs) {
 		settings.beginGroup("General");
 		if (tabs != null) {
 			settings.setValue("lastViewedTabs", tabs);
@@ -2325,5 +2325,34 @@ public class Global {
 		}
 		settings.endGroup();
 	}
+	
+    // 最後に開いていたタブのインデックスを取得
+    public static int getLastViewedTabIndex() {
+		settings.beginGroup("General");
+		Integer index;
+		try {
+			String val = (String) settings.value("lastViewedTabIndex", 0);
+			index = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				index = (Integer) settings.value("lastViewedTabIndex", 0);
+			} catch (Exception e1) {
+				index = 0;
+			}
+		}
+		settings.endGroup();
+		return index;
+    }
+    
+    // 最後に開いていたタブのインデックスを保存
+    public static void saveLastViewedTabIndex(Integer index) {
+		settings.beginGroup("General");
+		if (index != null) {
+			settings.setValue("lastViewedTabIndex", index);
+		} else {
+			settings.setValue("lastViewedTabIndex", 0);
+		}
+		settings.endGroup();
+    }
 }
 

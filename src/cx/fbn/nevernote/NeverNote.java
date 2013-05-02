@@ -830,22 +830,9 @@ public class NeverNote extends QMainWindow{
 			currentNote = conn.getNoteTable().getNote(currentNoteGuid, true,true,false,false,true);
 		}
 		
-		// タブのフォーカスをcurrentNoteGuidのノートに移す
+		// タブのフォーカスをlastViewedTabIndexに移す
 		if (tabBrowser.count() >= 2) {
-			Collection<TabBrowse>	tabBrowsers = tabWindows.values();
-			Iterator<TabBrowse>		tabBrowserIterator = tabBrowsers.iterator();
-			Collection<Integer>		tabIndexes = tabWindows.keySet();
-			Iterator<Integer>		tabIndexIterator = tabIndexes.iterator();
-			
-			while (tabBrowserIterator.hasNext()) {
-				TabBrowse tab = tabBrowserIterator.next();
-				int i = tabIndexIterator.next();
-				String guid = tab.getBrowserWindow().getNote().getGuid();
-				if (currentNoteGuid.equals(guid)) {
-					tabBrowser.setCurrentIndex(i);
-					break;
-				}
-			}
+			tabBrowser.setCurrentIndex(Global.getLastViewedTabIndex());
 		}
 		
 		noteIndexUpdated(true);
@@ -1317,6 +1304,7 @@ public class NeverNote extends QMainWindow{
 		
 		Global.saveWindowMaximized(isMaximized());
 		Global.saveCurrentNoteGuid(currentNoteGuid);
+		Global.saveLastViewedTabIndex(tabBrowser.currentIndex());
 		
 		// 開いていたタブ群をsettingsに保存しておく
 		Collection<TabBrowse>		tabBrowsers = tabWindows.values();
@@ -1327,10 +1315,12 @@ public class NeverNote extends QMainWindow{
 		while (tabIterator.hasNext()) {
 			TabBrowse tab = tabIterator.next();
 			int index = indexIterator.next();
-			String guid = tab.getBrowserWindow().getNote().getGuid();
-			tabs.put(index, guid);
+			if (tab.getBrowserWindow() != null && tab.getBrowserWindow().getNote() != null) {
+				String guid = tab.getBrowserWindow().getNote().getGuid();
+				tabs.put(index, guid);
+			}
 		}
-		Global.setLastViewedTabs(tabs);
+		Global.saveLastViewedTabs(tabs);
 			
 		int sortCol = noteTableView.proxyModel.sortColumn();
 		int sortOrder = noteTableView.proxyModel.sortOrder().value();
