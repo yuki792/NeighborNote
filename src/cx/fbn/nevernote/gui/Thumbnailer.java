@@ -1,5 +1,23 @@
 package cx.fbn.nevernote.gui;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+
+import com.evernote.edam.type.User;
 import com.trolltech.qt.core.QBuffer;
 import com.trolltech.qt.core.QByteArray;
 import com.trolltech.qt.core.QIODevice;
@@ -16,8 +34,10 @@ import com.trolltech.qt.gui.QPainter;
 import com.trolltech.qt.webkit.QWebPage;
 
 import cx.fbn.nevernote.Global;
+import cx.fbn.nevernote.oauth.OAuthTokenizer;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.threads.ThumbnailRunner;
+import cx.fbn.nevernote.utilities.AESEncrypter;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 import cx.fbn.nevernote.utilities.ListManager;
 
@@ -124,5 +144,56 @@ public class Thumbnailer extends QObject {
 		QByteArray b = buffer.buffer();
 		conn.getNoteTable().setThumbnail(guid, b);
 		conn.getNoteTable().setThumbnailNeeded(guid, false);
+		
+		// サムネイルをEvernoteサーバから取得
+		User user = Global.getUserInformation();
+		String serverUrl = Global.getServer();
+		String shardId = user.getShardId();
+		if (shardId == null || shardId.equals("")) {
+			return;
+		}
+		
+		OAuthTokenizer tokenizer = new OAuthTokenizer();
+    	AESEncrypter aes = new AESEncrypter();
+    	try {
+			aes.decrypt(new FileInputStream(Global.getFileManager().getHomeDirFile("oauth.txt")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		String authString = aes.getString();
+		String oauthToken = new String();
+		if (!authString.equals("")) {
+			tokenizer.tokenize(authString);
+			oauthToken = tokenizer.oauth_token;
+		}
+		
+		HttpClient httpClient = new DefaultHttpClient();
+
+		HttpPost httpPost = new HttpPost("https://" + serverUrl + "/shard/" + user.getShardId() + "/thm/note/" + guid);
+		httpPost.setHeader("Content-type", "application/x-www-form-urlencoded");
+		httpPost.setHeader("Host", serverUrl);
+
+		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+		nameValuePairs.add(new BasicNameValuePair("auth", oauthToken));
+		nameValuePairs.add(new BasicNameValuePair("size", "80"));
+		
+		try {
+			httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+			// Webサーバからのレスポンスを処理
+			HttpResponse response = null;
+			response = httpClient.execute(httpPost);
+			byte[] bytes = EntityUtils.toByteArray(response.getEntity());
+			QByteArray data = new QByteArray(bytes);
+			// データベースにEvernoteサーバから取得したサムネイルを保存。例↓
+			// conn.getNoteTable().setThumbnail(guid, data);
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		httpClient.getConnectionManager().shutdown();
 	}
 }
