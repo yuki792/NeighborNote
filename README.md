@@ -17,7 +17,7 @@ neighbornote.batを実行して下さい。
 
 要件
 ------------
-OpenSSLが必要です。Windowsを使っているのであれば、[Shining Light Productions - Win32 OpenSSL](http://slproweb.com/products/Win32OpenSSL.html)から"Win32 OpenSSL v0.9.8y Light"をダウンロードしてインストールする必要があるかもしれません。
+OpenSSLが必要です。Windowsを使っているのであれば、[Shining Light Productions - Win32 OpenSSL](http://slproweb.com/products/Win32OpenSSL.html)から"OpenSSL v0.9.8y Light"をダウンロードしてインストールする必要があるかもしれません。
 
 Download
 ------------
