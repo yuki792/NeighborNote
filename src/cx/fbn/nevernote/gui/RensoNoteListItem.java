@@ -34,6 +34,7 @@ import com.trolltech.qt.gui.QMouseEvent;
 import com.trolltech.qt.gui.QPaintEvent;
 import com.trolltech.qt.gui.QPainter;
 import com.trolltech.qt.gui.QPalette;
+import com.trolltech.qt.gui.QPen;
 import com.trolltech.qt.gui.QTextOption;
 import com.trolltech.qt.gui.QWidget;
 
@@ -111,12 +112,6 @@ public class RensoNoteListItem extends QWidget{
 		QFont normalFont = new QFont();
 		normalFont.setPixelSize(12);
 		
-		// 関連度
-		double ratio = (double)relationPoints / allPointSum;
-		int green = (int) (255 * (1.0 - ratio));
-		painter.setPen(new QColor(255, green, 0));
-		painter.setFont(relationFont);
-		painter.drawText(70, size().height() - 30, size().width() - 70, 30, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
 		// タイトル
 		painter.setPen(QColor.black);
 		painter.setFont(titleFont);
@@ -129,11 +124,34 @@ public class RensoNoteListItem extends QWidget{
 		painter.setPen(QColor.black);
 		painter.drawText(165, 23, size().width() - 165, 17, Qt.AlignmentFlag.AlignLeft.value(), tagNames);
 		// ノート内容
+		QPen tmpPen = painter.pen();
+		painter.setPen(new QColor(100, 100, 100));
 		QTextOption option = new QTextOption();
 		option.setAlignment(Qt.AlignmentFlag.AlignLeft);
 		option.setUseDesignMetrics(true);
-		painter.drawText(new QRectF(85, 40, width() - 85, 40), noteContent, option);
+		painter.drawText(new QRectF(85, 40, width() - 85, 45), noteContent, option);
+		painter.setPen(tmpPen);
 		
+		// 関連度
+		double ratio = (double)relationPoints / allPointSum;
+		QColor relationColor;
+		if (ratio >= 0.8) {
+			relationColor = new QColor(255, 0, 0);
+		} else if (ratio >= 0.5) {
+			relationColor = new QColor(255, 100, 0);
+		} else {
+			relationColor = new QColor(255, 200, 0);
+		}
+		painter.setFont(relationFont);
+		tmpPen = painter.pen();
+		painter.setPen(new QColor(255, 255, 255));
+		painter.drawText(size().width() - 70, size().height() - 33, 67, 33, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
+		painter.drawText(size().width() - 70, size().height() - 33, 73, 33, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
+		painter.drawText(70, size().height() - 36, size().width() - 70, 36, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
+		painter.drawText(70, size().height() - 30, size().width() - 70, 30, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
+		painter.setPen(relationColor);
+		painter.drawText(70, size().height() - 33, size().width() - 70, 33, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");		
+		painter.setPen(tmpPen);
 		// サムネイル
 		QImage img;
 		String thumbnailName = Global.getFileManager().getResDirPath("thumbnail-" + noteGuid + ".png");
