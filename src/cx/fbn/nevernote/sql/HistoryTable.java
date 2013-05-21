@@ -300,4 +300,13 @@ public class HistoryTable {
 			}
 		}
 	}
+
+	// 操作履歴数の取得
+	public int getHistoryCount() {
+		NSqlQuery query = new NSqlQuery(db.getBehaviorConnection());
+		query.exec("Select count(*) from History");
+		query.next();
+		int returnValue = new Integer(query.valueString(0));
+		return returnValue;
+	}
 }
