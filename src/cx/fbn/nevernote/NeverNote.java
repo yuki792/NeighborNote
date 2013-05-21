@@ -600,12 +600,25 @@ public class NeverNote extends QMainWindow{
 		tabBrowser = new TabBrowserWidget(this);
 		tabBrowser.setStyleSheet("QTabBar::tab{width:150px;}");
 		tabBrowser.setMovable(true);
+		TabBrowse tab = new TabBrowse(conn, tabBrowser, cbObserver);
+		browserWindow = tab.getBrowserWindow();
+		int index = tabBrowser.addNewTab(tab, "");
+		tabWindows.put(index, tab);
 		tabBrowser.setTabsClosable(true);
 		tabBrowser.currentChanged.connect(this, "tabWindowChanged(int)");
 		tabBrowser.tabCloseRequested.connect(this, "tabWindowClosing(int)");
 		
+		noteDirty = new HashMap<Integer, Boolean>();
+		noteDirty.put(index, false);
+		
 		inkNote = new HashMap<Integer, Boolean>();
 		readOnly = new HashMap<Integer, Boolean>();
+
+		// ICHANGED
+		// 履歴記録のハッシュマップを初期化
+		historyGuids.put(index, new ArrayList<String>());
+		historyPosition.put(index, 0);
+		fromHistory.put(index, false);
 		
         mainLeftRightSplitter.addWidget(leftSplitter1);
         mainLeftRightSplitter.addWidget(browserIndexSplitter);
@@ -779,60 +792,21 @@ public class NeverNote extends QMainWindow{
 		trayIcon.setToolTip(tr("NeighborNote"));
 		trayIcon.setContextMenu(trayMenu);
 		trayIcon.activated.connect(this, "trayActivated(com.trolltech.qt.gui.QSystemTrayIcon$ActivationReason)");
-		
-		// 前回のタブを復元
-		noteTableView.load(true);
-		HashMap<Integer, String> tabs = new HashMap<Integer, String>();
-		if (Global.getLastViewedTabs() != null) {
-			tabs.putAll(Global.getLastViewedTabs());
-		}
-		
-		Collection<String>		guids = tabs.values();
-		Iterator<String>		guidIterator = guids.iterator();
-		Collection<Integer>		indexes = tabs.keySet();
-		Iterator<Integer>		indexIterator = indexes.iterator();
-		noteDirty = new HashMap<Integer, Boolean>();
-		
-		while (guidIterator.hasNext()) {
-			String guid = guidIterator.next();
-			int tabIndex = indexIterator.next();
-			
-			currentNoteGuid = guid;
-			noteDirty.put(tabIndex, false);
-			if (!currentNoteGuid.trim().equals("")) {
-				currentNote = conn.getNoteTable().getNote(currentNoteGuid, true, true, false, false, true);
-				if (currentNote != null) {
-					openTabEditor(guid, tabIndex);
-				}
-			}
-		}
-		
-		// タブが0個だったら作る
-		if (tabBrowser.count() <= 0) {
-			TabBrowse tab = new TabBrowse(conn, tabBrowser, cbObserver);
-			browserWindow = tab.getBrowserWindow();
-			tabBrowser.currentChanged.disconnect();
-			int index = tabBrowser.addNewTab(tab, "");
-			tabBrowser.currentChanged.connect(this, "tabWindowChanged(int)");
-			tabWindows.put(index, tab);
-			noteDirty.put(index, false);
-			
-			// 履歴記録のハッシュマップを初期化
-			historyGuids.put(index, new ArrayList<String>());
-			historyPosition.put(index, 0);
-			fromHistory.put(index, false);
-		}
-		
+
+		currentNoteGuid="";
 		currentNoteGuid = Global.getLastViewedNoteGuid();
-		if (currentNoteGuid.trim().equals("")) {
+		if (currentNoteGuid.equals(""))
 			currentNote = new Note();
-		} else {
-			currentNote = conn.getNoteTable().getNote(currentNoteGuid, true,true,false,false,true);
-		}
 		
-		// タブのフォーカスをlastViewedTabIndexに移す
-		if (tabBrowser.count() >= 2) {
-			tabBrowser.setCurrentIndex(Global.getLastViewedTabIndex());
+		// ICHANGED
+		/* 上に移動したので要らない
+		historyGuids = new ArrayList<String>();
+		historyPosition = 0;
+		fromHistory = false;
+		*/
+		
+		if (!currentNoteGuid.trim().equals("")) {
+			currentNote = conn.getNoteTable().getNote(currentNoteGuid, true,true,false,false,true);
 		}
 		
 		noteIndexUpdated(true);
@@ -1304,23 +1278,6 @@ public class NeverNote extends QMainWindow{
 		
 		Global.saveWindowMaximized(isMaximized());
 		Global.saveCurrentNoteGuid(currentNoteGuid);
-		Global.saveLastViewedTabIndex(tabBrowser.currentIndex());
-		
-		// 開いていたタブ群をsettingsに保存しておく
-		Collection<TabBrowse>		tabBrowsers = tabWindows.values();
-		Iterator<TabBrowse>			tabIterator = tabBrowsers.iterator();
-		Collection<Integer>			tabIndexes = tabWindows.keySet();
-		Iterator<Integer>			indexIterator = tabIndexes.iterator();
-		HashMap<Integer, String>	tabs = new HashMap<Integer, String>();
-		while (tabIterator.hasNext()) {
-			TabBrowse tab = tabIterator.next();
-			int index = indexIterator.next();
-			if (tab.getBrowserWindow() != null && tab.getBrowserWindow().getNote() != null) {
-				String guid = tab.getBrowserWindow().getNote().getGuid();
-				tabs.put(index, guid);
-			}
-		}
-		Global.saveLastViewedTabs(tabs);
 			
 		int sortCol = noteTableView.proxyModel.sortColumn();
 		int sortOrder = noteTableView.proxyModel.sortOrder().value();
@@ -4832,36 +4789,17 @@ public class NeverNote extends QMainWindow{
 			conn.getHistoryTable().addHistory("rensoItemClick", prevCurrentNoteGuid, rensoNotePressedItemGuid);
 		}
 	}
-	
-	private void openTabEditor(String guid) {
-		openTabEditor(guid, -1);
-	}
 
-	// オーバーロード insertIndex < 0 ならば普通に追加
-	private void openTabEditor(String guid, int insertIndex) {
+	// ICHANGED
+	private void openTabEditor(String guid) {
+		
 		Note note = conn.getNoteTable().getNote(guid, true, true, false, true, true);
 		// 新しいタブエディタを作成
 		TabBrowse newBrowser = new TabBrowse(conn, tabBrowser, cbObserver);
 		showEditorButtons(newBrowser.getBrowserWindow());
 		
 		String noteTitle = note.getTitle();
-		int index;
-		// 最初のタブだけ、追加後に自動的にフォーカスが移ってしまうので、一度切断する
-		if (tabBrowser.count() == 0) {
-			tabBrowser.currentChanged.disconnect();
-			if (insertIndex < 0) {
-				index = tabBrowser.addNewTab(newBrowser, noteTitle);
-			} else {
-				index = tabBrowser.insertNewTab(insertIndex, newBrowser, noteTitle);
-			}
-			tabBrowser.currentChanged.connect(this, "tabWindowChanged(int)");
-		} else {
-			if (insertIndex < 0) {
-				index = tabBrowser.addNewTab(newBrowser, noteTitle);
-			} else {
-				index = tabBrowser.insertNewTab(insertIndex, newBrowser, noteTitle);
-			}
-		}
+		int index = tabBrowser.addNewTab(newBrowser, noteTitle);
 		tabWindows.put(index, newBrowser);
 		noteDirty.put(index, false);
 		
@@ -4897,8 +4835,6 @@ public class NeverNote extends QMainWindow{
 				addBrowseHistory();
 			}
 		}
-		
-		rensoNoteList.refreshRensoNoteList(currentNoteGuid);
 	}
 
 	// ICHANGED タブが閉じられた
