@@ -7631,7 +7631,7 @@ public class NeverNote extends QMainWindow{
 				String tableGuid = (String) ix.values().toArray()[0];
 				if (tableGuid.equals(rensoNotePressedItemGuid)) {
 					noteTableView.selectRow(i);
-					return;
+					break;
 				}
 			}
 		}

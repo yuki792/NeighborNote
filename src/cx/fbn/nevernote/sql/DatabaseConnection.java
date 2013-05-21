@@ -209,62 +209,6 @@ public class DatabaseConnection {
 	}
 	
 	public void upgradeDb(String version) {
-		if (version.equals("0.85")) {
-			executeSql("alter table note add column titleColor integer");
-			executeSql("alter table note add column thumbnail blob");
-			executeSql("alter table note add column thumbnailneeded boolean");
-			executeSql("Update note set thumbnailneeded = true;");
-			executeSql("create index NOTE_NOTEBOOK_INDEX on note (notebookguid, guid);");
-			executeSql("create index NOTETAGS_TAG_INDEX on notetags (tagguid, noteguid);");
-			version = "0.86";
-			Global.setDatabaseVersion(version);
-		} 
-		if (version.equals("0.86")) {
-	
-			executeSql("alter table notebook add column publishingUri VarChar");
-			executeSql("alter table notebook add column publishingOrder Integer");
-			executeSql("alter table notebook add column publishingAscending Boolean");
-			executeSql("alter table notebook add column publishingPublicDescription varchar");
-			executeSql("alter table notebook add column stack varchar");
-			executeSql("alter table notebook add column icon blob");
-			executeSql("alter table notebook add column readOnly boolean");
-			executeSql("alter table notebook add column linked boolean");
-			
-			executeSql("alter table tag add column realname varchar");
-			executeSql("alter table tag add column linked boolean");
-			executeSql("alter table tag add column icon blob");
-			executeSql("alter table tag add column notebookguid varchar");
-			executeSql("alter table SavedSearch add column icon blob");
-
-			executeSql("create index NOTE_THUMBNAIL_INDEX on note (thumbnailneeded, guid);");
-			executeSql("create index NOTE_EXPUNGED_INDEX on note (isExpunged, guid);");
-			executeSql("create index NOTE_DUEDATE_INDEX on note (attributeSubjectDate, guid);");
-			executeSql("create index TAG_NOTEBOOK_INDEX on tag (notebookGuid);");
-			
-			executeSql("update note set thumbnailneeded=true, thumbnail=null;");
-			executeSql("update notebook set publishingUri='', " +
-					"publishingAscending=false, stack='', readonly=false, publishingOrder=1, " +
-					"publishingPublicDescription='', linked=false");
-			executeSql("update tag set linked=false, realname='', notebookguid=''");
-			
-			sharedNotebookTable.createTable();
-			linkedNotebookTable.createTable();
-			systemIconTable.createTable();
-			inkImagesTable.createTable();
-			
-			version = "0.95";
-			executeSql("Insert into Sync (key, value) values ('FullNotebookSync', 'true')");
-			executeSql("Insert into Sync (key, value) values ('FullLinkedNotebookSync', 'true')");
-			executeSql("Insert into Sync (key, value) values ('FullSharedNotebookSync', 'true')");
-			executeSql("Insert into Sync (key, value) values ('FullInkNoteImageSync', 'true')");
-			Global.setDatabaseVersion(version);
-		} 
-		if (version.equals("0.95")) {
-			if (dbTableExists("words"))
-				executeSql("Drop table words;");
-			if (dbTableExists("NoteResources"))
-				executeSql("Drop table NoteResources;");
-		}
 		if (!dbTableColumnExists("NOTE", "ORIGINAL_GUID")) {
 			executeSql("alter table note add column ORIGINAL_GUID VarChar");
 			executeSql("create index NOTE_ORIGINAL_GUID_INDEX on note (original_guid, guid);");
