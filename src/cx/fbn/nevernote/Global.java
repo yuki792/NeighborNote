@@ -1763,13 +1763,13 @@ public class Global {
     }
     public static String getUpdatesAvailableUrl() {
 		settings.beginGroup("Upgrade");
-		String text = (String)settings.value("avialableUrl", "http://nevernote.sourceforge.net/versions.txt");
+		String text = (String)settings.value("avialableUrl", "http://puma.cis.ibaraki.ac.jp/products/neighbornote/develop/versions.txt");
 		settings.endGroup();	
 		return text;
     }
     public static String getUpdateAnnounceUrl() {
 		settings.beginGroup("Upgrade");
-		String text = (String)settings.value("announceUrl", "http://nevernote.sourceforge.net/upgrade.html");
+		String text = (String)settings.value("announceUrl", "http://puma.cis.ibaraki.ac.jp/products/neighbornote/develop/upgrade.html");
 		settings.endGroup();	
 		return text;
     }

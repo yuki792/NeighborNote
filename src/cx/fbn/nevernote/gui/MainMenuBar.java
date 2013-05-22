@@ -670,8 +670,7 @@ public class MainMenuBar extends QMenuBar {
 		checkForUpdates.setToolTip(tr("Check for newer versions"));
 		checkForUpdates.triggered.connect(parent, "checkForUpdates()"); 
 		setupShortcut(checkForUpdates, "Help_Check_For_Updates");
-		// ICHANGED TODO とりあえず封印
-		checkForUpdates.setEnabled(false);
+		checkForUpdates.setEnabled(true);
 		
 		aboutAction = new QAction(tr("About"), this);
 		aboutAction.setToolTip(tr("About NeighborNote"));
