@@ -3468,7 +3468,7 @@ public class NeverNote extends QMainWindow{
     	OAuthTokenizer tokenizer = new OAuthTokenizer();
     	AESEncrypter aes = new AESEncrypter();
     	try {
-			aes.decrypt(new FileInputStream(Global.getFileManager().getHomeDirFile("oauth.txt")));
+			aes.decrypt(new FileInputStream(Global.getFileManager().getHomeDirFile("oauthkey.txt")));
 		} catch (FileNotFoundException e) {
 			// File not found, so we'll just get empty strings anyway. 
 		}
@@ -3530,7 +3530,7 @@ public class NeverNote extends QMainWindow{
 	    	}
 	    	aes.setString(window.response);
 	    	try {
-				aes.encrypt(new FileOutputStream(Global.getFileManager().getHomeDirFile("oauth.txt")));
+				aes.encrypt(new FileOutputStream(Global.getFileManager().getHomeDirFile("oauthkey.txt")));
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

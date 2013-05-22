@@ -40,8 +40,13 @@ import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
 public class OAuthWindow extends QDialog {
-	private final static String consumerKey = "baumgarr"; 
-	private final static String consumerSecret = "60d4cdedb074b0ac";
+	// Old consumer key
+	//private final static String consumerKey = "baumgarr"; 
+	//private final static String consumerSecret = "60d4cdedb074b0ac";
+	
+	private final static String consumerKey = "baumgarr-3523"; 
+	private final static String consumerSecret = "8d5ee175f8a5d3ec";
+	
 	public String response;
 
 	private final String temporaryCredUrl;	  
