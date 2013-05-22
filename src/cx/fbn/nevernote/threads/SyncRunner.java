@@ -413,7 +413,7 @@ public class SyncRunner extends QObject implements Runnable {
 			//*****************************************
 			//* Sync linked/shared notebooks 
 			//*****************************************
-			//syncLinkedNotebooks();
+			syncLinkedNotebooks();
 			//conn.getNoteTable().getDirty();
 			//disableUploads = true;   /// DELETE THIS LINE!!!!
 			if (!disableUploads) {
