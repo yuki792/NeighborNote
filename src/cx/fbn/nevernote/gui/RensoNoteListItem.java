@@ -52,6 +52,7 @@ public class RensoNoteListItem extends QWidget{
 	private final RensoNoteList parent;
 	private final boolean isStared;
 	private final int allPointSum;
+	private final QPalette palette;
 	
 	private final String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
 	
@@ -86,9 +87,9 @@ public class RensoNoteListItem extends QWidget{
 		String kaigyo = System.getProperty("line.separator");
 		this.noteContent = this.noteContent.replaceAll(kaigyo, "");
 		
-		QPalette p = new QPalette();
-		p.setColor(QPalette.ColorRole.Window, new QColor(255, 255, 255));
-		this.setPalette(p);
+		palette = new QPalette();
+		palette.setColor(QPalette.ColorRole.Window, new QColor(255, 255, 255));
+		this.setPalette(palette);
 		this.setAutoFillBackground(true);
 		this.setBackgroundRole(QPalette.ColorRole.Window);
 	}
@@ -144,7 +145,7 @@ public class RensoNoteListItem extends QWidget{
 		}
 		painter.setFont(relationFont);
 		tmpPen = painter.pen();
-		painter.setPen(new QColor(255, 255, 255));
+		painter.setPen(this.palette().color(QPalette.ColorRole.Window));
 		painter.drawText(size().width() - 70, size().height() - 33, 67, 33, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
 		painter.drawText(size().width() - 70, size().height() - 33, 73, 33, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
 		painter.drawText(70, size().height() - 36, size().width() - 70, 36, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");
@@ -179,9 +180,8 @@ public class RensoNoteListItem extends QWidget{
 	@Override
 	protected void enterEvent(QEvent e){
 		if (!parent.isContextMenuVisible()) {
-			QPalette p = new QPalette();
-			p.setColor(QPalette.ColorRole.Window, new QColor(225, 235, 255));
-			this.setPalette(p);
+			palette.setColor(QPalette.ColorRole.Window, new QColor(225, 235, 255));
+			this.setPalette(palette);
 		}
 	}
 	
@@ -194,16 +194,15 @@ public class RensoNoteListItem extends QWidget{
 	
 	@Override
 	protected void mousePressEvent(QMouseEvent e) {
-		QPalette p = new QPalette();
-		p.setColor(QPalette.ColorRole.Window, new QColor(165, 175, 255));
-		this.setPalette(p);
+		
+		palette.setColor(QPalette.ColorRole.Window, new QColor(165, 175, 255));
+		this.setPalette(palette);
 		
 		super.mousePressEvent(e);
 	}
 	
 	public void setDefaultBackground() {
-		QPalette p = new QPalette();
-		p.setColor(QPalette.ColorRole.Window, new QColor(255, 255, 255));
-		this.setPalette(p);
+		palette.setColor(QPalette.ColorRole.Window, new QColor(255, 255, 255));
+		this.setPalette(palette);
 	}
 }
