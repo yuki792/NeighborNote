@@ -75,12 +75,12 @@ public class RensoNoteList extends QListWidget {
 		openNewTabAction.setToolTip(tr("Open this note in new tab"));
 		openNewTabAction.triggered.connect(parent, "openNewTabFromRNL()");
 		// スターをつけるアクション生成
-		starAction = new QAction(tr("STAR"), this);
-		starAction.setToolTip(tr("Star this item"));
+		starAction = new QAction(tr("Add Star"), this);
+		starAction.setToolTip(tr("Add Star to this item"));
 		starAction.triggered.connect(parent, "starNote()");
 		// スターを外すアクション生成
-		unstarAction = new QAction(tr("UNSTAR"), this);
-		unstarAction.setToolTip(tr("Unstar this item"));
+		unstarAction = new QAction(tr("Remove Star"), this);
+		unstarAction.setToolTip(tr("Remove Star from this item"));
 		unstarAction.triggered.connect(parent, "unstarNote()");
 		// このノートを除外するアクション生成
 		excludeNoteAction = new QAction(tr("Exclude"), this);
