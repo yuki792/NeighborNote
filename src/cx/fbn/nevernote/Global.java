@@ -23,6 +23,7 @@ package cx.fbn.nevernote;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -40,6 +41,7 @@ import com.evernote.edam.type.User;
 import com.evernote.edam.type.UserAttributes;
 import com.swabunga.spell.engine.Configuration;
 import com.trolltech.qt.core.QByteArray;
+import com.trolltech.qt.core.QFile;
 import com.trolltech.qt.core.QSettings;
 import com.trolltech.qt.core.QSize;
 import com.trolltech.qt.gui.QPalette;
@@ -196,8 +198,20 @@ public class Global {
 	
     // Do initial setup 
     public static void setup(StartupConfig startupConfig) throws InitializationException  {
-    	// ICHANGED 設定値の保存先を変更
-        settings = new QSettings("NeighborNote.ini", QSettings.Format.IniFormat);
+    	String settingFileName = new String("NeighborNote.ini");
+    	
+    	// バージョン0.1.2以下では設定ファイルをプログラムディレクトリに置いていたので、それを見つけたらホームディレクトリに移動させる。
+    	File programDir = new File(FileManager.toPlatformPathSeparator(startupConfig.getProgramDirPath()));
+    	String programPath = FileManager.slashTerminatePath(programDir.getPath());
+    	File homeDir = new File(FileManager.toPlatformPathSeparator(startupConfig.getHomeDirPath()));
+    	String homePath = FileManager.slashTerminatePath(homeDir.getPath());
+    	if (QFile.exists(programPath + settingFileName)) {
+    		QFile file = new QFile(programPath + settingFileName);
+    		file.copy(homePath + settingFileName);
+    		file.remove();
+    	}
+    	
+        settings = new QSettings(homePath + settingFileName, QSettings.Format.IniFormat);
         
         disableViewing = startupConfig.getDisableViewing();
         syncOnly = startupConfig.isSyncOnly();
