@@ -3,9 +3,12 @@ NixNote (1.5) stable; urgency=high
   * Correct bug causing notes to be marked as unsynchronized when tags have been updated.
   * Correct various oauth errors.
 
+<<<<<<< HEAD
 NixNote (1.4) stable; urgency=low
   * Corrected error synchronizing linked accounts.
   * Switched to new authentication key per Evernote's request.
+=======
+>>>>>>> c3e49e158d87c0988e908b2de0849464fa8ad38e
 NixNote (1.4) stable; urgency=low
   * Added better proxy support for OAuth
   * Search text dialog box won't clear if clicking "all notes".
