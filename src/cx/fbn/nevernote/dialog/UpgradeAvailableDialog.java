@@ -28,11 +28,14 @@ package cx.fbn.nevernote.dialog;
 
 import com.trolltech.qt.core.QUrl;
 import com.trolltech.qt.gui.QCheckBox;
+import com.trolltech.qt.gui.QDesktopServices;
 import com.trolltech.qt.gui.QDialog;
 import com.trolltech.qt.gui.QGridLayout;
 import com.trolltech.qt.gui.QHBoxLayout;
 import com.trolltech.qt.gui.QIcon;
+import com.trolltech.qt.gui.QLabel;
 import com.trolltech.qt.gui.QPushButton;
+import com.trolltech.qt.gui.QSpacerItem;
 import com.trolltech.qt.gui.QVBoxLayout;
 import com.trolltech.qt.webkit.QWebView;
 
@@ -40,14 +43,16 @@ import cx.fbn.nevernote.Global;
 
 public class UpgradeAvailableDialog extends QDialog {
 
-	private boolean 	okPressed;
-	private final QPushButton ok;
+	private boolean 	yesPressed;
+	private final QPushButton yesButton;
+	private final QPushButton noButton;
 	private final QCheckBox doNotRemindeMe;
+	private final QLabel downloadLabel;
 	private final String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
 	
 	// Constructor
 	public UpgradeAvailableDialog() {
-		okPressed = false;
+		yesPressed = false;
 		setWindowTitle(tr("Upgrade Available"));
 		setWindowIcon(new QIcon(iconPath+"nevernote.png"));
 		QVBoxLayout grid = new QVBoxLayout();
@@ -64,32 +69,44 @@ public class UpgradeAvailableDialog extends QDialog {
 		doNotRemindeMe.setChecked(true);
 		input.addWidget(doNotRemindeMe,2,1);
 		
+		QHBoxLayout labelLayout = new QHBoxLayout();
+		downloadLabel = new QLabel(tr("Do you want to download now?"));
+		labelLayout.addStretch();
+		labelLayout.addWidget(downloadLabel);
+		labelLayout.addStretch();
+		input.addItem(new QSpacerItem(0, 50), 3, 1);
+		input.addLayout(labelLayout, 4, 1);
+		
 		grid.addLayout(input);
 		
-		ok = new QPushButton("OK");
-		ok.clicked.connect(this, "okButtonPressed()");
+		yesButton = new QPushButton(tr("Yes"));
+		yesButton.clicked.connect(this, "yesButtonPressed()");
+		noButton = new QPushButton(tr("No"));
+		noButton.clicked.connect(this, "noButtonPressed()");
 
 		button.addStretch();
-		button.addWidget(ok);
+		button.addWidget(yesButton);
+		button.addWidget(noButton);
 		button.addStretch();
 		grid.addLayout(button);		
 	}
 
-	// The OK button was pressed
+	// The Yes button was pressed
 	@SuppressWarnings("unused")
-	private void okButtonPressed() {
-		okPressed = true;
+	private void yesButtonPressed() {
+		yesPressed = true;
+		QDesktopServices.openUrl(new QUrl(Global.getUpdateDownloadUrl()));
 		close();
 	}
-	// The CANCEL button was pressed
+	// The No button was pressed
 	@SuppressWarnings("unused")
-	private void cancelButtonPressed() {
-		okPressed = false;
+	private void noButtonPressed() {
+		yesPressed = false;
 		close();
 	}
-	// Check if the OK button was pressed
-	public boolean okPressed() {
-		return okPressed;
+	// Check if the Yes button was pressed
+	public boolean yesPressed() {
+		return yesPressed;
 	}
 	
 	public boolean remindMe() {

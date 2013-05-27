@@ -1773,6 +1773,12 @@ public class Global {
 		settings.endGroup();	
 		return text;
     }
+    public static String getUpdateDownloadUrl() {
+		settings.beginGroup("Upgrade");
+		String text = (String)settings.value("downloadUrl", "http://puma.cis.ibaraki.ac.jp/products/neighbornote/download.html");
+		settings.endGroup();	
+		return text;
+    }
     
     //*******************
     // Index settings
