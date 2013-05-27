@@ -200,13 +200,12 @@ public class Global {
     public static void setup(StartupConfig startupConfig) throws InitializationException  {
     	String settingFileName = new String("NeighborNote.ini");
     	
-    	// バージョン0.1.2以下では設定ファイルをプログラムディレクトリに置いていたので、それを見つけたらホームディレクトリに移動させる。
-    	File programDir = new File(FileManager.toPlatformPathSeparator(startupConfig.getProgramDirPath()));
-    	String programPath = FileManager.slashTerminatePath(programDir.getPath());
+    	// バージョン0.1.2以下で作成された古い設定ファイルを見つけたら、ホームディレクトリに移動させる。
+    	String oldSettingPath = new QSettings(settingFileName, QSettings.Format.IniFormat).fileName();
     	File homeDir = new File(FileManager.toPlatformPathSeparator(startupConfig.getHomeDirPath()));
     	String homePath = FileManager.slashTerminatePath(homeDir.getPath());
-    	if (QFile.exists(programPath + settingFileName)) {
-    		QFile file = new QFile(programPath + settingFileName);
+    	if (QFile.exists(oldSettingPath)) {
+    		QFile file = new QFile(oldSettingPath);
     		file.copy(homePath + settingFileName);
     		file.remove();
     	}
