@@ -1,0 +1,12 @@
+Modify package scripts for 1.5
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# On branch master
+# Changes to be committed:
+#   (use "git reset HEAD <file>..." to unstage)
+#
+#	modified:   package_scripts/deb/amd64/control
+#	modified:   package_scripts/deb/build.sh
+#	modified:   package_scripts/deb/i386/control
+#	modified:   package_scripts/tar/build.sh
+#
