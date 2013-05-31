@@ -2,7 +2,7 @@
 rem #####################
 rem # Install variables #
 rem #####################
-set NEIGHBORNOTE=%~dp0
+set NEIGHBORNOTE=%~dp1
 
 rem ########################################
 rem # Memory settings.  These can be tuned #
