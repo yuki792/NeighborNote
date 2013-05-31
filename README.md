@@ -8,12 +8,15 @@ Getting Started
 
 ダウンロード
 ------------
-NeighborNoteは[SourceForge.jp](http://sourceforge.jp/users/yuki792/pf/NeighborNote/files/)からダウンロード出来ます。
+NeighborNoteは[http://puma.cis.ibaraki.ac.jp/products/neighbornote/](http://puma.cis.ibaraki.ac.jp/products/neighbornote/)からダウンロード出来ます。
 
-起動方法
+起動方法(Windows)
 ------------
-neighbornote.batを実行して下さい。
+neighbornote.exeを実行して下さい。
 
+起動方法(MacOSX)
+------------
+neighbornote-osxを実行して下さい。
 
 要件
 ------------
@@ -21,11 +24,15 @@ OpenSSLが必要です。Windowsを使っているのであれば、[Shining Lig
 
 Download
 ------------
-NeighborNote is available on [SourceForge.jp](http://sourceforge.jp/users/yuki792/pf/NeighborNote/files/).
+NeighborNote is available on [http://puma.cis.ibaraki.ac.jp/products/neighbornote/](http://puma.cis.ibaraki.ac.jp/products/neighbornote/).
 
-How to Run
+How to Run(Windows)
 ------------
-Please run the neighbornote.bat.
+Please run the neighbornote.exe.
+
+How to Run(MacOSX)
+------------
+Please run the neighbornote-osx.
 
 Requirements
 ------------
