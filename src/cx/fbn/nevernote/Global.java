@@ -23,6 +23,7 @@ package cx.fbn.nevernote;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -40,6 +41,7 @@ import com.evernote.edam.type.User;
 import com.evernote.edam.type.UserAttributes;
 import com.swabunga.spell.engine.Configuration;
 import com.trolltech.qt.core.QByteArray;
+import com.trolltech.qt.core.QFile;
 import com.trolltech.qt.core.QSettings;
 import com.trolltech.qt.core.QSize;
 import com.trolltech.qt.gui.QPalette;
@@ -196,8 +198,19 @@ public class Global {
 	
     // Do initial setup 
     public static void setup(StartupConfig startupConfig) throws InitializationException  {
-    	// ICHANGED 設定値の保存先を変更
-        settings = new QSettings("NeighborNote.ini", QSettings.Format.IniFormat);
+    	String settingFileName = new String("NeighborNote.ini");
+    	
+    	// バージョン0.1.2以下で作成された古い設定ファイルを見つけたら、ホームディレクトリに移動させる。
+    	String oldSettingPath = new QSettings(settingFileName, QSettings.Format.IniFormat).fileName();
+    	File homeDir = new File(FileManager.toPlatformPathSeparator(startupConfig.getHomeDirPath()));
+    	String homePath = FileManager.slashTerminatePath(homeDir.getPath());
+    	if (QFile.exists(oldSettingPath)) {
+    		QFile file = new QFile(oldSettingPath);
+    		file.copy(homePath + settingFileName);
+    		file.remove();
+    	}
+    	
+        settings = new QSettings(homePath + settingFileName, QSettings.Format.IniFormat);
         
         disableViewing = startupConfig.getDisableViewing();
         syncOnly = startupConfig.isSyncOnly();
@@ -1770,6 +1783,12 @@ public class Global {
     public static String getUpdateAnnounceUrl() {
 		settings.beginGroup("Upgrade");
 		String text = (String)settings.value("announceUrl", "http://puma.cis.ibaraki.ac.jp/products/neighbornote/develop/upgrade.html");
+		settings.endGroup();	
+		return text;
+    }
+    public static String getUpdateDownloadUrl() {
+		settings.beginGroup("Upgrade");
+		String text = (String)settings.value("downloadUrl", "http://puma.cis.ibaraki.ac.jp/products/neighbornote/download.html");
 		settings.endGroup();	
 		return text;
     }

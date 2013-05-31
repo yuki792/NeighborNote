@@ -268,7 +268,7 @@ public class FileManager {
         return translateDirPath + toPlatformPathSeparator(relativePath);
     }
 
-    private static String toPlatformPathSeparator(String relativePath) {
+    public static String toPlatformPathSeparator(String relativePath) {
     	// Sometimes a space in the file name comes across as a %20.  This is to put it back as a space.
     	relativePath = relativePath.replace("%20", " ");
     	return ALL_PATH_SEPARATORS_REGEX.matcher(relativePath).replaceAll(
@@ -277,7 +277,7 @@ public class FileManager {
 				(File.separator.equals("\\") ? "\\\\" : File.separator));
     }
 
-    private static String slashTerminatePath(String path) {
+    public static String slashTerminatePath(String path) {
         if (!path.substring(path.length() - 1).equals(File.separator)) {
             return path + File.separator;
         }
