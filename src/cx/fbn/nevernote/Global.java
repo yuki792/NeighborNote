@@ -2322,5 +2322,15 @@ public class Global {
 		settings.endGroup();
 		return value;
 	}
+	
+	// タグを排除してプレーンテキストを抽出
+	public static String extractPlainText(String sourceText) {
+		String plainText = sourceText.replaceAll("<.+?>", "");
+		plainText = plainText.replaceAll("\\s{2,}", " ");
+		String kaigyo = System.getProperty("line.separator");
+		plainText = plainText.replaceAll(kaigyo, "");
+		
+		return plainText;
+	}
 }
 

@@ -48,7 +48,7 @@ public class RensoNoteListItem extends QWidget{
 	private final int relationPoints;
 	private final String noteCreated;
 	private final String tagNames;
-	private String noteContent;
+	private final String noteContent;
 	private final RensoNoteList parent;
 	private final boolean isStared;
 	private final int allPointSum;
@@ -81,12 +81,7 @@ public class RensoNoteListItem extends QWidget{
 		this.tagNames = new String(sb);
 		
 		// this.noteContent = new String(note.getContent());
-		this.noteContent = conn.getNoteTable().getNoteContentNoUTFConversion(note.getGuid());
-		this.noteContent = this.noteContent.replaceAll("<.+?>", "");
-		this.noteContent = this.noteContent.replaceAll("\\s{2,}", " ");
-		String kaigyo = System.getProperty("line.separator");
-		this.noteContent = this.noteContent.replaceAll(kaigyo, "");
-		
+		this.noteContent = Global.extractPlainText(conn.getNoteTable().getNoteContentNoUTFConversion(note.getGuid()));
 		palette = new QPalette();
 		palette.setColor(QPalette.ColorRole.Window, new QColor(255, 255, 255));
 		this.setPalette(palette);

@@ -111,13 +111,13 @@ public class NoteTable {
 				+"contentHash, contentLength, created, updated, deleted, active, notebookGuid, "
 				+"attributeSubjectDate, attributeLatitude, attributeLongitude, attributeAltitude, "
 				+"attributeAuthor, attributeSource, attributeSourceUrl, attributeSourceApplication, "
-				+"indexNeeded, isExpunged, isDirty, titlecolor, thumbnailneeded" 
+				+"indexNeeded, isExpunged, isDirty, titlecolor, thumbnailneeded, contentText" 
 				+") Values("
 				+":guid, :updateSequenceNumber, :title, :content, "
 				+":contentHash, :contentLength, :created, :updated, :deleted, :active, :notebookGuid, "
 				+":attributeSubjectDate, :attributeLatitude, :attributeLongitude, :attributeAltitude, "
 				+":attributeAuthor, :attributeSource, :attributeSourceUrl, :attributeSourceApplication, "
-				+":indexNeeded, :isExpunged, :isDirty, -1, true) ");
+				+":indexNeeded, :isExpunged, :isDirty, -1, true, :contentText) ");
 
 		StringBuilder created = new StringBuilder(simple.format(n.getCreated()));			
 		StringBuilder updated = new StringBuilder(simple.format(n.getUpdated()));			
@@ -130,10 +130,18 @@ public class NoteTable {
 		query.bindValue(":title", n.getTitle());
 		if (isDirty) {
 			EnmlConverter enml = new EnmlConverter(logger);
+			String contentText = Global.extractPlainText(enml.fixEnXMLCrap(enml.fixEnMediaCrap(n.getContent())));
+
 			query.bindValue(":content", enml.fixEnXMLCrap(enml.fixEnMediaCrap(n.getContent())));
+			query.bindValue(":contentText", contentText);
 		}
-		else
+		else {
+			String contentText = Global.extractPlainText(n.getContent());
+			
 			query.bindValue(":content", n.getContent());
+			query.bindValue(":contentText", contentText);
+			
+		}
 		query.bindValue(":contentHash", n.getContentHash());
 		query.bindValue(":contentLength", n.getContentLength());
 		query.bindValue(":created", created.toString());
@@ -567,7 +575,7 @@ public class NoteTable {
 	public void updateNoteContent(String guid, String content) {
 		logger.log(logger.HIGH, "Entering NoteTable.updateNoteContent");
 		NSqlQuery query = new NSqlQuery(db.getConnection());
-		boolean check = query.prepare("Update Note set content=:content, updated=CURRENT_TIMESTAMP(), isDirty=true, indexNeeded=true, " +
+		boolean check = query.prepare("Update Note set content=:content, contentText=:contentText, updated=CURRENT_TIMESTAMP(), isDirty=true, indexNeeded=true, " +
 				" thumbnailneeded=true where guid=:guid");
 		if (!check) {
 			logger.log(logger.EXTREME, "Update note content sql prepare has failed.");
@@ -578,6 +586,7 @@ public class NoteTable {
 //		codec = QTextCodec.codecForName("UTF-8");
 //		query.bindValue(":content", codec.fromUnicode(content).toString());
 		query.bindValue(":content", content);
+		query.bindValue(":contentText", Global.extractPlainText(content));
 		query.bindValue(":guid", guid);
 
 		check = query.exec();
@@ -1594,8 +1603,9 @@ public class NoteTable {
 				                 newSegment +
 				                 n.getContent().substring(endPos);
 				NSqlQuery query = new NSqlQuery(db.getConnection());
-				query.prepare("update note set isdirty=true, thumbnailneeded=true, content=:content where guid=:guid");
+				query.prepare("update note set isdirty=true, thumbnailneeded=true, content=:content, contentText=:contentText where guid=:guid");
 				query.bindValue(":content", content);
+				query.bindValue(":contentText", Global.extractPlainText(content));
 				query.bindValue(":guid", n.getGuid());
 				query.exec();
 			}

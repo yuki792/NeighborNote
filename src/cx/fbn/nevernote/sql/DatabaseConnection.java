@@ -290,6 +290,24 @@ public class DatabaseConnection {
 			executeSql("alter table note add column attributeContentClass VarChar");
 			executeSql("update note set attributeContentClass = ''");
 		}
+		
+		// Apache Luceneを使った日本語検索のためのプレーンテキストノートコンテンツカラムを準備
+		if (!dbTableColumnExists("NOTE", "CONTENTTEXT")) {
+			executeSql("alter table note add column contentText VarChar");
+			executeSql("update note set contentText = ''");
+			NSqlQuery query = new NSqlQuery(conn);
+			query.exec("Select guid, content from Note where contentText = ''");
+			while (query.next()) {
+				String guid = query.valueString(0);
+				String content = query.valueString(1);
+				String contentText = Global.extractPlainText(content);
+				NSqlQuery query2 = new NSqlQuery(conn);
+				query2.prepare("update note set contentText=:contentText where guid=:guid");
+				query2.bindValue(":contentText", contentText);
+				query2.bindValue(":guid", guid);
+				query2.exec();
+			}
+		}
 	}
 	
 	public void executeSql(String sql) {
