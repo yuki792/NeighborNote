@@ -380,6 +380,7 @@ public class REnSearch {
 	private void parseTerms(List<String> words) {
 		for (int i=0; i<words.size(); i++) {
 			String word = words.get(i);
+			System.out.println("word = " + word);
 			int pos = word.indexOf(":");
 			if (word.startsWith("any:")) {
 				any = true;
@@ -702,28 +703,33 @@ public class REnSearch {
 		}
 
 		NSqlQuery insertQuery = new NSqlQuery(conn.getConnection());
-		NSqlQuery indexQuery = new NSqlQuery(conn.getIndexConnection());
+//		NSqlQuery indexQuery = new NSqlQuery(conn.getIndexConnection());
 		NSqlQuery mergeQuery = new NSqlQuery(conn.getConnection());
 		NSqlQuery deleteQuery = new NSqlQuery(conn.getConnection());
+		NSqlQuery ftlQuery = new NSqlQuery(conn.getConnection());
+		ftlQuery.prepare("SELECT N.GUID AS GUID FROM FTL_SEARCH_DATA(:text, 0, 0) FT, NOTE N WHERE FT.TABLE='NOTE' AND N.GUID=FT.KEYS[0]");
 		
 		insertQuery.prepare("Insert into SEARCH_RESULTS (guid) values (:guid)");
 		mergeQuery.prepare("Insert into SEARCH_RESULTS_MERGE (guid) values (:guid)");
 		
 		if (subSelect) {
 			for (int i=0; i<getWords().size(); i++) {
-				if (getWords().get(i).indexOf("*") == -1) {
-					indexQuery.prepare("Select distinct guid from words where weight >= " +minimumRecognitionWeight +
-							" and word=:word");
-					indexQuery.bindValue(":word", getWords().get(i));
-				} else {
-					indexQuery.prepare("Select distinct guid from words where weight >= " +minimumRecognitionWeight +
-						" and word like :word");
-					indexQuery.bindValue(":word", getWords().get(i).replace("*", "%"));
-				}
-				indexQuery.exec();
+//				if (getWords().get(i).indexOf("*") == -1) {
+//					indexQuery.prepare("Select distinct guid from words where weight >= " +minimumRecognitionWeight +
+//							" and word=:word");
+//					indexQuery.bindValue(":word", getWords().get(i));
+//				} else {
+//					indexQuery.prepare("Select distinct guid from words where weight >= " +minimumRecognitionWeight +
+//						" and word like :word");
+//					indexQuery.bindValue(":word", getWords().get(i).replace("*", "%"));
+//				}
+				
+				ftlQuery.bindValue(":text", getWords().get(i));
+				ftlQuery.exec();
+				
 				String guid = null;
-				while(indexQuery.next()) {
-					guid = indexQuery.valueString(0);
+				while(ftlQuery.next()) {
+					guid = ftlQuery.valueString(0);
 					if (i==0 || any) {
 						insertQuery.bindValue(":guid", guid);
 						insertQuery.exec();

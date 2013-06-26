@@ -86,8 +86,9 @@ public class XMLInsertHilight {
 	}
 	
 	// We found a text node, so we need to search for things to hilight
-	private void scanWords(QDomNode node) {
+	private void scanWords(QDomNode node) { 
 		String value = node.nodeValue();
+		
 		QDomDocumentFragment fragment = doc.createDocumentFragment();
 		boolean matchFound = false;
 		int previousPosition = 0;
@@ -151,9 +152,9 @@ public class XMLInsertHilight {
 			String term = terms.get(i);
 			if (term.indexOf("*") > -1) {
 				term = term.replace("*", "");
-			} else {
+			}/* else {
 				term = "\\b"+term+"\\b";
-			}
+			}*/
 			regex.append(term);
 			if (i<terms.size()-1)
 				regex.append("|"); 

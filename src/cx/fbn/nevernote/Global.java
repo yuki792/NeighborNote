@@ -2325,10 +2325,12 @@ public class Global {
 	
 	// タグを排除してプレーンテキストを抽出
 	public static String extractPlainText(String sourceText) {
-		String plainText = sourceText.replaceAll("<.+?>", "");
-		plainText = plainText.replaceAll("\\s{2,}", " ");
+		String plainText = sourceText.replaceAll("<.+?>", "");	// タグを除去
+		plainText = plainText.replaceAll("\\s{2,}", " ");		// 2個以上の空白文字を1文字の空白に変換
 		String kaigyo = System.getProperty("line.separator");
-		plainText = plainText.replaceAll(kaigyo, "");
+		plainText = plainText.replaceAll(kaigyo, "");			// 改行を除去
+		plainText = plainText.replaceAll("&lt;.+?&gt;", "");	// &lt;で始まり&gt;で終わる文字列を除去
+		plainText = plainText.replaceAll("&.+?;", "");			// HTML特殊文字を除去
 		
 		return plainText;
 	}

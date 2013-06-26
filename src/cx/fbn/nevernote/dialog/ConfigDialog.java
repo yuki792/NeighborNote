@@ -44,6 +44,8 @@ import com.trolltech.qt.gui.QVBoxLayout;
 import com.trolltech.qt.gui.QWidget;
 
 import cx.fbn.nevernote.Global;
+import cx.fbn.nevernote.sql.DatabaseConnection;
+import cx.fbn.nevernote.sql.driver.NSqlQuery;
 public class ConfigDialog extends QDialog {
 	private final QListWidget 				contentsWidget;
 	private final ConfigFontPage			fontPage;
@@ -55,10 +57,12 @@ public class ConfigDialog extends QDialog {
 	private final ConfigIndexPage			indexPage;
 	// ICHANGED
 	private final ConfigRensoNoteListPage		rensoNoteListPage;
+	private final DatabaseConnection conn;
 	
     private final String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
 	
-	public ConfigDialog(QWidget parent) {
+	public ConfigDialog(QWidget parent, DatabaseConnection conn) {
+		this.conn = conn;
 		
 		contentsWidget = new QListWidget(this);
 		setWindowIcon(new QIcon(iconPath+"config.png"));
@@ -237,6 +241,29 @@ public class ConfigDialog extends QDialog {
 		Global.setDuplicateRensoNote(rensoNoteListPage.getDuplicateChecked());
 		Global.setVerifyExclude(rensoNoteListPage.getVerifyExcludeChecked());
 		Global.setRensoListItemMaximum(rensoNoteListPage.getRensoListItemMaximum());
+		
+		// 全文検索の対象項目を再設定
+		NSqlQuery query = new NSqlQuery(conn.getConnection());
+		query.exec("CALL FTL_DROP_ALL();");	// カラム単位で削除できないので一度全部消して、再構築
+		
+		StringBuilder noteTableTarget = new StringBuilder();
+		if (Global.indexNoteBody()) {
+			noteTableTarget.append("CONTENTTEXT");
+		}
+		if (Global.indexNoteTitle()) {
+			if (noteTableTarget.length() > 0) {
+				noteTableTarget.append(", ");
+			}
+			noteTableTarget.append("TITLE");
+		}
+		
+		// TODO 他の項目もあとで追加
+		
+		if (noteTableTarget.length() > 0) {
+			query.prepare("CALL FTL_CREATE_INDEX('PUBLIC', 'NOTE', :column);");
+			query.bindValue(":column", noteTableTarget.toString());
+			query.exec();
+		}
 		
 		close();
 	}

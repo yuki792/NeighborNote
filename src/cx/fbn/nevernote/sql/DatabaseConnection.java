@@ -307,6 +307,16 @@ public class DatabaseConnection {
 				query2.bindValue(":guid", guid);
 				query2.exec();
 			}
+			
+			// 全文検索のための準備
+			query.exec("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLucene.init\"");
+			query.exec("CALL FTL_INIT()");
+			if (Global.indexNoteBody()) {
+				query.exec("CALL FTL_CREATE_INDEX('PUBLIC', 'NOTE', 'CONTENTTEXT');");
+			}
+			if (Global.indexNoteTitle()) {
+				query.exec("CALL FTL_CREATE_INDEX('PUBLIC', 'NOTE', 'TITLE');");
+			}
 		}
 	}
 	

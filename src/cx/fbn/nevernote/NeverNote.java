@@ -1452,7 +1452,7 @@ public class NeverNote extends QMainWindow{
 		saveNoteColumnPositions();
 		saveNoteIndexWidth();
 		showColumns();
-        ConfigDialog settings = new ConfigDialog(this);
+        ConfigDialog settings = new ConfigDialog(this, conn);
         String dateFormat = Global.getDateFormat();
         String timeFormat = Global.getTimeFormat();
         
