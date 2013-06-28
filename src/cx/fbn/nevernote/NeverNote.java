@@ -47,7 +47,6 @@ import java.util.Vector;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.thrift.TException;
 import org.h2.tools.ChangeFileEncryption;
 
 import com.evernote.edam.error.EDAMNotFoundException;
@@ -66,6 +65,7 @@ import com.evernote.edam.type.Resource;
 import com.evernote.edam.type.SavedSearch;
 import com.evernote.edam.type.Tag;
 import com.evernote.edam.type.User;
+import com.evernote.thrift.TException;
 import com.trolltech.qt.QThread;
 import com.trolltech.qt.core.QByteArray;
 import com.trolltech.qt.core.QDateTime;
@@ -208,6 +208,7 @@ import cx.fbn.nevernote.xml.ExportData;
 import cx.fbn.nevernote.xml.ImportData;
 import cx.fbn.nevernote.xml.ImportEnex;
 import cx.fbn.nevernote.xml.NoteFormatter;
+//import org.apache.thrift.TException;
 
 
 public class NeverNote extends QMainWindow{
