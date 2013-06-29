@@ -26,7 +26,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.evernote.edam.error.EDAMNotFoundException;
+import com.evernote.edam.error.EDAMSystemException;
+import com.evernote.edam.error.EDAMUserException;
+import com.evernote.edam.limits.Constants;
+import com.evernote.edam.notestore.RelatedQuery;
+import com.evernote.edam.notestore.RelatedResult;
+import com.evernote.edam.notestore.RelatedResultSpec;
 import com.evernote.edam.type.Note;
+import com.evernote.thrift.TException;
 import com.trolltech.qt.core.QSize;
 import com.trolltech.qt.core.Qt.MouseButton;
 import com.trolltech.qt.gui.QAction;
@@ -39,6 +47,7 @@ import com.trolltech.qt.gui.QMenu;
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.NeverNote;
 import cx.fbn.nevernote.sql.DatabaseConnection;
+import cx.fbn.nevernote.threads.SyncRunner;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
 public class RensoNoteList extends QListWidget {
@@ -54,15 +63,17 @@ public class RensoNoteList extends QListWidget {
 	private final QAction excludeNoteAction;
 	private final NeverNote parent;
 	private final QMenu menu;
+	private final SyncRunner syncRunner;
 	private int allPointSum;
 
-	public RensoNoteList(DatabaseConnection c, NeverNote p) {
+	public RensoNoteList(DatabaseConnection c, NeverNote p, SyncRunner syncRunner) {
 		logger = new ApplicationLogger("rensoNoteList.log");
 		logger.log(logger.HIGH, "Setting up rensoNoteList");
 		allPointSum = 0;
 
-		conn = c;
+		this.conn = c;
 		this.parent = p;
+		this.syncRunner = syncRunner;
 		rensoNoteListItems = new HashMap<QListWidgetItem, String>();
 		rensoNoteListTrueItems = new ArrayList<RensoNoteListItem>();
 		
@@ -140,6 +151,23 @@ public class RensoNoteList extends QListWidget {
 		addWeight(sameNotebookHistory, Global.getSameNotebookWeight());
 		mergedHistory = mergeHistory(sameNotebookHistory, mergedHistory);
 		
+		// Evernoteの関連ノートを取得
+		RelatedResult result = getENRelatedNotes(guid);
+		List<Note> relatedNotes = new ArrayList<Note>();
+		if (result != null) {
+			relatedNotes = result.getNotes();
+		}
+		if (relatedNotes != null && !relatedNotes.isEmpty()) {
+			HashMap<String, Integer> ENRelatedNotes = new HashMap<String, Integer>();
+			
+			for (Note relatedNote : relatedNotes) {
+				String relatedGuid = relatedNote.getGuid();
+				ENRelatedNotes.put(relatedGuid, 1);
+			}
+			addWeight(ENRelatedNotes, 10);
+			mergedHistory = mergeHistory(ENRelatedNotes, mergedHistory);
+		}
+		
 		// すべての関連ポイントの合計を取得（関連度のパーセント算出に利用）
 		allPointSum = 0;
 		for (int p : mergedHistory.values()) {
@@ -151,6 +179,32 @@ public class RensoNoteList extends QListWidget {
 		logger.log(logger.HIGH, "Leaving RensoNoteList.refreshRensoNoteList");
 	}
 	
+	private RelatedResult getENRelatedNotes(String guid) {
+		RelatedQuery rquery = new RelatedQuery();
+		rquery.setNoteGuid(guid);
+		RelatedResultSpec resultSpec = new RelatedResultSpec();
+		resultSpec.setMaxNotes(Constants.EDAM_RELATED_MAX_NOTES);
+		if (syncRunner != null && syncRunner.localNoteStore != null) {
+			try {
+				RelatedResult result = syncRunner.localNoteStore.findRelated(syncRunner.authToken, rquery, resultSpec);
+				return result;
+			} catch (EDAMUserException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			} catch (EDAMSystemException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			} catch (EDAMNotFoundException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			} catch (TException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			}
+		}
+		return null;
+	}
+
 	// 操作回数に重み付けする
 	private void addWeight(HashMap<String, Integer> history, int weight){
 		Set<String> keySet = history.keySet();

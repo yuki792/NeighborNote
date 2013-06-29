@@ -626,7 +626,7 @@ public class NeverNote extends QMainWindow{
         
 		// ICHANGED
 		// 連想ノートリストをセットアップ
-		rensoNoteList = new RensoNoteList(conn, this);
+		rensoNoteList = new RensoNoteList(conn, this, syncRunner);
 		rensoNoteList.itemPressed.connect(this,
 				"rensoNoteItemPressed(QListWidgetItem)");
 		rensoNoteListDock = new QDockWidget(tr("Renso Note List"), this);
