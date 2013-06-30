@@ -26,15 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import com.evernote.edam.error.EDAMNotFoundException;
-import com.evernote.edam.error.EDAMSystemException;
-import com.evernote.edam.error.EDAMUserException;
-import com.evernote.edam.limits.Constants;
-import com.evernote.edam.notestore.RelatedQuery;
-import com.evernote.edam.notestore.RelatedResult;
-import com.evernote.edam.notestore.RelatedResultSpec;
 import com.evernote.edam.type.Note;
-import com.evernote.thrift.TException;
+import com.trolltech.qt.QThread;
 import com.trolltech.qt.core.QSize;
 import com.trolltech.qt.core.Qt.MouseButton;
 import com.trolltech.qt.gui.QAction;
@@ -47,6 +40,7 @@ import com.trolltech.qt.gui.QMenu;
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.NeverNote;
 import cx.fbn.nevernote.sql.DatabaseConnection;
+import cx.fbn.nevernote.threads.ENRelatedNotesRunner;
 import cx.fbn.nevernote.threads.SyncRunner;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
@@ -56,7 +50,6 @@ public class RensoNoteList extends QListWidget {
 	private final HashMap<QListWidgetItem, String> rensoNoteListItems;
 	private final List<RensoNoteListItem> rensoNoteListTrueItems;
 	private String rensoNotePressedItemGuid;
-	
 	private final QAction openNewTabAction;
 	private final QAction starAction;
 	private final QAction unstarAction;
@@ -64,6 +57,8 @@ public class RensoNoteList extends QListWidget {
 	private final NeverNote parent;
 	private final QMenu menu;
 	private final SyncRunner syncRunner;
+	private final ENRelatedNotesRunner ENRelatedNotesRunner;
+	private final QThread ENRelatedNotesThread;
 	private int allPointSum;
 
 	public RensoNoteList(DatabaseConnection c, NeverNote p, SyncRunner syncRunner) {
@@ -74,6 +69,12 @@ public class RensoNoteList extends QListWidget {
 		this.conn = c;
 		this.parent = p;
 		this.syncRunner = syncRunner;
+		
+		this.ENRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner);
+		this.ENRelatedNotesRunner.ENRelatedNotesSignal.getENRelatedNotesFinished.connect(this, "ENRelatedNotesComplete()");
+		this.ENRelatedNotesThread = new QThread(ENRelatedNotesRunner, "ENRelatedNotes Thread");
+		this.ENRelatedNotesThread.start();
+		
 		rensoNoteListItems = new HashMap<QListWidgetItem, String>();
 		rensoNoteListTrueItems = new ArrayList<RensoNoteListItem>();
 		
@@ -121,6 +122,27 @@ public class RensoNoteList extends QListWidget {
 
 		HashMap<String, Integer> mergedHistory = new HashMap<String, Integer>();
 		
+		// Evernoteの関連ノートを別スレッドで取得
+		ENRelatedNotesRunner.addGuid(guid);
+//		ENRelatedNotesRunner.setGuid(guid);
+//		ENRelatedNotesThread.finished.connect(this, "ENRelatedNotesComplete()");
+		
+//		RelatedResult result = getENRelatedNotes(guid);
+//		List<Note> relatedNotes = new ArrayList<Note>();
+//		if (result != null) {
+//			relatedNotes = result.getNotes();
+//		}
+//		if (relatedNotes != null && !relatedNotes.isEmpty()) {
+//			HashMap<String, Integer> ENRelatedNotes = new HashMap<String, Integer>();
+//			
+//			for (Note relatedNote : relatedNotes) {
+//				String relatedGuid = relatedNote.getGuid();
+//				ENRelatedNotes.put(relatedGuid, 1);
+//			}
+//			addWeight(ENRelatedNotes, 10);
+//			mergedHistory = mergeHistory(ENRelatedNotes, mergedHistory);
+//		}
+		
 		// browseHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> browseHistory = conn.getHistoryTable().getBehaviorHistory("browse", guid);
 		addWeight(browseHistory, Global.getBrowseWeight());
@@ -151,23 +173,6 @@ public class RensoNoteList extends QListWidget {
 		addWeight(sameNotebookHistory, Global.getSameNotebookWeight());
 		mergedHistory = mergeHistory(sameNotebookHistory, mergedHistory);
 		
-		// Evernoteの関連ノートを取得
-		RelatedResult result = getENRelatedNotes(guid);
-		List<Note> relatedNotes = new ArrayList<Note>();
-		if (result != null) {
-			relatedNotes = result.getNotes();
-		}
-		if (relatedNotes != null && !relatedNotes.isEmpty()) {
-			HashMap<String, Integer> ENRelatedNotes = new HashMap<String, Integer>();
-			
-			for (Note relatedNote : relatedNotes) {
-				String relatedGuid = relatedNote.getGuid();
-				ENRelatedNotes.put(relatedGuid, 1);
-			}
-			addWeight(ENRelatedNotes, 10);
-			mergedHistory = mergeHistory(ENRelatedNotes, mergedHistory);
-		}
-		
 		// すべての関連ポイントの合計を取得（関連度のパーセント算出に利用）
 		allPointSum = 0;
 		for (int p : mergedHistory.values()) {
@@ -179,31 +184,31 @@ public class RensoNoteList extends QListWidget {
 		logger.log(logger.HIGH, "Leaving RensoNoteList.refreshRensoNoteList");
 	}
 	
-	private RelatedResult getENRelatedNotes(String guid) {
-		RelatedQuery rquery = new RelatedQuery();
-		rquery.setNoteGuid(guid);
-		RelatedResultSpec resultSpec = new RelatedResultSpec();
-		resultSpec.setMaxNotes(Constants.EDAM_RELATED_MAX_NOTES);
-		if (syncRunner != null && syncRunner.localNoteStore != null) {
-			try {
-				RelatedResult result = syncRunner.localNoteStore.findRelated(syncRunner.authToken, rquery, resultSpec);
-				return result;
-			} catch (EDAMUserException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
-			} catch (EDAMSystemException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
-			} catch (EDAMNotFoundException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
-			} catch (TException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
-			}
-		}
-		return null;
-	}
+//	private RelatedResult getENRelatedNotes(String guid) {
+//		RelatedQuery rquery = new RelatedQuery();
+//		rquery.setNoteGuid(guid);
+//		RelatedResultSpec resultSpec = new RelatedResultSpec();
+//		resultSpec.setMaxNotes(Constants.EDAM_RELATED_MAX_NOTES);
+//		if (syncRunner != null && syncRunner.localNoteStore != null) {
+//			try {
+//				RelatedResult result = syncRunner.localNoteStore.findRelated(syncRunner.authToken, rquery, resultSpec);
+//				return result;
+//			} catch (EDAMUserException e) {
+//				// TODO 自動生成された catch ブロック
+//				e.printStackTrace();
+//			} catch (EDAMSystemException e) {
+//				// TODO 自動生成された catch ブロック
+//				e.printStackTrace();
+//			} catch (EDAMNotFoundException e) {
+//				// TODO 自動生成された catch ブロック
+//				e.printStackTrace();
+//			} catch (TException e) {
+//				// TODO 自動生成された catch ブロック
+//				e.printStackTrace();
+//			}
+//		}
+//		return null;
+//	}
 
 	// 操作回数に重み付けする
 	private void addWeight(HashMap<String, Integer> history, int weight){
@@ -364,5 +369,19 @@ public class RensoNoteList extends QListWidget {
 		if (QApplication.mouseButtons().isSet(MouseButton.RightButton)) {
 			rensoNotePressedItemGuid = getNoteGuid(current);
 		}
+	}
+	
+	// Evernoteの関連ノートの取得が完了
+	@SuppressWarnings("unused")
+	private void ENRelatedNotesComplete() {
+//		List<String> relatedNoteGuids = ENRelatedNotesRunner.getRelatedGuids();
+		List<String> relatedNoteGuids = ENRelatedNotesRunner.getENRelatedNoteGuids();
+		System.out.println(relatedNoteGuids);
+	}
+	
+	// Evernoteの関連ノート取得スレッドを終了させる
+	public void stopThread() {
+		ENRelatedNotesRunner.setKeepRunning(false);
+		// TODO keepRunningをfalseにしても、guidQueueが次のキューが来るまで待機するので終了できない。guidQueueに終了命令を処理できる仕組みを要追加。
 	}
 }

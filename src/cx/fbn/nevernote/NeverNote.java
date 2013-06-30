@@ -1251,6 +1251,9 @@ public class NeverNote extends QMainWindow{
 		saveNote();
 		listManager.stop();
 		saveWindowState();
+		
+		// 連想ノートリストのEvernote関連ノート取得スレッドを終了
+		rensoNoteList.stopThread();
 
 		if (tempFiles != null)
 			tempFiles.clear();
