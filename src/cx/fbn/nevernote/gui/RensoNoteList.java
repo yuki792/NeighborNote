@@ -43,6 +43,7 @@ import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.threads.ENRelatedNotesRunner;
 import cx.fbn.nevernote.threads.SyncRunner;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
+import cx.fbn.nevernote.utilities.Pair;
 
 public class RensoNoteList extends QListWidget {
 	private final DatabaseConnection conn;
@@ -56,9 +57,12 @@ public class RensoNoteList extends QListWidget {
 	private final QAction excludeNoteAction;
 	private final NeverNote parent;
 	private final QMenu menu;
+	private HashMap<String, Integer> mergedHistory;				// マージされた操作履歴
 	private final SyncRunner syncRunner;
-	private final ENRelatedNotesRunner ENRelatedNotesRunner;
-	private final QThread ENRelatedNotesThread;
+	private final ENRelatedNotesRunner enRelatedNotesRunner;
+	private final QThread enRelatedNotesThread;
+	private final HashMap<String, List<String>> enRelatedNotesCache;	// Evernote関連ノートのキャッシュ<guid, 関連ノートリスト>
+	private String guid;
 	private int allPointSum;
 
 	public RensoNoteList(DatabaseConnection c, NeverNote p, SyncRunner syncRunner) {
@@ -70,10 +74,13 @@ public class RensoNoteList extends QListWidget {
 		this.parent = p;
 		this.syncRunner = syncRunner;
 		
-		this.ENRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner);
-		this.ENRelatedNotesRunner.ENRelatedNotesSignal.getENRelatedNotesFinished.connect(this, "ENRelatedNotesComplete()");
-		this.ENRelatedNotesThread = new QThread(ENRelatedNotesRunner, "ENRelatedNotes Thread");
-		this.ENRelatedNotesThread.start();
+		this.guid = new String();
+		mergedHistory = new HashMap<String, Integer>();
+		enRelatedNotesCache = new HashMap<String, List<String>>();
+		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner);
+		this.enRelatedNotesRunner.enRelatedNotesSignal.getENRelatedNotesFinished.connect(this, "enRelatedNotesComplete()");
+		this.enRelatedNotesThread = new QThread(enRelatedNotesRunner, "ENRelatedNotes Thread");
+		this.enRelatedNotesThread.start();
 		
 		rensoNoteListItems = new HashMap<QListWidgetItem, String>();
 		rensoNoteListTrueItems = new ArrayList<RensoNoteListItem>();
@@ -106,12 +113,14 @@ public class RensoNoteList extends QListWidget {
 		logger.log(logger.HIGH, "rensoNoteList setup complete");
 	}
 
+	// 連想ノートリストをリフレッシュ
 	public void refreshRensoNoteList(String guid) {
 		logger.log(logger.HIGH, "Entering RensoNoteList.refreshRensoNoteList");
 
 		this.clear();
 		rensoNoteListItems.clear();
 		rensoNoteListTrueItems.clear();
+		mergedHistory = new HashMap<String, Integer>();
 
 		if (!this.isEnabled()) {
 			return;
@@ -119,34 +128,31 @@ public class RensoNoteList extends QListWidget {
 		if (guid == null || guid.equals("")) {
 			return;
 		}
+		
+		this.guid = guid;
+		// すでにEvernote関連ノートがキャッシュされているか確認
+		boolean isCached;
+		isCached = enRelatedNotesCache.containsKey(guid);
+		if (!isCached) {	// キャッシュ無し
+			// Evernoteの関連ノートを別スレッドで取得させる
+			enRelatedNotesRunner.addGuid(guid);
+		} else {			// キャッシュ有り
+			List<String> relatedNoteGuids = enRelatedNotesCache.get(guid);
+			addENRelatedNotes(relatedNoteGuids);
+		}
+		
+		calculateHistory(guid);
+		repaintRensoNoteList(false);
 
-		HashMap<String, Integer> mergedHistory = new HashMap<String, Integer>();
-		
-		// Evernoteの関連ノートを別スレッドで取得
-		ENRelatedNotesRunner.addGuid(guid);
-//		ENRelatedNotesRunner.setGuid(guid);
-//		ENRelatedNotesThread.finished.connect(this, "ENRelatedNotesComplete()");
-		
-//		RelatedResult result = getENRelatedNotes(guid);
-//		List<Note> relatedNotes = new ArrayList<Note>();
-//		if (result != null) {
-//			relatedNotes = result.getNotes();
-//		}
-//		if (relatedNotes != null && !relatedNotes.isEmpty()) {
-//			HashMap<String, Integer> ENRelatedNotes = new HashMap<String, Integer>();
-//			
-//			for (Note relatedNote : relatedNotes) {
-//				String relatedGuid = relatedNote.getGuid();
-//				ENRelatedNotes.put(relatedGuid, 1);
-//			}
-//			addWeight(ENRelatedNotes, 10);
-//			mergedHistory = mergeHistory(ENRelatedNotes, mergedHistory);
-//		}
-		
+		logger.log(logger.HIGH, "Leaving RensoNoteList.refreshRensoNoteList");
+	}
+	
+	// 操作履歴をデータベースから取得してノートごとの関連度を算出、その後mergedHistoryに追加
+	private void calculateHistory(String guid) {
 		// browseHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> browseHistory = conn.getHistoryTable().getBehaviorHistory("browse", guid);
 		addWeight(browseHistory, Global.getBrowseWeight());
-		mergedHistory = mergeHistory(browseHistory, new HashMap<String, Integer>());
+		mergedHistory = mergeHistory(browseHistory, mergedHistory);
 		
 		// copy&pasteHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> copyAndPasteHistory = conn.getHistoryTable().getBehaviorHistory("copy & paste", guid);
@@ -172,44 +178,8 @@ public class RensoNoteList extends QListWidget {
 		HashMap<String, Integer> sameNotebookHistory = conn.getHistoryTable().getBehaviorHistory("sameNotebook", guid);
 		addWeight(sameNotebookHistory, Global.getSameNotebookWeight());
 		mergedHistory = mergeHistory(sameNotebookHistory, mergedHistory);
-		
-		// すべての関連ポイントの合計を取得（関連度のパーセント算出に利用）
-		allPointSum = 0;
-		for (int p : mergedHistory.values()) {
-			allPointSum += p;
-		}
-		
-		addRensoNoteList(mergedHistory);
-
-		logger.log(logger.HIGH, "Leaving RensoNoteList.refreshRensoNoteList");
 	}
 	
-//	private RelatedResult getENRelatedNotes(String guid) {
-//		RelatedQuery rquery = new RelatedQuery();
-//		rquery.setNoteGuid(guid);
-//		RelatedResultSpec resultSpec = new RelatedResultSpec();
-//		resultSpec.setMaxNotes(Constants.EDAM_RELATED_MAX_NOTES);
-//		if (syncRunner != null && syncRunner.localNoteStore != null) {
-//			try {
-//				RelatedResult result = syncRunner.localNoteStore.findRelated(syncRunner.authToken, rquery, resultSpec);
-//				return result;
-//			} catch (EDAMUserException e) {
-//				// TODO 自動生成された catch ブロック
-//				e.printStackTrace();
-//			} catch (EDAMSystemException e) {
-//				// TODO 自動生成された catch ブロック
-//				e.printStackTrace();
-//			} catch (EDAMNotFoundException e) {
-//				// TODO 自動生成された catch ブロック
-//				e.printStackTrace();
-//			} catch (TException e) {
-//				// TODO 自動生成された catch ブロック
-//				e.printStackTrace();
-//			}
-//		}
-//		return null;
-//	}
-
 	// 操作回数に重み付けする
 	private void addWeight(HashMap<String, Integer> history, int weight){
 		Set<String> keySet = history.keySet();
@@ -218,6 +188,27 @@ public class RensoNoteList extends QListWidget {
 			String key = hist_iterator.next();
 			history.put(key, history.get(key) * weight);
 		}
+	}
+	
+	// 連想ノートリストを再描画
+	private void repaintRensoNoteList(boolean needClear) {
+		if (needClear) {
+			this.clear();
+			rensoNoteListItems.clear();
+			rensoNoteListTrueItems.clear();
+		}
+		
+		if (!this.isEnabled()) {
+			return;
+		}
+		
+		// すべての関連ポイントの合計を取得（関連度のパーセント算出に利用）
+		allPointSum = 0;
+		for (int p : mergedHistory.values()) {
+			allPointSum += p;
+		}
+		
+		addRensoNoteList(mergedHistory);
 	}
 	
 	// 引数1と引数2をマージしたハッシュマップを返す
@@ -240,6 +231,7 @@ public class RensoNoteList extends QListWidget {
 		return mergedHistory;
 	}
 	
+	// 連想ノートリストにハッシュマップのデータを追加
 	private void addRensoNoteList(HashMap<String, Integer> History){
 		String currentNoteGuid = new String(parent.getCurrentNoteGuid());
 		
@@ -373,15 +365,49 @@ public class RensoNoteList extends QListWidget {
 	
 	// Evernoteの関連ノートの取得が完了
 	@SuppressWarnings("unused")
-	private void ENRelatedNotesComplete() {
-//		List<String> relatedNoteGuids = ENRelatedNotesRunner.getRelatedGuids();
-		List<String> relatedNoteGuids = ENRelatedNotesRunner.getENRelatedNoteGuids();
-		System.out.println(relatedNoteGuids);
+	private void enRelatedNotesComplete() {
+		Pair<String, List<String>> enRelatedNoteGuidPair = enRelatedNotesRunner.getENRelatedNoteGuids();	// <元ノートguid, 関連ノートguidリスト>
+		
+		if (enRelatedNoteGuidPair == null) {
+			return;
+		}
+		
+		String sourceGuid = enRelatedNoteGuidPair.getFirst();
+		List<String> enRelatedNoteGuids = enRelatedNoteGuidPair.getSecond();
+		
+		
+		if (sourceGuid != null && !sourceGuid.equals("") && enRelatedNoteGuids != null) {	// Evernote関連ノートがnullでなければ
+			// まずキャッシュに追加
+			enRelatedNotesCache.put(sourceGuid, enRelatedNoteGuids);
+			
+			if (!enRelatedNoteGuids.isEmpty()) {	// Evernote関連ノートが存在していて
+				if (sourceGuid.equals(this.guid)) {	// 取得したデータが今開いているノートの関連ノートなら
+					// mergedHistoryにEvernote関連ノートを追加してから再描画
+					addENRelatedNotes(enRelatedNoteGuids);
+					repaintRensoNoteList(true);
+				}
+			}
+		}
+	}
+	
+	// Evernote関連ノートの関連度情報をmergedHistoryに追加
+	private void addENRelatedNotes(List<String> relatedNoteGuids) {
+		// Evernote関連ノート<guid, 関連ポイント>
+		HashMap<String, Integer> enRelatedNotes = new HashMap<String, Integer>();
+		
+		for (String relatedGuid : relatedNoteGuids) {
+			// TODO 重みをとりあえず10で固定。あとで設定できるようにする。
+			enRelatedNotes.put(relatedGuid, 10);
+		}
+		
+		mergedHistory = mergeHistory(enRelatedNotes, mergedHistory);
 	}
 	
 	// Evernoteの関連ノート取得スレッドを終了させる
-	public void stopThread() {
-		ENRelatedNotesRunner.setKeepRunning(false);
-		// TODO keepRunningをfalseにしても、guidQueueが次のキューが来るまで待機するので終了できない。guidQueueに終了命令を処理できる仕組みを要追加。
+	public boolean stopThread() {
+		if (enRelatedNotesRunner.addStop()) {
+			return true;
+		}
+		return false;
 	}
 }

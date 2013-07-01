@@ -1,3 +1,22 @@
+/*
+ * This file is part of NeighborNote
+ * Copyright 2013 Yuki Takahashi
+ * 
+ * This file may be licensed under the terms of of the
+ * GNU General Public License Version 2 (the ``GPL'').
+ *
+ * Software distributed under the License is distributed
+ * on an ``AS IS'' basis, WITHOUT WARRANTY OF ANY KIND, either
+ * express or implied. See the GPL for the specific language
+ * governing rights and limitations.
+ *
+ * You should have received a copy of the GPL along with this
+ * program. If not, go to http://www.gnu.org/licenses/gpl.html
+ * or write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+*/
+
 package cx.fbn.nevernote.threads;
 
 import java.util.ArrayList;
@@ -16,27 +35,25 @@ import com.evernote.thrift.TException;
 import com.trolltech.qt.core.QMutex;
 import com.trolltech.qt.core.QObject;
 
+import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.signals.ENRelatedNotesSignal;
+import cx.fbn.nevernote.utilities.Pair;
 
 public class ENRelatedNotesRunner extends QObject implements Runnable{
 	private final SyncRunner syncRunner;
-//	public volatile Signal0 getENRelatedNotesFinished;
-	public volatile ENRelatedNotesSignal ENRelatedNotesSignal;
-//	private List<String> relatedNoteGuids;
+	public volatile ENRelatedNotesSignal enRelatedNotesSignal;
 	public QMutex mutex;
 	private volatile boolean keepRunning;
-	private volatile LinkedBlockingQueue<String> guidQueue;
-	private volatile LinkedBlockingQueue<List<String>> resultQueue;
+	private volatile LinkedBlockingQueue<String> workQueue;
+	private volatile LinkedBlockingQueue<Pair<String, List<String>>> resultQueue;	// ペア<元ノートguid, 関連ノートguidリスト>を溜めておくキュー
 	
 	public ENRelatedNotesRunner(SyncRunner syncRunner) {
 		this.syncRunner = syncRunner;
-//		this.relatedNoteGuids = new ArrayList<String>();
-//		this.getENRelatedNotesFinished = new Signal0();
-		this.ENRelatedNotesSignal = new ENRelatedNotesSignal();
+		this.enRelatedNotesSignal = new ENRelatedNotesSignal();
 		this.mutex = new QMutex();
 		this.keepRunning = true;
-		this.guidQueue = new LinkedBlockingQueue<String>();
-		this.resultQueue = new LinkedBlockingQueue<List<String>>();
+		this.workQueue = new LinkedBlockingQueue<String>();
+		this.resultQueue = new LinkedBlockingQueue<Pair<String, List<String>>>();
 	}
 
 	@Override
@@ -45,19 +62,32 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		
 		while (keepRunning) {
 			try {
-				String guid = guidQueue.take();
-				List<String> relatedNoteGuids = new ArrayList<String>();
+				String work = workQueue.take();
 				mutex.lock();
-			
-				List<Note> relatedNotes = getENRelatedNotes(guid);
-				if (relatedNotes != null && !relatedNotes.isEmpty()) {
-					for (Note relatedNote : relatedNotes) {
-						relatedNoteGuids.add(relatedNote.getGuid());
+				if (work.startsWith("GET")) {
+					String guid = work.replace("GET ", "");
+					
+					List<Note> relatedNotes = getENRelatedNotes(guid);
+					
+					Pair<String, List<String>> resultPair = new Pair<String, List<String>>();
+					resultPair.setFirst(guid);
+					if (relatedNotes == null) {				// 取得に失敗
+					} else if (relatedNotes.isEmpty()) {	// このノートにEvernote関連ノートは存在しない
+						resultPair.setSecond(new ArrayList<String>());
+					} else {								// Evernote関連ノートが存在する
+						List<String> relatedNoteGuids = new ArrayList<String>();
+						for (Note relatedNote : relatedNotes) {
+							relatedNoteGuids.add(relatedNote.getGuid());
+						}
+						resultPair.setSecond(relatedNoteGuids);
 					}
+					
+					resultQueue.offer(resultPair);
+					enRelatedNotesSignal.getENRelatedNotesFinished.emit();
 				}
-				
-				resultQueue.offer(relatedNoteGuids);
-				ENRelatedNotesSignal.getENRelatedNotesFinished.emit();
+				if (work.startsWith("STOP")) {
+					keepRunning = false;
+				}
 				mutex.unlock();
 			} catch (InterruptedException e) {
 				// TODO 自動生成された catch ブロック
@@ -72,12 +102,17 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		
 		if (result != null) {
 			relatedNotes = result.getNotes();
+			return relatedNotes;
 		}
 		
-		return relatedNotes;
+		return null;
 	}
 	
 	private RelatedResult getENRelatedResult(String guid) {
+		if (!Global.isConnected) {
+			return null;
+		}
+		
 		RelatedQuery rquery = new RelatedQuery();
 		rquery.setNoteGuid(guid);
 		RelatedResultSpec resultSpec = new RelatedResultSpec();
@@ -112,14 +147,21 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 	}
 	
 	public synchronized boolean addGuid(String guid) {
-		if (guidQueue.offer(guid)) {
+		if (workQueue.offer("GET " + guid)) {
 			return true;
 		}
 		
 		return false;
 	}
 	
-	public synchronized List<String> getENRelatedNoteGuids() {
+	public synchronized boolean addStop() {
+		if (workQueue.offer("STOP")) {
+			return true;
+		}
+		return false;
+	}
+	
+	public synchronized Pair<String, List<String>> getENRelatedNoteGuids() {
 		try {
 			return resultQueue.take();
 		} catch (InterruptedException e) {
