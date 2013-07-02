@@ -7760,4 +7760,9 @@ public class NeverNote extends QMainWindow{
 		fromHistory.put(from,  fromHistory.get(to));
 		fromHistory.put(to, fromHist);
 	}
+	
+	// 連想ノートリストのgetter
+	public RensoNoteList getRensoNoteList() {
+		return rensoNoteList;
+	}
 }

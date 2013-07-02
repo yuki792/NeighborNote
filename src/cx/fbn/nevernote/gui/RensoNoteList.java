@@ -396,8 +396,7 @@ public class RensoNoteList extends QListWidget {
 		HashMap<String, Integer> enRelatedNotes = new HashMap<String, Integer>();
 		
 		for (String relatedGuid : relatedNoteGuids) {
-			// TODO 重みをとりあえず10で固定。あとで設定できるようにする。
-			enRelatedNotes.put(relatedGuid, 10);
+			enRelatedNotes.put(relatedGuid, Global.getENRelatedNotesWeight());
 		}
 		
 		mergedHistory = mergeHistory(enRelatedNotes, mergedHistory);
