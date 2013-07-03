@@ -28,13 +28,12 @@ package cx.fbn.nevernote.dialog;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.thrift.TException;
-
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
 import com.evernote.edam.type.Notebook;
 import com.evernote.edam.type.SharedNotebook;
+import com.evernote.thrift.TException;
 import com.trolltech.qt.core.QModelIndex;
 import com.trolltech.qt.core.Qt.ItemFlag;
 import com.trolltech.qt.core.Qt.ItemFlags;
@@ -53,6 +52,7 @@ import com.trolltech.qt.gui.QVBoxLayout;
 
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.threads.SyncRunner;
+//import org.apache.thrift.TException;
 
 public class ShareNotebook extends QDialog {
 	private final QPushButton				okButton;

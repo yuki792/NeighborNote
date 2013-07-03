@@ -45,10 +45,6 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.transport.THttpClient;
-import org.apache.thrift.transport.TTransportException;
 
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
@@ -68,6 +64,10 @@ import com.evernote.edam.type.Tag;
 import com.evernote.edam.type.User;
 import com.evernote.edam.userstore.AuthenticationResult;
 import com.evernote.edam.userstore.UserStore;
+import com.evernote.thrift.TException;
+import com.evernote.thrift.protocol.TBinaryProtocol;
+import com.evernote.thrift.transport.THttpClient;
+import com.evernote.thrift.transport.TTransportException;
 import com.trolltech.qt.core.QByteArray;
 import com.trolltech.qt.core.QFile;
 import com.trolltech.qt.core.QIODevice.OpenModeFlag;
@@ -86,6 +86,10 @@ import cx.fbn.nevernote.signals.TagSignal;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.sql.DeletedItemRecord;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
+//import org.apache.thrift.transport.THttpClient;
+//import org.apache.thrift.transport.TTransportException;
+//import org.apache.thrift.protocol.TBinaryProtocol;
+//import org.apache.thrift.TException;
 
 public class SyncRunner extends QObject implements Runnable {
 	
@@ -123,8 +127,6 @@ public class SyncRunner extends QObject implements Runnable {
     public volatile String username = ""; 
     public volatile String password = ""; 
 	public volatile String userStoreUrl;
-//	    private final static String consumerKey = "baumgarte"; 
-//	    private final static String consumerSecret = "eb8b5740e17cb55f";
     public String noteStoreUrlBase;
     private THttpClient userStoreTrans;
     private TBinaryProtocol userStoreProt;
@@ -1554,6 +1556,7 @@ public class SyncRunner extends QObject implements Runnable {
 		}
 		userStoreProt = new TBinaryProtocol(userStoreTrans);
 	    userStore = new UserStore.Client(userStoreProt, userStoreProt);
+	    
 	    syncSignal.saveUserStore.emit(userStore);
 	    try {
 			//authResult = userStore.authenticate(username, password, consumerKey, consumerSecret);

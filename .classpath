@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="lib/evernote-api-1.20.jar"/>
+	<classpathentry kind="lib" path="lib/evernote-api-1.25.0.jar"/>
 	<classpathentry kind="lib" path="lib/h2-1.3.158.jar"/>
 	<classpathentry kind="lib" path="lib/libthrift.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.14.jar"/>
@@ -25,8 +25,8 @@
 	<classpathentry kind="lib" path="lib/httpcore-4.1.jar"/>
 	<classpathentry kind="lib" path="lib/httpmime-4.1.1.jar"/>
 	<classpathentry kind="lib" path="lib/pdfbox-app-1.6.0.jar"/>
-	<classpathentry kind="lib" path="/usr/local/Trolltech/qtjambi-linux32-lgpl-4.5.2_01/qtjambi-4.5.2_01.jar"/>
-	<classpathentry kind="lib" path="/usr/local/Trolltech/qtjambi-linux32-lgpl-4.5.2_01/qtjambi-linux32-gcc-4.5.2_01.jar"/>
-	<classpathentry kind="lib" path="/home/zigzag/workspace/NeighborNote/lib/scribe-1.3.0.jar"/>
+	<classpathentry kind="lib" path="C:/pleiades/scribe-1.3.0.jar"/>
+	<classpathentry kind="lib" path="C:/pleiades/qtjambi-win32-lgpl-4.5.2_01/qtjambi-4.5.2_01.jar"/>
+	<classpathentry kind="lib" path="C:/pleiades/qtjambi-win32-lgpl-4.5.2_01/qtjambi-win32-msvc2005-4.5.2_01.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
