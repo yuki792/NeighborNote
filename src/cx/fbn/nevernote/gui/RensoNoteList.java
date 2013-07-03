@@ -77,7 +77,7 @@ public class RensoNoteList extends QListWidget {
 		this.guid = new String();
 		mergedHistory = new HashMap<String, Integer>();
 		enRelatedNotesCache = new HashMap<String, List<String>>();
-		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner);
+		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner, logger);
 		this.enRelatedNotesRunner.enRelatedNotesSignal.getENRelatedNotesFinished.connect(this, "enRelatedNotesComplete()");
 		this.enRelatedNotesThread = new QThread(enRelatedNotesRunner, "ENRelatedNotes Thread");
 		this.enRelatedNotesThread.start();

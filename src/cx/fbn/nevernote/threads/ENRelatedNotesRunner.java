@@ -37,9 +37,12 @@ import com.trolltech.qt.core.QObject;
 
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.signals.ENRelatedNotesSignal;
+import cx.fbn.nevernote.utilities.ApplicationLogger;
 import cx.fbn.nevernote.utilities.Pair;
 
 public class ENRelatedNotesRunner extends QObject implements Runnable{
+	
+	private final ApplicationLogger logger;
 	private final SyncRunner syncRunner;
 	public volatile ENRelatedNotesSignal enRelatedNotesSignal;
 	public QMutex mutex;
@@ -47,7 +50,8 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 	private volatile LinkedBlockingQueue<String> workQueue;
 	private volatile LinkedBlockingQueue<Pair<String, List<String>>> resultQueue;	// ペア<元ノートguid, 関連ノートguidリスト>を溜めておくキュー
 	
-	public ENRelatedNotesRunner(SyncRunner syncRunner) {
+	public ENRelatedNotesRunner(SyncRunner syncRunner, ApplicationLogger logger) {
+		this.logger = logger;
 		this.syncRunner = syncRunner;
 		this.enRelatedNotesSignal = new ENRelatedNotesSignal();
 		this.mutex = new QMutex();
@@ -60,21 +64,26 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 	public void run() {
 		thread().setPriority(Thread.MIN_PRIORITY);
 		
+		logger.log(logger.MEDIUM, "ENRelatedNotesスレッド開始");
 		while (keepRunning) {
 			try {
 				String work = workQueue.take();
 				mutex.lock();
 				if (work.startsWith("GET")) {
 					String guid = work.replace("GET ", "");
+					logger.log(logger.EXTREME, "Evernote関連ノート取得開始 guid = " + guid);
 					
 					List<Note> relatedNotes = getENRelatedNotes(guid);
 					
 					Pair<String, List<String>> resultPair = new Pair<String, List<String>>();
 					resultPair.setFirst(guid);
 					if (relatedNotes == null) {				// 取得に失敗
+						logger.log(logger.EXTREME, "Evernote関連ノートの取得に失敗");
 					} else if (relatedNotes.isEmpty()) {	// このノートにEvernote関連ノートは存在しない
+						logger.log(logger.EXTREME, "Evernote関連ノートの取得に成功　関連ノートは存在しなかった");
 						resultPair.setSecond(new ArrayList<String>());
 					} else {								// Evernote関連ノートが存在する
+						logger.log(logger.EXTREME, "Evernote関連ノートの取得に成功　関連ノートは存在した");
 						List<String> relatedNoteGuids = new ArrayList<String>();
 						for (Note relatedNote : relatedNotes) {
 							relatedNoteGuids.add(relatedNote.getGuid());
@@ -84,8 +93,9 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 					
 					resultQueue.offer(resultPair);
 					enRelatedNotesSignal.getENRelatedNotesFinished.emit();
-				}
-				if (work.startsWith("STOP")) {
+					logger.log(logger.EXTREME, "Evernote関連ノート取得完了 guid = " + guid);
+				} else if (work.startsWith("STOP")) {
+					logger.log(logger.MEDIUM, "ENRelatedNotesスレッド停止");
 					keepRunning = false;
 				}
 				mutex.unlock();
@@ -122,17 +132,13 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 				RelatedResult result = syncRunner.localNoteStore.findRelated(syncRunner.authToken, rquery, resultSpec);
 				return result;
 			} catch (EDAMUserException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
+				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：EDAMUserException");
 			} catch (EDAMSystemException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
+				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：EDAMSystemException");
 			} catch (EDAMNotFoundException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
+				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：EDAMnotFoundException guid = " + guid);
 			} catch (TException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
+				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：TException");
 			}
 		}
 		return null;
