@@ -67,8 +67,8 @@ import cx.fbn.nevernote.utilities.Pair;
 public class Global {
 	// Set current version and the known versions.
 	// ICHANGED 自分用に変更
-	public static String version = "0.1.3";
-	public static String[] validVersions = {"0.1.3", "0.1.2", "0.1.1", "0.1"};
+	public static String version = "0.2";
+	public static String[] validVersions = {"0.2", "0.1.3", "0.1.2", "0.1.1", "0.1"};
 	
     public static String username = ""; 
     //public static String password = "";     
@@ -2218,6 +2218,29 @@ public class Global {
 				value = (Integer)settings.value("sameNotebookWeight", 2);
 			} catch (Exception e1) {
 				value = 2;
+			}
+		}
+		settings.endGroup();
+		return value;
+	}
+	
+	// Evernote関連ノート機能統合に対する重み付け
+	public static void setENRelatedNotesWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("enRelatedNotesWeight", weight);
+		settings.endGroup();
+	}
+	public static int getENRelatedNotesWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val = (String)settings.value("enRelatedNotesWeight", 10);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("enRelatedNotesWeight", 10);
+			} catch (Exception e1) {
+				value = 10;
 			}
 		}
 		settings.endGroup();

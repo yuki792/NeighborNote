@@ -39,6 +39,7 @@ public class ConfigRensoNoteListPage extends QWidget {
 	private final QSlider rensoItemClickSlider;
 	private final QSlider sameTagSlider;
 	private final QSlider sameNotebookSlider;
+	private final QSlider enRelatedNotesSlider;
 	
 	private final QSpinBox browseSpinner;
 	private final QSpinBox copyPasteSpinner;
@@ -47,6 +48,7 @@ public class ConfigRensoNoteListPage extends QWidget {
 	private final QSpinBox sameTagSpinner;
 	private final QSpinBox sameNotebookSpinner;
 	private final QSpinBox rensoListItemMaximumSpinner;
+	private final QSpinBox enRelatedNotesSpinner;
 	
 	private final QCheckBox mergeCheck;
 	private final QCheckBox duplicateCheck;
@@ -182,8 +184,30 @@ public class ConfigRensoNoteListPage extends QWidget {
 		
 		QHBoxLayout sameNotebookLayout = new QHBoxLayout();
 		sameNotebookLayout.addWidget(sameNotebookSlider);
-		sameNotebookLayout.addWidget(sameNotebookSpinner);	
+		sameNotebookLayout.addWidget(sameNotebookSpinner);
 		
+		// enRelatedNotes
+		enRelatedNotesSlider = new QSlider();
+		enRelatedNotesSlider.setOrientation(Qt.Orientation.Horizontal);
+		enRelatedNotesSlider.setRange(0, 10);
+		enRelatedNotesSlider.setSingleStep(1);
+		enRelatedNotesSlider.setTickPosition(QSlider.TickPosition.TicksAbove);
+		enRelatedNotesSlider.setTickInterval(1);
+		enRelatedNotesSlider.setFocusPolicy(Qt.FocusPolicy.StrongFocus);
+		
+		enRelatedNotesSpinner = new QSpinBox();
+		enRelatedNotesSpinner.setRange(0, 10);
+		enRelatedNotesSpinner.setSingleStep(1);
+		
+		enRelatedNotesSlider.valueChanged.connect(enRelatedNotesSpinner, "setValue(int)");
+		enRelatedNotesSpinner.valueChanged.connect(enRelatedNotesSlider, "setValue(int)");
+		enRelatedNotesSpinner.setValue(Global.getENRelatedNotesWeight());
+		
+		QHBoxLayout enRelatedNotesLayout = new QHBoxLayout();
+		enRelatedNotesLayout.addWidget(enRelatedNotesSlider);
+		enRelatedNotesLayout.addWidget(enRelatedNotesSpinner);
+		
+		// 重み付け設定部分のレイアウト
 		QFormLayout styleLayout = new QFormLayout();
 		styleLayout.setHorizontalSpacing(10);
 		styleLayout.setVerticalSpacing(30);
@@ -193,6 +217,7 @@ public class ConfigRensoNoteListPage extends QWidget {
 		styleLayout.addRow(tr("Renso Item Click Weight"), rensoItemClickLayout);
 		styleLayout.addRow(tr("Same Tag Weight"), sameTagLayout);
 		styleLayout.addRow(tr("Same Notebook Weight"), sameNotebookLayout);
+		styleLayout.addRow(tr("Evernote Related Notes Integration"), enRelatedNotesLayout);
 
 		QGroupBox weightingGroup = new QGroupBox(tr("Weighting"));
 		weightingGroup.setLayout(styleLayout);
@@ -272,6 +297,13 @@ public class ConfigRensoNoteListPage extends QWidget {
 	//*****************************************
 	public int getSameNotebookWeight() {
 		return sameNotebookSpinner.value();
+	}
+	
+	//*****************************************
+	//* Evernote Related Notes Integration Weight
+	//*****************************************
+	public int getENRelatedNotesWeight() {
+		return enRelatedNotesSpinner.value();
 	}
 
 	//*****************************************

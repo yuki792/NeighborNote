@@ -41,9 +41,9 @@ import com.trolltech.qt.gui.QListWidgetItem;
 import com.trolltech.qt.gui.QPushButton;
 import com.trolltech.qt.gui.QStackedWidget;
 import com.trolltech.qt.gui.QVBoxLayout;
-import com.trolltech.qt.gui.QWidget;
 
 import cx.fbn.nevernote.Global;
+import cx.fbn.nevernote.NeverNote;
 public class ConfigDialog extends QDialog {
 	private final QListWidget 				contentsWidget;
 	private final ConfigFontPage			fontPage;
@@ -53,12 +53,13 @@ public class ConfigDialog extends QDialog {
 	private final ConfigAppearancePage 		appearancePage;
 	private final ConfigSpellPage			spellPage;
 	private final ConfigIndexPage			indexPage;
-	// ICHANGED
-	private final ConfigRensoNoteListPage		rensoNoteListPage;
+	private final ConfigRensoNoteListPage	rensoNoteListPage;
+	private final NeverNote 				parent;
 	
     private final String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
 	
-	public ConfigDialog(QWidget parent) {
+	public ConfigDialog(NeverNote parent) {
+		this.parent = parent;
 		
 		contentsWidget = new QListWidget(this);
 		setWindowIcon(new QIcon(iconPath+"config.png"));
@@ -231,12 +232,16 @@ public class ConfigDialog extends QDialog {
 		Global.setRensoItemClickWeight(rensoNoteListPage.getRensoItemClickWeight());
 		Global.setSameTagWeight(rensoNoteListPage.getSameTagWeight());
 		Global.setSameNotebookWeight(rensoNoteListPage.getSameNotebookWeight());
+		Global.setENRelatedNotesWeight(rensoNoteListPage.getENRelatedNotesWeight());
 		
 		// ICHANGED
 		Global.setMergeRensoNote(rensoNoteListPage.getMergeChecked());
 		Global.setDuplicateRensoNote(rensoNoteListPage.getDuplicateChecked());
 		Global.setVerifyExclude(rensoNoteListPage.getVerifyExcludeChecked());
 		Global.setRensoListItemMaximum(rensoNoteListPage.getRensoListItemMaximum());
+		
+		// 連想ノートリストをリフレッシュ
+		parent.getRensoNoteList().refreshRensoNoteList(parent.getCurrentNoteGuid());
 		
 		close();
 	}
@@ -262,7 +267,6 @@ public class ConfigDialog extends QDialog {
 	// Create icons used for navigating the page
 	public void createIcons() {
 		String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
-
 		
 		QListWidgetItem formatsButton = new QListWidgetItem(contentsWidget);
 		formatsButton.setText(tr("Appearance"));

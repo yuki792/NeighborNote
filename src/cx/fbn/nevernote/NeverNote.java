@@ -47,7 +47,6 @@ import java.util.Vector;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.thrift.TException;
 import org.h2.tools.ChangeFileEncryption;
 
 import com.evernote.edam.error.EDAMNotFoundException;
@@ -66,6 +65,7 @@ import com.evernote.edam.type.Resource;
 import com.evernote.edam.type.SavedSearch;
 import com.evernote.edam.type.Tag;
 import com.evernote.edam.type.User;
+import com.evernote.thrift.TException;
 import com.trolltech.qt.QThread;
 import com.trolltech.qt.core.QByteArray;
 import com.trolltech.qt.core.QDateTime;
@@ -208,6 +208,7 @@ import cx.fbn.nevernote.xml.ExportData;
 import cx.fbn.nevernote.xml.ImportData;
 import cx.fbn.nevernote.xml.ImportEnex;
 import cx.fbn.nevernote.xml.NoteFormatter;
+//import org.apache.thrift.TException;
 
 
 public class NeverNote extends QMainWindow{
@@ -625,7 +626,7 @@ public class NeverNote extends QMainWindow{
         
 		// ICHANGED
 		// 連想ノートリストをセットアップ
-		rensoNoteList = new RensoNoteList(conn, this);
+		rensoNoteList = new RensoNoteList(conn, this, syncRunner);
 		rensoNoteList.itemPressed.connect(this,
 				"rensoNoteItemPressed(QListWidgetItem)");
 		rensoNoteListDock = new QDockWidget(tr("Renso Note List"), this);
@@ -1250,6 +1251,9 @@ public class NeverNote extends QMainWindow{
 		saveNote();
 		listManager.stop();
 		saveWindowState();
+		
+		// 連想ノートリストのEvernote関連ノート取得スレッドを終了
+		rensoNoteList.stopThread();
 
 		if (tempFiles != null)
 			tempFiles.clear();
@@ -7755,5 +7759,10 @@ public class NeverNote extends QMainWindow{
 		boolean fromHist = fromHistory.get(from);
 		fromHistory.put(from,  fromHistory.get(to));
 		fromHistory.put(to, fromHist);
+	}
+	
+	// 連想ノートリストのgetter
+	public RensoNoteList getRensoNoteList() {
+		return rensoNoteList;
 	}
 }
