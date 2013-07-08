@@ -2329,8 +2329,16 @@ public class Global {
 		plainText = plainText.replaceAll("\\s{2,}", " ");		// 2個以上の空白文字を1文字の空白に変換
 		String kaigyo = System.getProperty("line.separator");
 		plainText = plainText.replaceAll(kaigyo, "");			// 改行を除去
-		plainText = plainText.replaceAll("&lt;.+?&gt;", "");	// &lt;で始まり&gt;で終わる文字列を除去
-		plainText = plainText.replaceAll("&.+?;", "");			// HTML特殊文字を除去
+//		plainText = plainText.replaceAll("&lt;.+?&gt;", "");	// &lt;で始まり&gt;で終わる文字列を除去
+		
+		// HTML特殊文字のサニタイジングを解除
+		plainText = plainText.replaceAll("&#39;", "'");
+		plainText = plainText.replaceAll("&quot;", "\"");
+		plainText = plainText.replaceAll("&gt;", ">");
+		plainText = plainText.replaceAll("&lt;", "<");
+		plainText = plainText.replaceAll("&amp;", "&");
+		
+		plainText = plainText.replaceAll("&.+?;", "");			// その他HTML特殊文字があれば除去
 		
 		return plainText;
 	}
