@@ -548,6 +548,8 @@ public class BrowserWindow extends QWidget {
 		buttonLayout.addWidget(newSeparator());
 		fontList = new QComboBox();
 		fontSize = new QComboBox();
+		fontList.setMaximumWidth(130);
+		fontSize.setMaximumWidth(45);
 		fontList.setToolTip("Font");
 		fontSize.setToolTip("Font Size");
 		fontList.activated.connect(this, "fontChanged(String)");
