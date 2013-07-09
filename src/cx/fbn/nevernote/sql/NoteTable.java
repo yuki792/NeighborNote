@@ -1770,7 +1770,35 @@ public class NoteTable {
 	 *
 	 * boolean retVal = query.valueBoolean(0, false); return retVal; }
 	 */
+	
+	// ノートコンテンツのプレーンテキストを取得
+	public String getNoteContentText(String noteGuid) {
 
+		if (noteGuid == null)
+			return null;
+		if (noteGuid.trim().equals(""))
+			return null;
+
+		NSqlQuery query = new NSqlQuery(db.getConnection());
+		query.prepare("Select contentText from Note where guid=:guid");
+		query.bindValue(":guid", noteGuid);
+		if (!query.exec()) {
+			logger.log(logger.MEDIUM, "Noteテーブルからプレーンコンテンツの取得失敗");
+			logger.log(logger.MEDIUM, query.lastError());
+			return null;
+		}
+		if (!query.next()) {
+			logger.log(logger.EXTREME, "SQL Retrieve failed for note guid "
+					+ noteGuid + " in getNotePlainContent()");
+			logger.log(logger.EXTREME, " -> " + query.lastError().toString());
+			logger.log(logger.EXTREME, " -> " + query.lastError());
+			return null;
+		}
+
+		String noteContentText = query.valueString(0);
+
+		return noteContentText;
+	}
 }	
 
 

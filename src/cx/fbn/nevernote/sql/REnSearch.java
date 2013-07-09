@@ -380,7 +380,6 @@ public class REnSearch {
 	private void parseTerms(List<String> words) {
 		for (int i=0; i<words.size(); i++) {
 			String word = words.get(i);
-			System.out.println("word = " + word);
 			int pos = word.indexOf(":");
 			if (word.startsWith("any:")) {
 				any = true;

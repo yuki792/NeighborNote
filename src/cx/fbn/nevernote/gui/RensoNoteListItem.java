@@ -81,7 +81,8 @@ public class RensoNoteListItem extends QWidget{
 		this.tagNames = new String(sb);
 		
 		// this.noteContent = new String(note.getContent());
-		this.noteContent = Global.extractPlainText(conn.getNoteTable().getNoteContentNoUTFConversion(note.getGuid()));
+//		this.noteContent = Global.extractPlainText(conn.getNoteTable().getNoteContentNoUTFConversion(note.getGuid()));
+		this.noteContent = conn.getNoteTable().getNoteContentText(note.getGuid());
 		palette = new QPalette();
 		palette.setColor(QPalette.ColorRole.Window, new QColor(255, 255, 255));
 		this.setPalette(palette);

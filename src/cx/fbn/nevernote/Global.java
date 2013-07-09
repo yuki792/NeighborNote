@@ -53,6 +53,7 @@ import cx.fbn.nevernote.config.StartupConfig;
 import cx.fbn.nevernote.gui.ContainsAttributeFilterTable;
 import cx.fbn.nevernote.gui.DateAttributeFilterTable;
 import cx.fbn.nevernote.gui.ShortcutKeys;
+import cx.fbn.nevernote.sql.driver.NSqlQuery;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 import cx.fbn.nevernote.utilities.Pair;
 
@@ -2341,6 +2342,34 @@ public class Global {
 		plainText = plainText.replaceAll("&.+?;", "");			// その他HTML特殊文字があれば除去
 		
 		return plainText;
+	}
+	
+	// 全文検索機能の対象となるテーブルとカラムを再構築
+	public static boolean rebuildFullTextTarget(NSqlQuery query) {
+		StringBuilder noteTableTarget = new StringBuilder();
+		boolean success = true;
+		
+		if (Global.indexNoteBody()) {
+			noteTableTarget.append("CONTENTTEXT");
+		}
+		if (Global.indexNoteTitle()) {
+			if (noteTableTarget.length() > 0) {
+				noteTableTarget.append(", ");
+			}
+			noteTableTarget.append("TITLE");
+		}
+		
+		// TODO 他の項目もあとで追加
+		
+		if (noteTableTarget.length() > 0) {
+			query.prepare("CALL FTL_CREATE_INDEX('PUBLIC', 'NOTE', :column);");
+			query.bindValue(":column", noteTableTarget.toString());
+			if (!query.exec()) {
+				success = false;
+			}
+		}
+		
+		return success;
 	}
 }
 
