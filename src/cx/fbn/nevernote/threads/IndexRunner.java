@@ -30,7 +30,6 @@ import java.util.TreeSet;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.LockSupport;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
@@ -44,7 +43,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 import com.evernote.edam.type.Data;
-import com.evernote.edam.type.Note;
 import com.evernote.edam.type.Resource;
 import com.trolltech.qt.core.QByteArray;
 import com.trolltech.qt.core.QIODevice.OpenModeFlag;
@@ -76,8 +74,8 @@ public class IndexRunner extends QObject implements Runnable {
 	private final QDomDocument			doc;
 	private static String				regex = Global.getWordRegex();
 	public String						specialIndexCharacters = "";
-	public boolean						indexNoteBody = true;
-	public boolean						indexNoteTitle = true;
+//	public boolean						indexNoteBody = true;
+//	public boolean						indexNoteTitle = true;
 	public boolean						indexImageRecognition = true;
 	private final DatabaseConnection	conn;
 	private volatile LinkedBlockingQueue<String> workQueue;
@@ -163,62 +161,62 @@ public class IndexRunner extends QObject implements Runnable {
 	}
 	
 	// Reindex a note
-	public void indexNoteContent() {
-		foundWords.clear();
-		
-		logger.log(logger.EXTREME, "Entering indexRunner.indexNoteContent()");
-		
-		logger.log(logger.EXTREME, "Getting note content");
-		Note n = conn.getNoteTable().getNote(guid,true,false,true,true, true);
-		String data;
-		if (indexNoteBody) {
-			data = n.getContent();
-			data = conn.getNoteTable().getNoteContentNoUTFConversion(n.getGuid());
-		
-			logger.log(logger.EXTREME, "Removing any encrypted data");
-			data = removeEnCrypt(data.toString());
-			logger.log(logger.EXTREME, "Removing xml markups");
-		} else
-			data = "";
-		String text;
-		if (indexNoteTitle)
-			text =  removeTags(StringEscapeUtils.unescapeHtml4(data) +" "+ n.getTitle());
-		else
-			text = removeTags(StringEscapeUtils.unescapeHtml4(data));
-				
-		logger.log(logger.EXTREME, "Splitting words");
-		String[] result = text.toString().split(regex);
-		conn.commitTransaction();
-		conn.beginTransaction();
-		logger.log(logger.EXTREME, "Deleting existing words for note from index");
-		conn.getWordsTable().expungeFromWordIndex(guid, "CONTENT");
-		
-		logger.log(logger.EXTREME, "Number of words found: " +result.length);
-		for (int j=0; j<result.length && keepRunning; j++) {
-			if (interrupt) {
-				processInterrupt();
-			}
-			if (!result[j].trim().equals("")) {
-				logger.log(logger.EXTREME, "Result word: " +result[j].trim());
-				addToIndex(guid, result[j], "CONTENT");
-			}
-		}
-		
-		// Add tags
-		for (int j=0; j<n.getTagNamesSize(); j++) {
-			if (n.getTagNames() != null && n.getTagNames().get(j) != null && !n.getTagNames().get(j).trim().equals(""))
-				addToIndex(guid, n.getTagNames().get(j), "CONTENT");
-		}
-		
-		// If we were interrupted, we will reindex this note next time
-		if (Global.keepRunning) {
-			logger.log(logger.EXTREME, "Resetting note guid needed");
-			conn.getNoteTable().setIndexNeeded(guid, false);
-		} 
-		conn.commitTransaction();
-		uncommittedCount = 0;
-		logger.log(logger.EXTREME, "Leaving indexRunner.indexNoteContent()");
-	}
+//	public void indexNoteContent() {
+//		foundWords.clear();
+//		
+//		logger.log(logger.EXTREME, "Entering indexRunner.indexNoteContent()");
+//		
+//		logger.log(logger.EXTREME, "Getting note content");
+//		Note n = conn.getNoteTable().getNote(guid,true,false,true,true, true);
+//		String data;
+//		if (indexNoteBody) {
+//			data = n.getContent();
+//			data = conn.getNoteTable().getNoteContentNoUTFConversion(n.getGuid());
+//		
+//			logger.log(logger.EXTREME, "Removing any encrypted data");
+//			data = removeEnCrypt(data.toString());
+//			logger.log(logger.EXTREME, "Removing xml markups");
+//		} else
+//			data = "";
+//		String text;
+//		if (indexNoteTitle)
+//			text =  removeTags(StringEscapeUtils.unescapeHtml4(data) +" "+ n.getTitle());
+//		else
+//			text = removeTags(StringEscapeUtils.unescapeHtml4(data));
+//				
+//		logger.log(logger.EXTREME, "Splitting words");
+//		String[] result = text.toString().split(regex);
+//		conn.commitTransaction();
+//		conn.beginTransaction();
+//		logger.log(logger.EXTREME, "Deleting existing words for note from index");
+//		conn.getWordsTable().expungeFromWordIndex(guid, "CONTENT");
+//		
+//		logger.log(logger.EXTREME, "Number of words found: " +result.length);
+//		for (int j=0; j<result.length && keepRunning; j++) {
+//			if (interrupt) {
+//				processInterrupt();
+//			}
+//			if (!result[j].trim().equals("")) {
+//				logger.log(logger.EXTREME, "Result word: " +result[j].trim());
+//				addToIndex(guid, result[j], "CONTENT");
+//			}
+//		}
+//		
+//		// Add tags
+//		for (int j=0; j<n.getTagNamesSize(); j++) {
+//			if (n.getTagNames() != null && n.getTagNames().get(j) != null && !n.getTagNames().get(j).trim().equals(""))
+//				addToIndex(guid, n.getTagNames().get(j), "CONTENT");
+//		}
+//		
+//		// If we were interrupted, we will reindex this note next time
+//		if (Global.keepRunning) {
+//			logger.log(logger.EXTREME, "Resetting note guid needed");
+//			conn.getNoteTable().setIndexNeeded(guid, false);
+//		} 
+//		conn.commitTransaction();
+//		uncommittedCount = 0;
+//		logger.log(logger.EXTREME, "Leaving indexRunner.indexNoteContent()");
+//	}
 	
 	
 	private String removeTags(String text) {
@@ -660,22 +658,22 @@ public class IndexRunner extends QObject implements Runnable {
 	}
 	
 	private void scanUnindexed() {
-		List<String> notes = conn.getNoteTable().getUnindexed();
+//		List<String> notes = conn.getNoteTable().getUnindexed();
 		guid = null;
 		boolean started = false;
-		if (notes.size() > 0) {
-			signal.indexStarted.emit();
-			started = true;
-		}
-		for (int i=0; i<notes.size() && keepRunning; i++) {
-			if (interrupt) {
-				processInterrupt();
-			}
-			guid = notes.get(i);
-			if (guid != null && keepRunning) {
-				indexNoteContent();
-			}
-		}
+//		if (notes.size() > 0) {
+//			signal.indexStarted.emit();
+//			started = true;
+//		}
+//		for (int i=0; i<notes.size() && keepRunning; i++) {
+//			if (interrupt) {
+//				processInterrupt();
+//			}
+//			guid = notes.get(i);
+//			if (guid != null && keepRunning) {
+//				indexNoteContent();
+//			}
+//		}
 		
 		List<String> unindexedResources = conn.getNoteTable().noteResourceTable.getUnindexed();
 		if (unindexedResources.size() > 0 && !started) {

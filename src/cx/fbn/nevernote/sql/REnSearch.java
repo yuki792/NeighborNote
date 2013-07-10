@@ -33,7 +33,6 @@ import com.evernote.edam.type.Note;
 import com.evernote.edam.type.Notebook;
 import com.evernote.edam.type.Tag;
 
-import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.sql.driver.NSqlQuery;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
@@ -392,16 +391,16 @@ public class REnSearch {
 				searchPhrases.add(word.toLowerCase());
 			}
 			if (!searchPhrase && pos < 0) {
-				if (word != null && word.length() > 0 && !Global.automaticWildcardSearches())
+				if (word != null && word.length() > 0/* && !Global.automaticWildcardSearches()*/)
 					getWords().add(word); 
-				if (word != null && word.length() > 0 && Global.automaticWildcardSearches()) {
-					String wildcardWord = word;
-					if (!wildcardWord.startsWith("*"))
-						wildcardWord = "*"+wildcardWord;
-					if (!wildcardWord.endsWith("*"))
-						wildcardWord = wildcardWord+"*";
-					getWords().add(wildcardWord); 
-				}
+//				if (word != null && word.length() > 0 && Global.automaticWildcardSearches()) {
+//					String wildcardWord = word;
+//					if (!wildcardWord.startsWith("*"))
+//						wildcardWord = "*"+wildcardWord;
+//					if (!wildcardWord.endsWith("*"))
+//						wildcardWord = wildcardWord+"*";
+//					getWords().add(wildcardWord); 
+//				}
 //				getWords().add("*"+word+"*");           //// WILDCARD
 			}
 			if (word.startsWith("intitle:")) 
@@ -702,7 +701,7 @@ public class REnSearch {
 		}
 
 		NSqlQuery insertQuery = new NSqlQuery(conn.getConnection());
-//		NSqlQuery indexQuery = new NSqlQuery(conn.getIndexConnection());
+		NSqlQuery indexQuery = new NSqlQuery(conn.getIndexConnection());
 		NSqlQuery mergeQuery = new NSqlQuery(conn.getConnection());
 		NSqlQuery deleteQuery = new NSqlQuery(conn.getConnection());
 		NSqlQuery ftlQuery = new NSqlQuery(conn.getConnection());
@@ -713,20 +712,32 @@ public class REnSearch {
 		
 		if (subSelect) {
 			for (int i=0; i<getWords().size(); i++) {
-//				if (getWords().get(i).indexOf("*") == -1) {
-//					indexQuery.prepare("Select distinct guid from words where weight >= " +minimumRecognitionWeight +
-//							" and word=:word");
-//					indexQuery.bindValue(":word", getWords().get(i));
-//				} else {
-//					indexQuery.prepare("Select distinct guid from words where weight >= " +minimumRecognitionWeight +
-//						" and word like :word");
-//					indexQuery.bindValue(":word", getWords().get(i).replace("*", "%"));
-//				}
+				// wordsテーブルから検索
+				if (getWords().get(i).indexOf("*") == -1) {
+					indexQuery.prepare("Select distinct guid from words where weight >= " +minimumRecognitionWeight +
+							" and word=:word");
+					indexQuery.bindValue(":word", getWords().get(i));
+				} else {
+					indexQuery.prepare("Select distinct guid from words where weight >= " +minimumRecognitionWeight +
+						" and word like :word");
+					indexQuery.bindValue(":word", getWords().get(i).replace("*", "%"));
+				}
+				indexQuery.exec();
+				String guid = null;
+				while(indexQuery.next()) {
+					guid = indexQuery.valueString(0);
+					if (i==0 || any) {
+						insertQuery.bindValue(":guid", guid);
+						insertQuery.exec();
+					} else {
+						mergeQuery.bindValue(":guid", guid);
+						mergeQuery.exec();
+					}
+				}
 				
+				// luceneによる全文検索
 				ftlQuery.bindValue(":text", getWords().get(i));
 				ftlQuery.exec();
-				
-				String guid = null;
 				while(ftlQuery.next()) {
 					guid = ftlQuery.valueString(0);
 					if (i==0 || any) {
@@ -737,6 +748,7 @@ public class REnSearch {
 						mergeQuery.exec();
 					}
 				}
+				
 				if (i>0 && !any) {
 					deleteQuery.exec("Delete from SEARCH_RESULTS where guid not in (select guid from SEARCH_RESULTS_MERGE)");
 					deleteQuery.exec("Delete from SEARCH_RESULTS_MERGE");

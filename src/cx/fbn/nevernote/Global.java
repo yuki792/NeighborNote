@@ -2019,27 +2019,27 @@ public class Global {
     }
     
     // If we should automatically wildcard searches
-    public static boolean automaticWildcardSearches() {
-		settings.beginGroup("General");
-		try {
-			String value = (String)settings.value("automaticWildcard", "false");
-			settings.endGroup();
-			if (value.equals("true"))
-				return true;
-			else
-				return false;
-		} catch (java.lang.ClassCastException e) {
-			Boolean value = (Boolean) settings.value("automaticWildcard", false);
-			settings.endGroup();
-			return value;
-		}
-
-    }
-    public static void setAutomaticWildcardSearches(boolean value) {
-		settings.beginGroup("General");
-		settings.setValue("automaticWildcard", value);
-		settings.endGroup();	
-    }
+//    public static boolean automaticWildcardSearches() {
+//		settings.beginGroup("General");
+//		try {
+//			String value = (String)settings.value("automaticWildcard", "false");
+//			settings.endGroup();
+//			if (value.equals("true"))
+//				return true;
+//			else
+//				return false;
+//		} catch (java.lang.ClassCastException e) {
+//			Boolean value = (Boolean) settings.value("automaticWildcard", false);
+//			settings.endGroup();
+//			return value;
+//		}
+//
+//    }
+//    public static void setAutomaticWildcardSearches(boolean value) {
+//		settings.beginGroup("General");
+//		settings.setValue("automaticWildcard", value);
+//		settings.endGroup();	
+//    }
 
     // If we should automatically select the children of any tag
     public static boolean displayRightToLeft() {

@@ -44,7 +44,7 @@ public class ConfigIndexPage extends QWidget {
 	private final QCheckBox indexAttachmentsLocally;
 	private final QCheckBox indexImageRecognition;
 	private final QCheckBox indexTitle;
-	private final QCheckBox automaticWildcard;
+//	private final QCheckBox automaticWildcard;
 	private final QLineEdit specialStrip;
 	private final QCheckBox indexBody;
 	private final QLineEdit regexEdit;
@@ -76,8 +76,8 @@ public class ConfigIndexPage extends QWidget {
 		indexImageRecognition = new QCheckBox(tr("Index Image Recognition"));
 		indexImageRecognition.setChecked(Global.indexImageRecognition());
 		
-		automaticWildcard = new QCheckBox(tr("Automatically Wildcard All Searches"));
-		automaticWildcard.setChecked(Global.automaticWildcardSearches());
+//		automaticWildcard = new QCheckBox(tr("Automatically Wildcard All Searches"));
+//		automaticWildcard.setChecked(Global.automaticWildcardSearches());
 		
 		specialStrip = new QLineEdit();
 		specialStrip.setText(Global.getSpecialIndexCharacters());
@@ -87,7 +87,7 @@ public class ConfigIndexPage extends QWidget {
 		attachmentLayout.addWidget(indexTitle);
 		attachmentLayout.addWidget(indexAttachmentsLocally);
 		attachmentLayout.addWidget(indexImageRecognition);
-		attachmentLayout.addWidget(automaticWildcard);
+//		attachmentLayout.addWidget(automaticWildcard);
 		
 		QHBoxLayout specialCharLayout = new QHBoxLayout();
 		specialCharLayout.addWidget(new QLabel(tr("Special Word Characters")));
@@ -150,9 +150,9 @@ public class ConfigIndexPage extends QWidget {
 	public boolean getIndexImageRecognition() {
 		return indexImageRecognition.isChecked();
 	}
-	public boolean getAutomaticWildcardSearches() {
-		return automaticWildcard.isChecked();
-	}
+//	public boolean getAutomaticWildcardSearches() {
+//		return automaticWildcard.isChecked();
+//	}
 	
 	//*****************************************
 	//* Word length get/set methods 
