@@ -329,12 +329,14 @@ public class NeverNote extends QMainWindow{
     int					tagDeadCount=0;				// number of consecutive dead times for the tag thread
     int					trashDeadCount=0;			// number of consecutive dead times for the trash thread
     int 				saveThreadDeadCount=0;		// number of consecutive dead times for the save thread
+    int 				enRelatedNotesThreadDeadCount=0;	// number of consecutive dead times for the EvernoteRelatedNotes Thread
     boolean				disableTagThreadCheck=false;
     boolean				disableNotebookThreadCheck=false;
     boolean				disableTrashThreadCheck=false;
     boolean				disableSaveThreadCheck=false;
     boolean				disableSyncThreadCheck=false;
     boolean				disableIndexThreadCheck=false;
+    boolean				disableENRelatedNotesThreadCheck=false;
     
     HashMap<String, String>		noteCache;			// Cash of note content	
     HashMap<String, Boolean>	readOnlyCache;		// List of cashe notes that are read-only
@@ -6746,7 +6748,15 @@ public class NeverNote extends QMainWindow{
 		} else
 			indexThreadDeadCount=0;
 
-		
+		if (!rensoNoteList.getEnRelatedNotesThread().isAlive()) {
+			enRelatedNotesThreadDeadCount++;
+			if (enRelatedNotesThreadDeadCount > MAX && !disableENRelatedNotesThreadCheck) {
+				QMessageBox.information(this, tr("A thread has died."), tr("It appears as the Evernote Related Notes thread has died.  I recommend "+
+					"checking stopping NeighborNote, saving the logs for later viewing, and restarting.  Sorry."));
+				disableENRelatedNotesThreadCheck = true;
+			}
+		} else
+			enRelatedNotesThreadDeadCount=0;
 	}
 
 	private void thumbnailTimer() {

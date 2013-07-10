@@ -611,14 +611,14 @@ public class Global {
     public static boolean automaticLogin() {
     	try {
     		settings.beginGroup("General");
-    		String text = (String)settings.value("automaticLogin", "false");
+    		String text = (String)settings.value("automaticLogin", "true");
     		settings.endGroup();
     		if (text.equalsIgnoreCase("true"))
     			return true;
     		else
     			return false;		
     	} catch (java.lang.ClassCastException e) {
-    		Boolean value = (Boolean) settings.value("automaticLogin", false);
+    		Boolean value = (Boolean) settings.value("automaticLogin", true);
     		settings.endGroup();
     		return value;
     	}

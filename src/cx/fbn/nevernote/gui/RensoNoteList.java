@@ -80,7 +80,7 @@ public class RensoNoteList extends QListWidget {
 		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner, logger);
 		this.enRelatedNotesRunner.enRelatedNotesSignal.getENRelatedNotesFinished.connect(this, "enRelatedNotesComplete()");
 		this.enRelatedNotesThread = new QThread(enRelatedNotesRunner, "ENRelatedNotes Thread");
-		this.enRelatedNotesThread.start();
+		this.getEnRelatedNotesThread().start();
 		
 		rensoNoteListItems = new HashMap<QListWidgetItem, String>();
 		rensoNoteListTrueItems = new ArrayList<RensoNoteListItem>();
@@ -408,5 +408,9 @@ public class RensoNoteList extends QListWidget {
 			return true;
 		}
 		return false;
+	}
+
+	public QThread getEnRelatedNotesThread() {
+		return enRelatedNotesThread;
 	}
 }

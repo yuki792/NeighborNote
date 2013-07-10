@@ -225,7 +225,8 @@ public class MainMenuBar extends QMenuBar {
 		noteDuplicateAction = new QAction(tr("Duplicate"), this);
 		noteDuplicateAction.setToolTip(tr("Duplicate this note"));
 		noteDuplicateAction.triggered.connect(parent, "duplicateNote()");
-		setupShortcut(noteReindex, "File_Note_Duplicate");
+		// IFIXED
+		setupShortcut(noteDuplicateAction, "File_Note_Duplicate");
 		
 		noteMergeAction = new QAction(tr("Merge Notes"), this);
 		noteMergeAction.setToolTip(tr("Merge Multiple notes"));
