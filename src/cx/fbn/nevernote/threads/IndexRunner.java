@@ -72,8 +72,8 @@ public class IndexRunner extends QObject implements Runnable {
 	public final int					REINDEXNOTE=3;
 	public boolean						keepRunning;
 	private final QDomDocument			doc;
-	private static String				regex = Global.getWordRegex();
-	public String						specialIndexCharacters = "";
+//	private static String				regex = Global.getWordRegex();
+//	public String						specialIndexCharacters = "";
 //	public boolean						indexNoteBody = true;
 //	public boolean						indexNoteTitle = true;
 	public boolean						indexImageRecognition = true;
@@ -366,10 +366,11 @@ public class IndexRunner extends QObject implements Runnable {
 			RTFParser parser = new RTFParser();	
 			ParseContext context = new ParseContext();
 			parser.parse(input, textHandler, metadata, context);
-			String[] result = textHandler.toString().split(regex);
-			for (int i=0; i<result.length && keepRunning; i++) {
-				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
-			}
+//			String[] result = textHandler.toString().split(regex);
+//			for (int i=0; i<result.length && keepRunning; i++) {
+//				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
+//			}
+			updateResourceText(r.getGuid(), textHandler.toString());
 			input.close();
 		
 			f.close();
@@ -413,13 +414,14 @@ public class IndexRunner extends QObject implements Runnable {
 			OpenDocumentParser parser = new OpenDocumentParser();	
 			ParseContext context = new ParseContext();
 			parser.parse(input, textHandler, metadata, context);
-			String[] result = textHandler.toString().split(regex);
-			for (int i=0; i<result.length && keepRunning; i++) {
-				if (interrupt) {
-					processInterrupt();
-				}
-				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
-			}
+//			String[] result = textHandler.toString().split(regex);
+//			for (int i=0; i<result.length && keepRunning; i++) {
+//				if (interrupt) {
+//					processInterrupt();
+//				}
+//				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
+//			}
+			updateResourceText(r.getGuid(), textHandler.toString());
 			input.close();
 		
 			f.close();
@@ -463,13 +465,14 @@ public class IndexRunner extends QObject implements Runnable {
 			OfficeParser parser = new OfficeParser();	
 			ParseContext context = new ParseContext();
 			parser.parse(input, textHandler, metadata, context);
-			String[] result = textHandler.toString().split(regex);
-			for (int i=0; i<result.length && keepRunning; i++) {
-				if (interrupt) {
-					processInterrupt();
-				}
-				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
-			}
+//			String[] result = textHandler.toString().split(regex);
+//			for (int i=0; i<result.length && keepRunning; i++) {
+//				if (interrupt) {
+//					processInterrupt();
+//				}
+//				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
+//			}
+			updateResourceText(r.getGuid(), textHandler.toString());
 			input.close();
 		
 			f.close();
@@ -514,13 +517,14 @@ public class IndexRunner extends QObject implements Runnable {
 			PDFParser parser = new PDFParser();	
 			ParseContext context = new ParseContext();
 			parser.parse(input, textHandler, metadata, context);
-			String[] result = textHandler.toString().split(regex);
-			for (int i=0; i<result.length && keepRunning; i++) {
-				if (interrupt) {
-					processInterrupt();
-				}
-				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
-			}
+//			String[] result = textHandler.toString().split(regex);
+//			for (int i=0; i<result.length && keepRunning; i++) {
+//				if (interrupt) {
+//					processInterrupt();
+//				}
+//				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
+//			}
+			updateResourceText(r.getGuid(), textHandler.toString());
 			input.close();
 		
 			f.close();
@@ -564,13 +568,14 @@ public class IndexRunner extends QObject implements Runnable {
 			OOXMLParser parser = new OOXMLParser();	
 			ParseContext context = new ParseContext();
 			parser.parse(input, textHandler, metadata, context);
-			String[] result = textHandler.toString().split(regex);
-			for (int i=0; i<result.length && keepRunning; i++) {
-				if (interrupt) {
-					processInterrupt();
-				}
-				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
-			}
+//			String[] result = textHandler.toString().split(regex);
+//			for (int i=0; i<result.length && keepRunning; i++) {
+//				if (interrupt) {
+//					processInterrupt();
+//				}
+//				addToIndex(r.getNoteGuid(), result[i], "RESOURCE");
+//			}
+			updateResourceText(r.getGuid(), textHandler.toString());
 			input.close();
 		
 			f.close();
@@ -623,38 +628,43 @@ public class IndexRunner extends QObject implements Runnable {
 	}
 
 	
-	private void addToIndex(String guid, String word, String type) {
-		if (foundWords.contains(word))
-			return;
-		StringBuffer buffer = new StringBuffer(word.toLowerCase());
-		for (int i=buffer.length()-1; i>=0; i--) {
-			if (!Character.isLetterOrDigit(buffer.charAt(i)) && specialIndexCharacters.indexOf(buffer.charAt(i)) == -1)
-				buffer.deleteCharAt(i);
-			else
-				break;
-		}
-		buffer = buffer.reverse();
-		for (int i=buffer.length()-1; i>=0; i--) {
-			if (!Character.isLetterOrDigit(buffer.charAt(i)))
-				buffer.deleteCharAt(i);
-			else
-				break;
-		}
-		buffer = buffer.reverse();
-		if (buffer.length() > 0) {
-			// We have a good word, now let's trim off junk at the beginning or end
-			if (!foundWords.contains(buffer.toString())) {
-				foundWords.add(buffer.toString());
-				foundWords.add(word);
-				conn.getWordsTable().addWordToNoteIndex(guid, buffer.toString(), type, 100);
-				uncommittedCount++;
-				if (uncommittedCount > 100) {
-					conn.commitTransaction();
-					uncommittedCount=0;
-				}
-			}
-		}
-		return;
+//	private void addToIndex(String guid, String word, String type) {
+//		if (foundWords.contains(word))
+//			return;
+//		StringBuffer buffer = new StringBuffer(word.toLowerCase());
+//		for (int i=buffer.length()-1; i>=0; i--) {
+//			if (!Character.isLetterOrDigit(buffer.charAt(i)) && specialIndexCharacters.indexOf(buffer.charAt(i)) == -1)
+//				buffer.deleteCharAt(i);
+//			else
+//				break;
+//		}
+//		buffer = buffer.reverse();
+//		for (int i=buffer.length()-1; i>=0; i--) {
+//			if (!Character.isLetterOrDigit(buffer.charAt(i)))
+//				buffer.deleteCharAt(i);
+//			else
+//				break;
+//		}
+//		buffer = buffer.reverse();
+//		if (buffer.length() > 0) {
+//			// We have a good word, now let's trim off junk at the beginning or end
+//			if (!foundWords.contains(buffer.toString())) {
+//				foundWords.add(buffer.toString());
+//				foundWords.add(word);
+//				conn.getWordsTable().addWordToNoteIndex(guid, buffer.toString(), type, 100);
+//				uncommittedCount++;
+//				if (uncommittedCount > 100) {
+//					conn.commitTransaction();
+//					uncommittedCount=0;
+//				}
+//			}
+//		}
+//		return;
+//	}
+	
+	// ノートリソーステーブルのリソーステキストに追加
+	private void updateResourceText(String guid, String text) {
+		conn.getNoteTable().noteResourceTable.updateResourceText(guid, text);
 	}
 	
 	private void scanUnindexed() {

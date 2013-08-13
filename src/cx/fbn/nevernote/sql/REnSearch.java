@@ -704,8 +704,10 @@ public class REnSearch {
 		NSqlQuery indexQuery = new NSqlQuery(conn.getIndexConnection());
 		NSqlQuery mergeQuery = new NSqlQuery(conn.getConnection());
 		NSqlQuery deleteQuery = new NSqlQuery(conn.getConnection());
-		NSqlQuery ftlQuery = new NSqlQuery(conn.getConnection());
-		ftlQuery.prepare("SELECT N.GUID AS GUID FROM FTL_SEARCH_DATA(:text, 0, 0) FT, NOTE N WHERE FT.TABLE='NOTE' AND N.GUID=FT.KEYS[0]");
+		NSqlQuery ftlNoteQuery = new NSqlQuery(conn.getConnection());
+		NSqlQuery ftlResourceQuery = new NSqlQuery(conn.getResourceConnection());
+		ftlNoteQuery.prepare("SELECT N.GUID AS GUID FROM FTL_SEARCH_DATA(:text, 0, 0) FT, NOTE N WHERE FT.TABLE='NOTE' AND N.GUID=FT.KEYS[0]");
+		ftlResourceQuery.prepare("SELECT R.GUID AS GUID FROM FTL_SEARCH_DATA(:text, 0, 0) FT, NOTERESOURCES R WHERE FT.TABLE='NOTERESOURCES' AND R.GUID=FT.KEYS[0]");
 		
 		insertQuery.prepare("Insert into SEARCH_RESULTS (guid) values (:guid)");
 		mergeQuery.prepare("Insert into SEARCH_RESULTS_MERGE (guid) values (:guid)");
@@ -735,17 +737,39 @@ public class REnSearch {
 					}
 				}
 				
-				// luceneによる全文検索
-				ftlQuery.bindValue(":text", getWords().get(i));
-				ftlQuery.exec();
-				while(ftlQuery.next()) {
-					guid = ftlQuery.valueString(0);
+				// luceneによる全文検索　ノートテーブル
+				ftlNoteQuery.bindValue(":text", getWords().get(i));
+				ftlNoteQuery.exec();
+				while(ftlNoteQuery.next()) {
+					guid = ftlNoteQuery.valueString(0);
 					if (i==0 || any) {
 						insertQuery.bindValue(":guid", guid);
 						insertQuery.exec();
 					} else {
 						mergeQuery.bindValue(":guid", guid);
 						mergeQuery.exec();
+					}
+				}
+				// luceneによる全文検索　リソーステーブル
+				NSqlQuery rQuery = new NSqlQuery(conn.getResourceConnection());
+				ftlResourceQuery.bindValue(":text", getWords().get(i));
+				ftlResourceQuery.exec();
+				while(ftlResourceQuery.next()) {
+					guid = ftlResourceQuery.valueString(0);
+					
+					// リソースguidからノートguidを算出
+					rQuery.prepare("Select noteGuid from noteResources where guid=:guid");
+					rQuery.bindValue(":guid", guid);
+					rQuery.exec();
+					while(rQuery.next()) {
+						guid = rQuery.valueString(0);
+						if (i==0 || any) {
+							insertQuery.bindValue(":guid", guid);
+							insertQuery.exec();
+						} else {
+							mergeQuery.bindValue(":guid", guid);
+							mergeQuery.exec();
+						}
 					}
 				}
 				

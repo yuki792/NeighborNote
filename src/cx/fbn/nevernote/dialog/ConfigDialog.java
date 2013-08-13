@@ -180,12 +180,12 @@ public class ConfigDialog extends QDialog {
 		Global.setIndexNoteTitle(indexPage.getIndexNoteTitle());
 		Global.setIndexImageRecognition(indexPage.getIndexImageRecognition());
 //		Global.setAutomaticWildcardSearches(indexPage.getAutomaticWildcardSearches());
-		Global.setSpecialIndexCharacters(indexPage.getSpecialCharacters());
+//		Global.setSpecialIndexCharacters(indexPage.getSpecialCharacters());
 		Global.setIncludeTagChildren(appearancePage.getIncludeTagChildren());
 		Global.setDisplayRightToLeft(appearancePage.getDisplayRightToLeft());
 		
 		Global.userStoreUrl = "https://"+debugPage.getServer()+"/edam/user";
-		Global.setWordRegex(indexPage.getRegex());
+//		Global.setWordRegex(indexPage.getRegex());
 		Global.setRecognitionWeight(indexPage.getRecognitionWeight());
 		Global.setIndexThreadSleepInterval(indexPage.getSleepInterval());
 		Global.setMessageLevel( debugPage.getDebugLevel());
@@ -243,9 +243,14 @@ public class ConfigDialog extends QDialog {
 		Global.setRensoListItemMaximum(rensoNoteListPage.getRensoListItemMaximum());
 		
 		// 全文検索の対象項目を再設定
-		NSqlQuery query = new NSqlQuery(conn.getConnection());
-		query.exec("CALL FTL_DROP_ALL();");	// カラム単位で削除できないので一度全部消して、再構築
-		Global.rebuildFullTextTarget(query);
+		NSqlQuery nQuery = new NSqlQuery(conn.getConnection());
+		NSqlQuery rQuery = new NSqlQuery(conn.getResourceConnection()); 
+		// カラム単位で削除できないので一度全部消す
+		nQuery.exec("CALL FTL_DROP_ALL();");
+		rQuery.exec("CALL FTL_DROP_ALL();");
+		// 再構築
+		Global.rebuildFullTextNoteTarget(conn);
+		Global.rebuildFullTextResourceTarget(conn);
 		
 		close();
 	}
@@ -356,7 +361,7 @@ public class ConfigDialog extends QDialog {
 		appearancePage.setDisplayRightToLeft(Global.displayRightToLeft());
 		appearancePage.setStartupNotebook(Global.getStartupNotebook());
 		
-		indexPage.setRegex(Global.getWordRegex());
+//		indexPage.setRegex(Global.getWordRegex());
 		indexPage.setSleepInterval(Global.getIndexThreadSleepInterval());
 		connectionPage.setSyncInterval(Global.getSyncInterval());
 		

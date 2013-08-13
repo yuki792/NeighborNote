@@ -53,6 +53,7 @@ import cx.fbn.nevernote.config.StartupConfig;
 import cx.fbn.nevernote.gui.ContainsAttributeFilterTable;
 import cx.fbn.nevernote.gui.DateAttributeFilterTable;
 import cx.fbn.nevernote.gui.ShortcutKeys;
+import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.sql.driver.NSqlQuery;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 import cx.fbn.nevernote.utilities.Pair;
@@ -140,7 +141,7 @@ public class Global {
     //public static int minimumWordCount = 2;
     
     // Regular expression to parse text with when indexing
-    private static String wordRegex;
+//    private static String wordRegex;
     
     // Experimental fixes.  Set via Edit/Preferences/Debugging
     public static boolean enableCarriageReturnFix = false;
@@ -222,10 +223,10 @@ public class Global {
 		getServer();  // Setup URL to connect to
 		
 		// Get regular expressions used to parse out words
-		settings.beginGroup("General");
-		String regex = (String) settings.value("regex", "[,\\s]+");
-		setWordRegex(regex);
-		settings.endGroup();
+//		settings.beginGroup("General");
+//		String regex = (String) settings.value("regex", "[,\\s]+");
+//		setWordRegex(regex);
+//		settings.endGroup();
 		
 		//Setup debugging information
 		settings.beginGroup("Debug");
@@ -252,12 +253,12 @@ public class Global {
     }
 
     // Get/Set word parsing regular expression
-    public static String getWordRegex() {
-    	return wordRegex;
-    }
-    public static void setWordRegex(String r) {
-    	wordRegex = r;
-    }
+//    public static String getWordRegex() {
+//    	return wordRegex;
+//    }
+//    public static void setWordRegex(String r) {
+//    	wordRegex = r;
+//    }
 
    // Set the debug message level
    public static void setMessageLevel(String msglevel) {
@@ -1881,18 +1882,18 @@ public class Global {
 		settings.endGroup();	
     }
     // Get/Set characters that shouldn't be removed from a word
-    public static String getSpecialIndexCharacters() {
-		settings.beginGroup("Index");
-		String text = (String)settings.value("specialCharacters", "");
-		settings.endGroup();	
-		return text;
-    }
-    public static void setSpecialIndexCharacters(String value) {
-		settings.beginGroup("Index");
-		settings.setValue("specialCharacters", value);
-		settings.endGroup();	
-		databaseCache = value;
-    }
+//    public static String getSpecialIndexCharacters() {
+//		settings.beginGroup("Index");
+//		String text = (String)settings.value("specialCharacters", "");
+//		settings.endGroup();	
+//		return text;
+//    }
+//    public static void setSpecialIndexCharacters(String value) {
+//		settings.beginGroup("Index");
+//		settings.setValue("specialCharacters", value);
+//		settings.endGroup();	
+//		databaseCache = value;
+//    }
     
     //*****************************************************************************
     // Control how tag selection behaves (should they be "and" or "or" selections
@@ -2345,7 +2346,8 @@ public class Global {
 	}
 	
 	// 全文検索機能の対象となるテーブルとカラムを再構築
-	public static boolean rebuildFullTextTarget(NSqlQuery query) {
+	public static boolean rebuildFullTextNoteTarget(DatabaseConnection dbConn) {
+		NSqlQuery nQuery = new NSqlQuery(dbConn.getConnection());
 		StringBuilder noteTableTarget = new StringBuilder();
 		boolean success = true;
 		
@@ -2359,12 +2361,30 @@ public class Global {
 			noteTableTarget.append("TITLE");
 		}
 		
-		// TODO 他の項目もあとで追加
-		
 		if (noteTableTarget.length() > 0) {
-			query.prepare("CALL FTL_CREATE_INDEX('PUBLIC', 'NOTE', :column);");
-			query.bindValue(":column", noteTableTarget.toString());
-			if (!query.exec()) {
+			nQuery.prepare("CALL FTL_CREATE_INDEX('PUBLIC', 'NOTE', :column);");
+			nQuery.bindValue(":column", noteTableTarget.toString());
+			if (!nQuery.exec()) {
+				success = false;
+			}
+		}
+		
+		return success;
+	}
+	
+	public static boolean rebuildFullTextResourceTarget(DatabaseConnection dbConn) {
+		NSqlQuery rQuery = new NSqlQuery(dbConn.getResourceConnection());
+		StringBuilder resourceTableTarget = new StringBuilder();
+		boolean success = true;
+		
+		if (Global.indexAttachmentsLocally()) {
+			resourceTableTarget.append("RESOURCETEXT");
+		}
+		
+		if (resourceTableTarget.length() > 0) {
+			rQuery.prepare("CALL FTL_CREATE_INDEX('PUBLIC', 'NOTERESOURCES', :column);");
+			rQuery.bindValue(":column", resourceTableTarget.toString());
+			if (!rQuery.exec()) {
 				success = false;
 			}
 		}

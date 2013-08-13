@@ -455,7 +455,7 @@ public class NeverNote extends QMainWindow{
         indexRunner.indexImageRecognition = Global.indexImageRecognition();
 //        indexRunner.indexNoteBody = Global.indexNoteBody();
 //        indexRunner.indexNoteTitle = Global.indexNoteTitle();
-        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
+//        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
 		indexThread.start();
 		
         synchronizeAnimationTimer = new QTimer();
@@ -1463,7 +1463,7 @@ public class NeverNote extends QMainWindow{
         indexRunner.indexAttachmentsLocally = Global.indexAttachmentsLocally();
 //        indexRunner.indexNoteBody = Global.indexNoteBody();
 //        indexRunner.indexNoteTitle = Global.indexNoteTitle();
-        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
+//        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
         indexRunner.indexImageRecognition = Global.indexImageRecognition();
         if (Global.showTrayIcon() || Global.minimizeOnClose())
         	trayIcon.show();

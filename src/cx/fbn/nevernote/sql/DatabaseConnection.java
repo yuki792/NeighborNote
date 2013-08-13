@@ -308,10 +308,25 @@ public class DatabaseConnection {
 				query2.exec();
 			}
 			
-			// 全文検索のための準備
+			// Apache Luceneを使った全文検索のための準備
 			query.exec("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLucene.init\"");
 			query.exec("CALL FTL_INIT()");
-			Global.rebuildFullTextTarget(query);
+			
+			Global.rebuildFullTextNoteTarget(this);
+		}
+		
+		// Apache Luceneを使った日本語検索のためのプレーンテキストノートリソースカラムを準備
+		NSqlQuery rQuery = new NSqlQuery(resourceConn);
+		rQuery.exec("select TABLE_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='NOTERESOURCES' and COLUMN_NAME='RESOURCETEXT'");
+		if (!rQuery.next()) {
+			rQuery.exec("alter table noteResources add column resourceText VarChar");
+			rQuery.exec("update noteResources set resourceText = ''");
+			
+			// Apache Luceneを使った全文検索のための準備
+			rQuery.exec("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLucene.init\"");
+			rQuery.exec("CALL FTL_INIT()");
+			
+			Global.rebuildFullTextResourceTarget(this);
 		}
 	}
 	

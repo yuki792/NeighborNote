@@ -675,5 +675,27 @@ public class NoteResourceTable  {
 		NSqlQuery query = new NSqlQuery(db.getResourceConnection());
 		query.exec("update noteresources set isdirty=false");
 	}
+	
+	// リソーステキストを更新
+	public void updateResourceText(String guid, String text) {
+		logger.log(logger.HIGH, "Entering NoteResourceTable.updateResourceText");
+		NSqlQuery query = new NSqlQuery(db.getResourceConnection());
+		boolean check = query.prepare("Update noteResources set resourceText=:resourceText where guid=:guid");
+		if (!check) {
+			logger.log(logger.EXTREME, "Update resourceText sql prepare has failed.");
+			logger.log(logger.MEDIUM, query.lastError());
+		}
+		
+		query.bindValue(":resourceText", text);
+		query.bindValue(":guid", guid);
+		
+		check = query.exec();
+		if (!check) {
+			logger.log(logger.EXTREME, "Update resourceText has failed.");
+			logger.log(logger.MEDIUM, query.lastError());
+		}
+		logger.log(logger.HIGH, "Leaving NoteResourceTable.updateResourceText");
+		query.exec();
+	}
 }
 
