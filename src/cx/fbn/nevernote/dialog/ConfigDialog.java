@@ -44,6 +44,8 @@ import com.trolltech.qt.gui.QVBoxLayout;
 
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.NeverNote;
+import cx.fbn.nevernote.sql.DatabaseConnection;
+import cx.fbn.nevernote.sql.driver.NSqlQuery;
 public class ConfigDialog extends QDialog {
 	private final QListWidget 				contentsWidget;
 	private final ConfigFontPage			fontPage;
@@ -55,11 +57,13 @@ public class ConfigDialog extends QDialog {
 	private final ConfigIndexPage			indexPage;
 	private final ConfigRensoNoteListPage	rensoNoteListPage;
 	private final NeverNote 				parent;
+	private final DatabaseConnection conn;
 	
-    private final String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
-	
-	public ConfigDialog(NeverNote parent) {
+    	private final String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
+    
+	public ConfigDialog(NeverNote parent, DatabaseConnection conn) {
 		this.parent = parent;
+		this.conn = conn;
 		
 		contentsWidget = new QListWidget(this);
 		setWindowIcon(new QIcon(iconPath+"config.png"));
@@ -176,13 +180,13 @@ public class ConfigDialog extends QDialog {
 		Global.setIndexNoteBody(indexPage.getIndexNoteBody());
 		Global.setIndexNoteTitle(indexPage.getIndexNoteTitle());
 		Global.setIndexImageRecognition(indexPage.getIndexImageRecognition());
-		Global.setAutomaticWildcardSearches(indexPage.getAutomaticWildcardSearches());
-		Global.setSpecialIndexCharacters(indexPage.getSpecialCharacters());
+//		Global.setAutomaticWildcardSearches(indexPage.getAutomaticWildcardSearches());
+//		Global.setSpecialIndexCharacters(indexPage.getSpecialCharacters());
 		Global.setIncludeTagChildren(appearancePage.getIncludeTagChildren());
 		Global.setDisplayRightToLeft(appearancePage.getDisplayRightToLeft());
 		
 		Global.userStoreUrl = "https://"+debugPage.getServer()+"/edam/user";
-		Global.setWordRegex(indexPage.getRegex());
+//		Global.setWordRegex(indexPage.getRegex());
 		Global.setRecognitionWeight(indexPage.getRecognitionWeight());
 		Global.setIndexThreadSleepInterval(indexPage.getSleepInterval());
 		Global.setMessageLevel( debugPage.getDebugLevel());
@@ -242,6 +246,16 @@ public class ConfigDialog extends QDialog {
 		
 		// 連想ノートリストをリフレッシュ
 		parent.getRensoNoteList().refreshRensoNoteList(parent.getCurrentNoteGuid());
+		
+		// 全文検索の対象項目を再設定
+		NSqlQuery nQuery = new NSqlQuery(conn.getConnection());
+		NSqlQuery rQuery = new NSqlQuery(conn.getResourceConnection()); 
+		// カラム単位で削除できないので一度全部消す
+		nQuery.exec("CALL FTL_DROP_ALL();");
+		rQuery.exec("CALL FTL_DROP_ALL();");
+		// 再構築
+		Global.rebuildFullTextNoteTarget(conn);
+		Global.rebuildFullTextResourceTarget(conn);
 		
 		close();
 	}
@@ -351,7 +365,7 @@ public class ConfigDialog extends QDialog {
 		appearancePage.setDisplayRightToLeft(Global.displayRightToLeft());
 		appearancePage.setStartupNotebook(Global.getStartupNotebook());
 		
-		indexPage.setRegex(Global.getWordRegex());
+//		indexPage.setRegex(Global.getWordRegex());
 		indexPage.setSleepInterval(Global.getIndexThreadSleepInterval());
 		connectionPage.setSyncInterval(Global.getSyncInterval());
 		

@@ -33,7 +33,6 @@ import com.evernote.edam.type.Note;
 import com.evernote.edam.type.Notebook;
 import com.evernote.edam.type.Tag;
 
-import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.sql.driver.NSqlQuery;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
@@ -392,16 +391,16 @@ public class REnSearch {
 				searchPhrases.add(word.toLowerCase());
 			}
 			if (!searchPhrase && pos < 0) {
-				if (word != null && word.length() > 0 && !Global.automaticWildcardSearches())
+				if (word != null && word.length() > 0/* && !Global.automaticWildcardSearches()*/)
 					getWords().add(word); 
-				if (word != null && word.length() > 0 && Global.automaticWildcardSearches()) {
-					String wildcardWord = word;
-					if (!wildcardWord.startsWith("*"))
-						wildcardWord = "*"+wildcardWord;
-					if (!wildcardWord.endsWith("*"))
-						wildcardWord = wildcardWord+"*";
-					getWords().add(wildcardWord); 
-				}
+//				if (word != null && word.length() > 0 && Global.automaticWildcardSearches()) {
+//					String wildcardWord = word;
+//					if (!wildcardWord.startsWith("*"))
+//						wildcardWord = "*"+wildcardWord;
+//					if (!wildcardWord.endsWith("*"))
+//						wildcardWord = wildcardWord+"*";
+//					getWords().add(wildcardWord); 
+//				}
 //				getWords().add("*"+word+"*");           //// WILDCARD
 			}
 			if (word.startsWith("intitle:")) 
@@ -705,12 +704,17 @@ public class REnSearch {
 		NSqlQuery indexQuery = new NSqlQuery(conn.getIndexConnection());
 		NSqlQuery mergeQuery = new NSqlQuery(conn.getConnection());
 		NSqlQuery deleteQuery = new NSqlQuery(conn.getConnection());
+		NSqlQuery ftlNoteQuery = new NSqlQuery(conn.getConnection());
+		NSqlQuery ftlResourceQuery = new NSqlQuery(conn.getResourceConnection());
+		ftlNoteQuery.prepare("SELECT N.GUID AS GUID FROM FTL_SEARCH_DATA(:text, 0, 0) FT, NOTE N WHERE FT.TABLE='NOTE' AND N.GUID=FT.KEYS[0]");
+		ftlResourceQuery.prepare("SELECT R.GUID AS GUID FROM FTL_SEARCH_DATA(:text, 0, 0) FT, NOTERESOURCES R WHERE FT.TABLE='NOTERESOURCES' AND R.GUID=FT.KEYS[0]");
 		
 		insertQuery.prepare("Insert into SEARCH_RESULTS (guid) values (:guid)");
 		mergeQuery.prepare("Insert into SEARCH_RESULTS_MERGE (guid) values (:guid)");
 		
 		if (subSelect) {
 			for (int i=0; i<getWords().size(); i++) {
+				// wordsテーブルから検索
 				if (getWords().get(i).indexOf("*") == -1) {
 					indexQuery.prepare("Select distinct guid from words where weight >= " +minimumRecognitionWeight +
 							" and word=:word");
@@ -732,6 +736,43 @@ public class REnSearch {
 						mergeQuery.exec();
 					}
 				}
+				
+				// luceneによる全文検索　ノートテーブル
+				ftlNoteQuery.bindValue(":text", getWords().get(i));
+				ftlNoteQuery.exec();
+				while(ftlNoteQuery.next()) {
+					guid = ftlNoteQuery.valueString(0);
+					if (i==0 || any) {
+						insertQuery.bindValue(":guid", guid);
+						insertQuery.exec();
+					} else {
+						mergeQuery.bindValue(":guid", guid);
+						mergeQuery.exec();
+					}
+				}
+				// luceneによる全文検索　リソーステーブル
+				NSqlQuery rQuery = new NSqlQuery(conn.getResourceConnection());
+				ftlResourceQuery.bindValue(":text", getWords().get(i));
+				ftlResourceQuery.exec();
+				while(ftlResourceQuery.next()) {
+					guid = ftlResourceQuery.valueString(0);
+					
+					// リソースguidからノートguidを算出
+					rQuery.prepare("Select noteGuid from noteResources where guid=:guid");
+					rQuery.bindValue(":guid", guid);
+					rQuery.exec();
+					while(rQuery.next()) {
+						guid = rQuery.valueString(0);
+						if (i==0 || any) {
+							insertQuery.bindValue(":guid", guid);
+							insertQuery.exec();
+						} else {
+							mergeQuery.bindValue(":guid", guid);
+							mergeQuery.exec();
+						}
+					}
+				}
+				
 				if (i>0 && !any) {
 					deleteQuery.exec("Delete from SEARCH_RESULTS where guid not in (select guid from SEARCH_RESULTS_MERGE)");
 					deleteQuery.exec("Delete from SEARCH_RESULTS_MERGE");

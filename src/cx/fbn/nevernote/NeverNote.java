@@ -456,9 +456,9 @@ public class NeverNote extends QMainWindow{
 		indexThread = new QThread(indexRunner, "Index Thread");
         indexRunner.indexAttachmentsLocally = Global.indexAttachmentsLocally();
         indexRunner.indexImageRecognition = Global.indexImageRecognition();
-        indexRunner.indexNoteBody = Global.indexNoteBody();
-        indexRunner.indexNoteTitle = Global.indexNoteTitle();
-        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
+//        indexRunner.indexNoteBody = Global.indexNoteBody();
+//        indexRunner.indexNoteTitle = Global.indexNoteTitle();
+//        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
 		indexThread.start();
 		
         synchronizeAnimationTimer = new QTimer();
@@ -1458,7 +1458,7 @@ public class NeverNote extends QMainWindow{
 		saveNoteColumnPositions();
 		saveNoteIndexWidth();
 		showColumns();
-        ConfigDialog settings = new ConfigDialog(this);
+        ConfigDialog settings = new ConfigDialog(this, conn);
         String dateFormat = Global.getDateFormat();
         String timeFormat = Global.getTimeFormat();
         
@@ -1467,9 +1467,9 @@ public class NeverNote extends QMainWindow{
         
         settings.exec();
         indexRunner.indexAttachmentsLocally = Global.indexAttachmentsLocally();
-        indexRunner.indexNoteBody = Global.indexNoteBody();
-        indexRunner.indexNoteTitle = Global.indexNoteTitle();
-        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
+//        indexRunner.indexNoteBody = Global.indexNoteBody();
+//        indexRunner.indexNoteTitle = Global.indexNoteTitle();
+//        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
         indexRunner.indexImageRecognition = Global.indexImageRecognition();
         if (Global.showTrayIcon() || Global.minimizeOnClose())
         	trayIcon.show();

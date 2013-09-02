@@ -123,8 +123,9 @@ public class NoteFormatter {
 		logger.log(logger.EXTREME, "Note guid: " +currentNoteGuid);
 		logger.log(logger.EXTREME, "Note Text:" +currentNote);
 		QDomDocument doc = new QDomDocument();
-		QDomDocument.Result result = doc.setContent(currentNote.getContent());
-
+//		QDomDocument.Result result = doc.setContent(currentNote.getContent());
+		QDomDocument.Result result = doc.setContent(conn.getNoteTable().getNoteContentNoUTFConversion(currentNote.getGuid()));
+		
 		// Handle any errors
 		if (!result.success) {
 			logger.log(logger.LOW, "Error parsing document.  Attempting to restructure");
@@ -197,8 +198,13 @@ public class NoteFormatter {
 			for (int j=z-1; j>i+1; j--) 
 				html.deleteCharAt(j);
 		} 
+		
+		QTextCodec codec;
+		codec = QTextCodec.codecForName("UTF-8");
+		String value = codec.fromUnicode(html.toString()).toString();
+		return value;
 
-		return html.toString(); //.replace("<Body", "<Body dir=\"rtl\"");
+//		return html.toString(); //.replace("<Body", "<Body dir=\"rtl\"");
 	}	
 
 	private void addImageHilight(String resGuid, QFile f) {
