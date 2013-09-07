@@ -2414,5 +2414,30 @@ public class Global {
 		
 		return success;
 	}
+	
+    // 操作ログを取らないモードのボタン状態
+    public static boolean isHaltLogButton() {
+		settings.beginGroup("RensoNoteList");
+		try {
+			String text = (String)settings.value("haltOperationLog", "false");
+			settings.endGroup();
+			if (text.equalsIgnoreCase("true"))
+				return true;
+			else
+				return false;
+		} catch (java.lang.ClassCastException e) {
+			Boolean value = (Boolean) settings.value("haltOperationLog", true);
+			settings.endGroup();
+			return value;
+		}
+    }
+    public static void saveHaltLogButton(boolean val) {
+		settings.beginGroup("RensoNoteList");
+		if (val)
+			settings.setValue("haltOperationLog", "true");
+		else
+			settings.setValue("haltOperationLog", "false");
+		settings.endGroup();
+    }
 }
 

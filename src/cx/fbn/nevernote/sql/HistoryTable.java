@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.sql.driver.NSqlQuery;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
@@ -57,6 +58,11 @@ public class HistoryTable {
 	public void addHistory(String behaviorType, String guid1, String guid2) {
 		NSqlQuery query = new NSqlQuery(db.getBehaviorConnection());
 		boolean excludedCheck = false;
+		
+		// 操作ログの取得を停止中
+		if (Global.isHaltLogButton()) {
+			return;
+		}
 		
 		if (behaviorType == null) {
 			return;
