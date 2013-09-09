@@ -602,11 +602,11 @@ public class NeverNote extends QMainWindow{
 		tabBrowser = new TabBrowserWidget(this);
 		tabBrowser.setStyleSheet("QTabBar::tab{width:150px;}");
 		tabBrowser.setMovable(true);
+		tabBrowser.setTabsClosable(true);
 		TabBrowse tab = new TabBrowse(conn, tabBrowser, cbObserver);
 		browserWindow = tab.getBrowserWindow();
 		int index = tabBrowser.addNewTab(tab, "");
 		tabWindows.put(index, tab);
-		tabBrowser.setTabsClosable(true);
 		tabBrowser.currentChanged.connect(this, "tabWindowChanged(int)");
 		tabBrowser.tabCloseRequested.connect(this, "tabWindowClosing(int)");
 		
@@ -4904,6 +4904,11 @@ public class NeverNote extends QMainWindow{
 			boolean fromHist = fromHistory.get(i + 1);
 			fromHistory.put(i,  fromHist);
 			fromHistory.remove(i + 1);
+		}
+		
+		// タブが残り1つになったら、閉じるボタンを消す
+		if (tabBrowser.count() == 1) {
+			tabBrowser.hideTabCloseButton(0);
 		}
 		
 		// タブの閉じるボタンを押すと、tabWindowClosingより先にtabWindowChangedが呼ばれてしまうので、手動で呼びなおす
