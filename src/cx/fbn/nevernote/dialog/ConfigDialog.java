@@ -229,7 +229,6 @@ public class ConfigDialog extends QDialog {
 		Global.setDefaultFontSize(fontPage.getFontSize());
 		Global.setDatabaseCache(debugPage.getDatabaseCacheSize());
 		
-		// ICHANGED
 		Global.setBrowseWeight(rensoNoteListPage.getBrowseWeight());
 		Global.setCopyPasteWeight(rensoNoteListPage.getCopyPasteWeight());
 		Global.setAddNewNoteWeight(rensoNoteListPage.getAddNewNoteWeight());
@@ -238,7 +237,18 @@ public class ConfigDialog extends QDialog {
 		Global.setSameNotebookWeight(rensoNoteListPage.getSameNotebookWeight());
 		Global.setENRelatedNotesWeight(rensoNoteListPage.getENRelatedNotesWeight());
 		
-		// ICHANGED
+		// 現在カスタムモードなら、カスタムモードの設定値として保存
+		String mode = new String(Global.rensoWeightingSelect());
+		if (mode.equals("Custom")) {
+			Global.saveCustomBrowseWeight(rensoNoteListPage.getBrowseWeight());
+			Global.saveCustomCopyPasteWeight(rensoNoteListPage.getCopyPasteWeight());
+			Global.saveCustomAddNewNoteWeight(rensoNoteListPage.getAddNewNoteWeight());
+			Global.saveCustomRensoItemClickWeight(rensoNoteListPage.getRensoItemClickWeight());
+			Global.saveCustomSameTagWeight(rensoNoteListPage.getSameTagWeight());
+			Global.saveCustomSameNotebookWeight(rensoNoteListPage.getSameNotebookWeight());
+			Global.saveCustomENRelatedNotesWeight(rensoNoteListPage.getENRelatedNotesWeight());
+		}
+		
 		Global.setMergeRensoNote(rensoNoteListPage.getMergeChecked());
 		Global.setDuplicateRensoNote(rensoNoteListPage.getDuplicateChecked());
 		Global.setVerifyExclude(rensoNoteListPage.getVerifyExcludeChecked());

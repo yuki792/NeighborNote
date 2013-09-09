@@ -456,4 +456,8 @@ public class RensoNoteList extends QListWidget {
 	public QThread getEnRelatedNotesThread() {
 		return enRelatedNotesThread;
 	}
+	
+	public String getGuid() {
+		return guid;
+	}
 }

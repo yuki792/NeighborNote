@@ -2141,11 +2141,11 @@ public class Global {
 		settings.beginGroup("RensoNoteList");
 		Integer value;
 		try {
-			String val  = (String)settings.value("addNewNoteWeight", 1);
+			String val  = (String)settings.value("addNewNoteWeight", 3);
 			value = new Integer(val.trim());
 		} catch (Exception e) {
 			try {
-				value = (Integer)settings.value("addNewNoteWeight", 1);
+				value = (Integer)settings.value("addNewNoteWeight", 3);
 			} catch (Exception e1) {
 				value = 1;
 			}
@@ -2236,11 +2236,11 @@ public class Global {
 		settings.beginGroup("RensoNoteList");
 		Integer value;
 		try {
-			String val = (String)settings.value("enRelatedNotesWeight", 10);
+			String val = (String)settings.value("enRelatedNotesWeight", 5);
 			value = new Integer(val.trim());
 		} catch (Exception e) {
 			try {
-				value = (Integer)settings.value("enRelatedNotesWeight", 10);
+				value = (Integer)settings.value("enRelatedNotesWeight", 5);
 			} catch (Exception e1) {
 				value = 10;
 			}
@@ -2439,5 +2439,179 @@ public class Global {
 			settings.setValue("haltOperationLog", "false");
 		settings.endGroup();
     }
+    
+    // 連想ノートリストの重み付けモードの状態
+    public static String rensoWeightingSelect() {
+		settings.beginGroup("RensoNoteList");
+		String text = (String)settings.value("rensoWeightingSelect", "Standard");
+		settings.endGroup();
+		return text;
+    }
+    public static void saveRensoWeightingSelect(String val) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("rensoWeightingSelect", val);
+		settings.endGroup();
+    }
+    
+    //ordinal から指定した Enum の要素に変換する汎用関数
+	public static <E extends Enum<E>> E fromOrdinal(Class<E> enumClass, int ordinal) {
+	    E[] enumArray = enumClass.getEnumConstants();
+	    return enumArray[ordinal];
+	}
+	
+	// 連想ノートリスト重み付けモード：カスタムの設定値（同時閲覧）
+    public static int customBrowseWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("customBrowseWeight", 1);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("customBrowseWeight", 1);
+			} catch (Exception e1) {
+				value = 1;
+			}
+		}
+		settings.endGroup();
+		return value;
+    }
+	public static void saveCustomBrowseWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("customBrowseWeight", weight);
+		settings.endGroup();
+	}
+	// 連想ノートリスト重み付けモード：カスタムの設定値（コピー＆ペースト）
+    public static int customCopyPasteWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("customCopyPasteWeight", 3);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("customCopyPasteWeight", 3);
+			} catch (Exception e1) {
+				value = 3;
+			}
+		}
+		settings.endGroup();
+		return value;
+    }
+	public static void saveCustomCopyPasteWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("customCopyPasteWeight", weight);
+		settings.endGroup();
+	}
+	// 連想ノートリスト重み付けモード：カスタムの設定値（新規ノート追加）
+    public static int customAddNewNoteWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("customAddNewNoteWeight", 3);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("customAddNewNoteWeight", 3);
+			} catch (Exception e1) {
+				value = 3;
+			}
+		}
+		settings.endGroup();
+		return value;
+    }
+	public static void saveCustomAddNewNoteWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("customAddNewNoteWeight", weight);
+		settings.endGroup();
+	}
+	// 連想ノートリスト重み付けモード：カスタムの設定値（連想ノートクリック）
+    public static int customRensoItemClickWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("customRensoItemClickWeight", 10);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("customRensoItemClickWeight", 10);
+			} catch (Exception e1) {
+				value = 10;
+			}
+		}
+		settings.endGroup();
+		return value;
+    }
+	public static void saveCustomRensoItemClickWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("customRensoItemClickWeight", weight);
+		settings.endGroup();
+	}
+	// 連想ノートリスト重み付けモード：カスタムの設定値（同じタグ）
+    public static int customSameTagWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("customSameTagWeight", 2);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("customSameTagWeight", 2);
+			} catch (Exception e1) {
+				value = 2;
+			}
+		}
+		settings.endGroup();
+		return value;
+    }
+	public static void saveCustomSameTagWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("customSameTagWeight", weight);
+		settings.endGroup();
+	}
+	// 連想ノートリスト重み付けモード：カスタムの設定値（同じノートブック）
+    public static int customSameNotebookWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("customSameNotebookWeight", 2);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("customSameNotebookWeight", 2);
+			} catch (Exception e1) {
+				value = 2;
+			}
+		}
+		settings.endGroup();
+		return value;
+    }
+	public static void saveCustomSameNotebookWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("customSameNotebookWeight", weight);
+		settings.endGroup();
+	}
+	// 連想ノートリスト重み付けモード：カスタムの設定値(Evernote関連ノート）
+    public static int customENRelatedNotesWeight() {
+		settings.beginGroup("RensoNoteList");
+		Integer value;
+		try {
+			String val  = (String)settings.value("customENRelatedNotesWeight", 5);
+			value = new Integer(val.trim());
+		} catch (Exception e) {
+			try {
+				value = (Integer)settings.value("customENRelatedNotesWeight", 5);
+			} catch (Exception e1) {
+				value = 5;
+			}
+		}
+		settings.endGroup();
+		return value;
+    }
+	public static void saveCustomENRelatedNotesWeight(int weight) {
+		settings.beginGroup("RensoNoteList");
+		settings.setValue("customENRelatedNotesWeight", weight);
+		settings.endGroup();
+	}
 }
 

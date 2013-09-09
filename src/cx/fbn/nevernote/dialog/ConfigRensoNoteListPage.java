@@ -25,6 +25,7 @@ import com.trolltech.qt.gui.QCheckBox;
 import com.trolltech.qt.gui.QFormLayout;
 import com.trolltech.qt.gui.QGroupBox;
 import com.trolltech.qt.gui.QHBoxLayout;
+import com.trolltech.qt.gui.QLabel;
 import com.trolltech.qt.gui.QSlider;
 import com.trolltech.qt.gui.QSpinBox;
 import com.trolltech.qt.gui.QVBoxLayout;
@@ -208,19 +209,45 @@ public class ConfigRensoNoteListPage extends QWidget {
 		enRelatedNotesLayout.addWidget(enRelatedNotesSpinner);
 		
 		// 重み付け設定部分のレイアウト
+		QVBoxLayout vLayout = new QVBoxLayout();
 		QFormLayout styleLayout = new QFormLayout();
 		styleLayout.setHorizontalSpacing(10);
 		styleLayout.setVerticalSpacing(30);
-		styleLayout.addRow(tr("Browse Weight"), browseLayout);
+		styleLayout.addRow(tr("Concurrent Browse Weight"), browseLayout);
 		styleLayout.addRow(tr("Copy&Paste Weight"), copyPasteLayout);
 		styleLayout.addRow(tr("Add New Note Weight"), addNewNoteLayout);
 		styleLayout.addRow(tr("Renso Item Click Weight"), rensoItemClickLayout);
 		styleLayout.addRow(tr("Same Tag Weight"), sameTagLayout);
 		styleLayout.addRow(tr("Same Notebook Weight"), sameNotebookLayout);
-		styleLayout.addRow(tr("Evernote Related Notes Integration"), enRelatedNotesLayout);
+		styleLayout.addRow(tr("Evernote Related Notes Weight"), enRelatedNotesLayout);
+		vLayout.addLayout(styleLayout);
 
 		QGroupBox weightingGroup = new QGroupBox(tr("Weighting"));
-		weightingGroup.setLayout(styleLayout);
+		weightingGroup.setLayout(vLayout);
+		
+		// プリセットモードがカスタム以外ならば設定不可能にする
+		String mode = new String(Global.rensoWeightingSelect());
+		if (!mode.equals("Custom")) {
+			QLabel attention = new QLabel(tr("You can change these settings if you select \"Custom\" Mode."));
+			attention.setStyleSheet("color : red");
+			vLayout.insertWidget(0, attention);
+			vLayout.insertSpacing(1, 20);
+			
+			browseSlider.setEnabled(false);
+			browseSpinner.setEnabled(false);
+			copyPasteSlider.setEnabled(false);
+			copyPasteSpinner.setEnabled(false);
+			addNewNoteSlider.setEnabled(false);
+			addNewNoteSpinner.setEnabled(false);
+			rensoItemClickSlider.setEnabled(false);
+			rensoItemClickSpinner.setEnabled(false);
+			sameTagSlider.setEnabled(false);
+			sameTagSpinner.setEnabled(false);
+			sameNotebookSlider.setEnabled(false);
+			sameNotebookSpinner.setEnabled(false);
+			enRelatedNotesSlider.setEnabled(false);
+			enRelatedNotesSpinner.setEnabled(false);
+		}
 		
 		// ノートのマージ・複製の関連ノートリストへの適用
 		mergeCheck = new QCheckBox(tr("When you merge the notes, also merge RensoNoteList"));
