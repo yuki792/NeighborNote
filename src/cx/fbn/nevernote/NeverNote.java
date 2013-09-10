@@ -3748,6 +3748,7 @@ public class NeverNote extends QMainWindow{
 
 		Global.isConnected = syncRunner.isConnected;
 		
+		boolean autoLoginMessageFlag = false;
 		if (!Global.isConnected) {
 	    	OAuthWindow window = new OAuthWindow(logger);
 	    	if (window.error) {
@@ -3774,6 +3775,7 @@ public class NeverNote extends QMainWindow{
 	    	syncRunner.authToken = tokenizer.oauth_token;
 			syncRunner.enConnect();
 			Global.isConnected = syncRunner.isConnected;
+			autoLoginMessageFlag = true;
 		}
 //		Global.username = syncRunner.username;
 		    	
@@ -3781,9 +3783,16 @@ public class NeverNote extends QMainWindow{
 			return;
 		setupOnlineMenu();
 		setupConnectMenuOptions();
+		
+		// 初回ログイン時に自動ログインが無効だったら、有効化するか確認する
+		if (autoLoginMessageFlag && !Global.automaticLogin()) {
+			if (QMessageBox.question(this, tr("Confirmation"), tr("Are you sure you want to enable the auto-login feature?"), 
+					QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No) == StandardButton.Yes.value()) {
+				Global.setAutomaticLogin(true);
+			}
+		}
+		
 		logger.log(logger.HIGH, "Leaving NeverNote.remoteConnect");
-
-
     }
     private void setupConnectMenuOptions() {
     	logger.log(logger.HIGH, "entering NeverNote.setupConnectMenuOptions");

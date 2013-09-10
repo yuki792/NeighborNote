@@ -155,7 +155,7 @@ public class RensoNoteListDock extends QDockWidget {
 			
 			// カスタムモードかつアプリ起動時以外なら、メッセージ表示
 			if (mode == PresetMode.Custom) {
-				QMessageBox.information(this, tr("Custom Mode was Selected"), tr("Custom mode was selected.\nYou can customize weighting manually in the Edit/Preferences/Renso Note List."));
+				QMessageBox.information(this, tr("Information"), tr("Custom mode was selected.\nYou can customize weighting manually in the Edit/Preferences/Renso Note List."));
 			}
 		}
 	}
@@ -165,7 +165,7 @@ public class RensoNoteListDock extends QDockWidget {
 		logger.log(logger.EXTREME, "RensoNoteListDock.haltLogToggled");
 		
 		if (checked) {
-			QMessageBox.information(this, tr("Halt Collectiong Operation Log"), tr("Collecting operation log halted.\nYou can resume, if you press this button again."));
+			QMessageBox.information(this, tr("Information"), tr("Collecting operation log halted.\nYou can resume, if you press this button again."));
 		}
 		Global.saveHaltLogButton(checked);
 	}
