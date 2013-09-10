@@ -44,6 +44,7 @@ public class DatabaseStatus extends QDialog {
 	QLabel indexCount;
 	QLabel resourceIndexNeeded;
 	QLabel historyCount;
+	QLabel rensoClickCount;
 	private final QPushButton ok;
     private final String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
 	
@@ -63,6 +64,7 @@ public class DatabaseStatus extends QDialog {
 		resourceIndexNeeded = new QLabel();
 		indexCount = new QLabel();
 		historyCount = new QLabel();
+		rensoClickCount = new QLabel();
 		
 		grid.addWidget(new QLabel(tr("Notebooks:")), 0,0);
 		grid.addWidget(notebookCount, 0,1);
@@ -94,11 +96,14 @@ public class DatabaseStatus extends QDialog {
 		grid.addWidget(new QLabel(tr("Tobal Behavior History:")), 9, 0);
 		grid.addWidget(historyCount, 9,1);
 		
+		grid.addWidget(new QLabel(tr("Renso Note Click:")), 10, 0);
+		grid.addWidget(rensoClickCount, 10, 1);
+		
 		QGridLayout buttonLayout = new QGridLayout();
 		ok = new QPushButton(tr("OK"));
 		ok.clicked.connect(this, "okPushed()");
 		buttonLayout.addWidget(ok, 1, 1);
-		grid.addLayout(buttonLayout,10,1);
+		grid.addLayout(buttonLayout,11,1);
 	}
 	
 	@SuppressWarnings("unused")
@@ -134,6 +139,9 @@ public class DatabaseStatus extends QDialog {
 	}
 	public void setHistoryCount(int d) {
 		historyCount.setText(NumberFormat.getInstance().format(d));
+	}
+	public void setRensoClickCount(int d) {
+		rensoClickCount.setText(NumberFormat.getInstance().format(d));
 	}
  	public QPushButton getOkButton() {
 		return ok;

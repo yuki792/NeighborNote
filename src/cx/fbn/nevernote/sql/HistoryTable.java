@@ -315,4 +315,13 @@ public class HistoryTable {
 		int returnValue = new Integer(query.valueString(0));
 		return returnValue;
 	}
+	
+	// 連想ノートクリック回数を取得
+	public int getRensoClickCount() {
+		NSqlQuery query = new NSqlQuery(db.getBehaviorConnection());
+		query.exec("Select count(*) from History where behaviorType='rensoItemClick'");
+		query.next();
+		int returnValue = new Integer(query.valueString(0));
+		return returnValue;
+	}
 }

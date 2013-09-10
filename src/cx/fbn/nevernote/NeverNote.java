@@ -2965,6 +2965,7 @@ public class NeverNote extends QMainWindow{
 		status.setResourceCount(conn.getNoteTable().noteResourceTable.getResourceCount());
 		status.setWordCount(conn.getWordsTable().getWordCount());
 		status.setHistoryCount(conn.getHistoryTable().getHistoryCount());
+		status.setRensoClickCount(conn.getHistoryTable().getRensoClickCount());
 		waitCursor(false);
 		status.exec();
 	}
