@@ -106,7 +106,6 @@ import com.trolltech.qt.gui.QComboBox;
 import com.trolltech.qt.gui.QCursor;
 import com.trolltech.qt.gui.QDesktopServices;
 import com.trolltech.qt.gui.QDialog;
-import com.trolltech.qt.gui.QDockWidget;
 import com.trolltech.qt.gui.QFileDialog;
 import com.trolltech.qt.gui.QFileDialog.AcceptMode;
 import com.trolltech.qt.gui.QFileDialog.FileMode;
@@ -181,6 +180,7 @@ import cx.fbn.nevernote.gui.ExternalBrowse;
 import cx.fbn.nevernote.gui.MainMenuBar;
 import cx.fbn.nevernote.gui.NotebookTreeWidget;
 import cx.fbn.nevernote.gui.RensoNoteList;
+import cx.fbn.nevernote.gui.RensoNoteListDock;
 import cx.fbn.nevernote.gui.SavedSearchTreeWidget;
 import cx.fbn.nevernote.gui.SearchPanel;
 import cx.fbn.nevernote.gui.TabBrowse;
@@ -329,12 +329,14 @@ public class NeverNote extends QMainWindow{
     int					tagDeadCount=0;				// number of consecutive dead times for the tag thread
     int					trashDeadCount=0;			// number of consecutive dead times for the trash thread
     int 				saveThreadDeadCount=0;		// number of consecutive dead times for the save thread
+    int 				enRelatedNotesThreadDeadCount=0;	// number of consecutive dead times for the EvernoteRelatedNotes Thread
     boolean				disableTagThreadCheck=false;
     boolean				disableNotebookThreadCheck=false;
     boolean				disableTrashThreadCheck=false;
     boolean				disableSaveThreadCheck=false;
     boolean				disableSyncThreadCheck=false;
     boolean				disableIndexThreadCheck=false;
+    boolean				disableENRelatedNotesThreadCheck=false;
     
     HashMap<String, String>		noteCache;			// Cash of note content	
     HashMap<String, Boolean>	readOnlyCache;		// List of cashe notes that are read-only
@@ -364,8 +366,7 @@ public class NeverNote extends QMainWindow{
 	// ICHANGED
 	private final TabBrowserWidget tabBrowser; // ブラウザウィンドウをタブ化
 	private final HashMap<Integer, TabBrowse> tabWindows; // タブウィンドウ
-	private final RensoNoteList rensoNoteList; // 連想ノートリスト
-	private final QDockWidget rensoNoteListDock; // 連想ノートリストドックウィジェット
+	private final RensoNoteListDock rensoNoteListDock; // 連想ノートリストドックウィジェット
 	ClipBoardObserver cbObserver;
 	String rensoNotePressedItemGuid;
 	
@@ -454,9 +455,9 @@ public class NeverNote extends QMainWindow{
 		indexThread = new QThread(indexRunner, "Index Thread");
         indexRunner.indexAttachmentsLocally = Global.indexAttachmentsLocally();
         indexRunner.indexImageRecognition = Global.indexImageRecognition();
-        indexRunner.indexNoteBody = Global.indexNoteBody();
-        indexRunner.indexNoteTitle = Global.indexNoteTitle();
-        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
+//        indexRunner.indexNoteBody = Global.indexNoteBody();
+//        indexRunner.indexNoteTitle = Global.indexNoteTitle();
+//        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
 		indexThread.start();
 		
         synchronizeAnimationTimer = new QTimer();
@@ -601,11 +602,11 @@ public class NeverNote extends QMainWindow{
 		tabBrowser = new TabBrowserWidget(this);
 		tabBrowser.setStyleSheet("QTabBar::tab{width:150px;}");
 		tabBrowser.setMovable(true);
+		tabBrowser.setTabsClosable(true);
 		TabBrowse tab = new TabBrowse(conn, tabBrowser, cbObserver);
 		browserWindow = tab.getBrowserWindow();
 		int index = tabBrowser.addNewTab(tab, "");
 		tabWindows.put(index, tab);
-		tabBrowser.setTabsClosable(true);
 		tabBrowser.currentChanged.connect(this, "tabWindowChanged(int)");
 		tabBrowser.tabCloseRequested.connect(this, "tabWindowClosing(int)");
 		
@@ -626,11 +627,7 @@ public class NeverNote extends QMainWindow{
         
 		// ICHANGED
 		// 連想ノートリストをセットアップ
-		rensoNoteList = new RensoNoteList(conn, this, syncRunner);
-		rensoNoteList.itemPressed.connect(this,
-				"rensoNoteItemPressed(QListWidgetItem)");
-		rensoNoteListDock = new QDockWidget(tr("Renso Note List"), this);
-		rensoNoteListDock.setWidget(rensoNoteList);
+        rensoNoteListDock = new RensoNoteListDock(conn, this, syncRunner, iconPath, tr("Renso Note List"));
 		addDockWidget(DockWidgetArea.RightDockWidgetArea, rensoNoteListDock);
 
 		if (Global.getListView() == Global.View_List_Wide) {
@@ -1253,7 +1250,7 @@ public class NeverNote extends QMainWindow{
 		saveWindowState();
 		
 		// 連想ノートリストのEvernote関連ノート取得スレッドを終了
-		rensoNoteList.stopThread();
+		rensoNoteListDock.getRensoNoteList().stopThread();
 
 		if (tempFiles != null)
 			tempFiles.clear();
@@ -1456,7 +1453,7 @@ public class NeverNote extends QMainWindow{
 		saveNoteColumnPositions();
 		saveNoteIndexWidth();
 		showColumns();
-        ConfigDialog settings = new ConfigDialog(this);
+        ConfigDialog settings = new ConfigDialog(this, conn);
         String dateFormat = Global.getDateFormat();
         String timeFormat = Global.getTimeFormat();
         
@@ -1465,9 +1462,9 @@ public class NeverNote extends QMainWindow{
         
         settings.exec();
         indexRunner.indexAttachmentsLocally = Global.indexAttachmentsLocally();
-        indexRunner.indexNoteBody = Global.indexNoteBody();
-        indexRunner.indexNoteTitle = Global.indexNoteTitle();
-        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
+//        indexRunner.indexNoteBody = Global.indexNoteBody();
+//        indexRunner.indexNoteTitle = Global.indexNoteTitle();
+//        indexRunner.specialIndexCharacters = Global.getSpecialIndexCharacters();
         indexRunner.indexImageRecognition = Global.indexImageRecognition();
         if (Global.showTrayIcon() || Global.minimizeOnClose())
         	trayIcon.show();
@@ -2968,6 +2965,7 @@ public class NeverNote extends QMainWindow{
 		status.setResourceCount(conn.getNoteTable().noteResourceTable.getResourceCount());
 		status.setWordCount(conn.getWordsTable().getWordCount());
 		status.setHistoryCount(conn.getHistoryTable().getHistoryCount());
+		status.setRensoClickCount(conn.getHistoryTable().getRensoClickCount());
 		waitCursor(false);
 		status.exec();
 	}
@@ -3750,6 +3748,7 @@ public class NeverNote extends QMainWindow{
 
 		Global.isConnected = syncRunner.isConnected;
 		
+		boolean autoLoginMessageFlag = false;
 		if (!Global.isConnected) {
 	    	OAuthWindow window = new OAuthWindow(logger);
 	    	if (window.error) {
@@ -3776,6 +3775,7 @@ public class NeverNote extends QMainWindow{
 	    	syncRunner.authToken = tokenizer.oauth_token;
 			syncRunner.enConnect();
 			Global.isConnected = syncRunner.isConnected;
+			autoLoginMessageFlag = true;
 		}
 //		Global.username = syncRunner.username;
 		    	
@@ -3783,9 +3783,16 @@ public class NeverNote extends QMainWindow{
 			return;
 		setupOnlineMenu();
 		setupConnectMenuOptions();
+		
+		// 初回ログイン時に自動ログインが無効だったら、有効化するか確認する
+		if (autoLoginMessageFlag && !Global.automaticLogin()) {
+			if (QMessageBox.question(this, tr("Confirmation"), tr("Are you sure you want to enable the auto-login feature?"), 
+					QMessageBox.StandardButton.Yes, QMessageBox.StandardButton.No) == StandardButton.Yes.value()) {
+				Global.setAutomaticLogin(true);
+			}
+		}
+		
 		logger.log(logger.HIGH, "Leaving NeverNote.remoteConnect");
-
-
     }
     private void setupConnectMenuOptions() {
     	logger.log(logger.HIGH, "entering NeverNote.setupConnectMenuOptions");
@@ -4060,7 +4067,7 @@ public class NeverNote extends QMainWindow{
 
 		// ICHANGED
 		// 連想ノートリストを更新
-		rensoNoteList.refreshRensoNoteList(currentNoteGuid);
+		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 		
 		waitCursor(false);
 		logger.log(logger.HIGH, "Leaving NeverNote.noteTableSelection");
@@ -4907,6 +4914,11 @@ public class NeverNote extends QMainWindow{
 			boolean fromHist = fromHistory.get(i + 1);
 			fromHistory.put(i,  fromHist);
 			fromHistory.remove(i + 1);
+		}
+		
+		// タブが残り1つになったら、閉じるボタンを消す
+		if (tabBrowser.count() == 1) {
+			tabBrowser.hideTabCloseButton(0);
 		}
 		
 		// タブの閉じるボタンを押すと、tabWindowClosingより先にtabWindowChangedが呼ばれてしまうので、手動で呼びなおす
@@ -6746,7 +6758,15 @@ public class NeverNote extends QMainWindow{
 		} else
 			indexThreadDeadCount=0;
 
-		
+		if (!rensoNoteListDock.getRensoNoteList().getEnRelatedNotesThread().isAlive()) {
+			enRelatedNotesThreadDeadCount++;
+			if (enRelatedNotesThreadDeadCount > MAX && !disableENRelatedNotesThreadCheck) {
+				QMessageBox.information(this, tr("A thread has died."), tr("It appears as the Evernote Related Notes thread has died.  I recommend "+
+					"checking stopping NeighborNote, saving the logs for later viewing, and restarting.  Sorry."));
+				disableENRelatedNotesThreadCheck = true;
+			}
+		} else
+			enRelatedNotesThreadDeadCount=0;
 	}
 
 	private void thumbnailTimer() {
@@ -7554,7 +7574,7 @@ public class NeverNote extends QMainWindow{
 		refreshEvernoteNote(true);
 
 		// 連想ノートリストを更新
-		rensoNoteList.refreshRensoNoteList(currentNoteGuid);
+		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 	}
 	
 	// ICHANGD
@@ -7614,7 +7634,7 @@ public class NeverNote extends QMainWindow{
 	private void rensoNoteItemPressed(QListWidgetItem current) {
 		logger.log(logger.HIGH, "Nevernote.rensoNoteSelectionChangeに入った");
 
-		rensoNotePressedItemGuid = rensoNoteList.getNoteGuid(current);
+		rensoNotePressedItemGuid = rensoNoteListDock.getRensoNoteList().getNoteGuid(current);
 		
 		// 右クリックだったら終了
 		if (QApplication.mouseButtons().isSet(MouseButton.RightButton)) {
@@ -7681,7 +7701,7 @@ public class NeverNote extends QMainWindow{
 		// 除外ノートテーブルに追加
 		conn.getExcludedTable().addExclusion(guid, currentNoteGuid);
 		
-		rensoNoteList.refreshRensoNoteList(currentNoteGuid);
+		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 	}
 	
 	// ICHANGED
@@ -7700,7 +7720,7 @@ public class NeverNote extends QMainWindow{
 		// スター付きノートテーブルに追加
 		conn.getStaredTable().addStaredItem(currentNoteGuid, guid);
 		
-		rensoNoteList.refreshRensoNoteList(currentNoteGuid);
+		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 	}
 	
 	// ICHANGED
@@ -7719,7 +7739,7 @@ public class NeverNote extends QMainWindow{
 		// スター付きノートテーブルから削除
 		conn.getStaredTable().removeStaredItem(currentNoteGuid, guid);
 		
-		rensoNoteList.refreshRensoNoteList(currentNoteGuid);
+		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 	}
 	
 	// ICHANGED
@@ -7763,6 +7783,6 @@ public class NeverNote extends QMainWindow{
 	
 	// 連想ノートリストのgetter
 	public RensoNoteList getRensoNoteList() {
-		return rensoNoteList;
+		return rensoNoteListDock.getRensoNoteList();
 	}
 }

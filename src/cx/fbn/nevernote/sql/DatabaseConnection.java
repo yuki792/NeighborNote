@@ -290,6 +290,44 @@ public class DatabaseConnection {
 			executeSql("alter table note add column attributeContentClass VarChar");
 			executeSql("update note set attributeContentClass = ''");
 		}
+		
+		// Apache Luceneを使った日本語検索のためのプレーンテキストノートコンテンツカラムを準備
+		if (!dbTableColumnExists("NOTE", "CONTENTTEXT")) {
+			executeSql("alter table note add column contentText VarChar");
+			executeSql("update note set contentText = ''");
+			NSqlQuery query = new NSqlQuery(conn);
+			query.exec("Select guid, content from Note where contentText = ''");
+			while (query.next()) {
+				String guid = query.valueString(0);
+				String content = query.valueString(1);
+				String contentText = Global.extractPlainText(content);
+				NSqlQuery query2 = new NSqlQuery(conn);
+				query2.prepare("update note set contentText=:contentText where guid=:guid");
+				query2.bindValue(":contentText", contentText);
+				query2.bindValue(":guid", guid);
+				query2.exec();
+			}
+			
+			// Apache Luceneを使った全文検索のための準備
+			query.exec("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLuceneEx.init\"");
+			query.exec("CALL FTL_INIT()");
+			
+			Global.rebuildFullTextNoteTarget(this);
+		}
+		
+		// Apache Luceneを使った日本語検索のためのプレーンテキストノートリソースカラムを準備
+		NSqlQuery rQuery = new NSqlQuery(resourceConn);
+		rQuery.exec("select TABLE_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='NOTERESOURCES' and COLUMN_NAME='RESOURCETEXT'");
+		if (!rQuery.next()) {
+			rQuery.exec("alter table noteResources add column resourceText VarChar");
+			rQuery.exec("update noteResources set resourceText = ''");
+			
+			// Apache Luceneを使った全文検索のための準備
+			rQuery.exec("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLuceneEx.init\"");
+			rQuery.exec("CALL FTL_INIT()");
+			
+			Global.rebuildFullTextResourceTarget(this);
+		}
 	}
 	
 	public void executeSql(String sql) {

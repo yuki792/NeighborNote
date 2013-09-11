@@ -44,10 +44,10 @@ public class ConfigIndexPage extends QWidget {
 	private final QCheckBox indexAttachmentsLocally;
 	private final QCheckBox indexImageRecognition;
 	private final QCheckBox indexTitle;
-	private final QCheckBox automaticWildcard;
-	private final QLineEdit specialStrip;
+//	private final QCheckBox automaticWildcard;
+//	private final QLineEdit specialStrip;
 	private final QCheckBox indexBody;
-	private final QLineEdit regexEdit;
+//	private final QLineEdit regexEdit;
 	
 	public ConfigIndexPage(QWidget parent) {
 //		super(parent);
@@ -76,23 +76,23 @@ public class ConfigIndexPage extends QWidget {
 		indexImageRecognition = new QCheckBox(tr("Index Image Recognition"));
 		indexImageRecognition.setChecked(Global.indexImageRecognition());
 		
-		automaticWildcard = new QCheckBox(tr("Automatically Wildcard All Searches"));
-		automaticWildcard.setChecked(Global.automaticWildcardSearches());
+//		automaticWildcard = new QCheckBox(tr("Automatically Wildcard All Searches"));
+//		automaticWildcard.setChecked(Global.automaticWildcardSearches());
 		
-		specialStrip = new QLineEdit();
-		specialStrip.setText(Global.getSpecialIndexCharacters());
+//		specialStrip = new QLineEdit();
+//		specialStrip.setText(Global.getSpecialIndexCharacters());
 		
 		QVBoxLayout attachmentLayout = new QVBoxLayout();
 		attachmentLayout.addWidget(indexBody);
 		attachmentLayout.addWidget(indexTitle);
 		attachmentLayout.addWidget(indexAttachmentsLocally);
 		attachmentLayout.addWidget(indexImageRecognition);
-		attachmentLayout.addWidget(automaticWildcard);
+//		attachmentLayout.addWidget(automaticWildcard);
 		
-		QHBoxLayout specialCharLayout = new QHBoxLayout();
-		specialCharLayout.addWidget(new QLabel(tr("Special Word Characters")));
-		specialCharLayout.addWidget(specialStrip);
-		attachmentLayout.addLayout(specialCharLayout);
+//		QHBoxLayout specialCharLayout = new QHBoxLayout();
+//		specialCharLayout.addWidget(new QLabel(tr("Special Word Characters")));
+//		specialCharLayout.addWidget(specialStrip);
+//		attachmentLayout.addLayout(specialCharLayout);
 		attachmentGroup.setLayout(attachmentLayout);
 
 		// Index sleep interval
@@ -109,22 +109,22 @@ public class ConfigIndexPage extends QWidget {
 		sleepGroup.setLayout(sleepLayout);
 		
 		// Regular Expressions for word parsing
-		QGroupBox regexGroup = new QGroupBox(tr("Word Parse"));
-		QLabel regexLabel = new QLabel(tr("Regular Expression"));
-		regexEdit = new QLineEdit();
-		regexEdit.setText(Global.getWordRegex());
-
-		QHBoxLayout regexLayout = new QHBoxLayout();
-		regexLayout.addWidget(regexLabel);
-		regexLayout.addWidget(regexEdit);		
-		regexGroup.setLayout(regexLayout);
+//		QGroupBox regexGroup = new QGroupBox(tr("Word Parse"));
+//		QLabel regexLabel = new QLabel(tr("Regular Expression"));
+//		regexEdit = new QLineEdit();
+//		regexEdit.setText(Global.getWordRegex());
+//
+//		QHBoxLayout regexLayout = new QHBoxLayout();
+//		regexLayout.addWidget(regexLabel);
+//		regexLayout.addWidget(regexEdit);		
+//		regexGroup.setLayout(regexLayout);
 		
 		
 		QVBoxLayout mainLayout = new QVBoxLayout();
 		mainLayout.addWidget(sleepGroup);
 		mainLayout.addWidget(weightGroup);
 		mainLayout.addWidget(attachmentGroup);
-		mainLayout.addWidget(regexGroup);
+//		mainLayout.addWidget(regexGroup);
 		mainLayout.addStretch(1);
 		setLayout(mainLayout);
 
@@ -144,15 +144,15 @@ public class ConfigIndexPage extends QWidget {
 	public boolean getIndexNoteTitle() {
 		return indexTitle.isChecked();
 	}
-	public String getSpecialCharacters() {
-		return specialStrip.text();
-	}
+//	public String getSpecialCharacters() {
+//		return specialStrip.text();
+//	}
 	public boolean getIndexImageRecognition() {
 		return indexImageRecognition.isChecked();
 	}
-	public boolean getAutomaticWildcardSearches() {
-		return automaticWildcard.isChecked();
-	}
+//	public boolean getAutomaticWildcardSearches() {
+//		return automaticWildcard.isChecked();
+//	}
 	
 	//*****************************************
 	//* Word length get/set methods 
@@ -181,11 +181,11 @@ public class ConfigIndexPage extends QWidget {
 	//*****************************************
 	//* Regex get/set methods 
 	//*****************************************
-	public void setRegex(String s) {
-		regexEdit.setText(s);
-	}
-	public String getRegex() {
-		return regexEdit.text();
-	}
+//	public void setRegex(String s) {
+//		regexEdit.setText(s);
+//	}
+//	public String getRegex() {
+//		return regexEdit.text();
+//	}
 
 }

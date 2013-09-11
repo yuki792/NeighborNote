@@ -20,6 +20,8 @@
 // ICHANGED
 package cx.fbn.nevernote.gui;
 
+import com.trolltech.qt.core.QSize;
+import com.trolltech.qt.gui.QTabBar;
 import com.trolltech.qt.gui.QTabWidget;
 import com.trolltech.qt.gui.QWidget;
 
@@ -28,6 +30,7 @@ import cx.fbn.nevernote.NeverNote;
 public class TabBrowserWidget extends QTabWidget {
 	private final TabBrowserBar bar;
 	private final NeverNote parent;
+	private QSize closeButtonSize;
 	
 	public TabBrowserWidget(NeverNote parent) {
 		super(parent);
@@ -41,6 +44,18 @@ public class TabBrowserWidget extends QTabWidget {
 		int index = this.addTab(widget, new String());
 		bar.addNewTab(index, title);
 		this.setTabToolTip(index, title);
+		
+		// タブが1個（多分これが発生するのはアプリ起動時だけ）なら閉じるボタンを隠す
+		// タブが2個以上あったら、一番左のタブの閉じるボタンを復元する
+		int tabCnt = this.count();
+		if (tabCnt == 1) {
+			hideTabCloseButton(0);
+		} else if (tabCnt >= 2) {
+			if (closeButtonSize != null && !bar.tabButton(0, QTabBar.ButtonPosition.RightSide).size().equals(closeButtonSize)) {
+				showTabCloseButton(0);
+			}
+		}
+		
 		return index;
 	}
 
@@ -49,4 +64,20 @@ public class TabBrowserWidget extends QTabWidget {
 		this.setTabToolTip(index, title);
 	}
 	
+	// タブを閉じるボタンを隠す
+	public void hideTabCloseButton(int index) {
+		if (closeButtonSize == null) {
+			closeButtonSize = bar.tabButton(index, QTabBar.ButtonPosition.RightSide).size();
+		}
+		bar.tabButton(index, QTabBar.ButtonPosition.RightSide).resize(0, 0);
+	}
+	
+	// タブを閉じるボタンを復元する
+	public void showTabCloseButton(int index) {
+		if (closeButtonSize != null) {
+			bar.tabButton(index, QTabBar.ButtonPosition.RightSide).resize(closeButtonSize);
+		} else {
+			bar.tabButton(index, QTabBar.ButtonPosition.RightSide).resize(16, 16);
+		}
+	}
 }

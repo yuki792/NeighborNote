@@ -65,9 +65,9 @@ public class RensoNoteList extends QListWidget {
 	private String guid;
 	private int allPointSum;
 
-	public RensoNoteList(DatabaseConnection c, NeverNote p, SyncRunner syncRunner) {
-		logger = new ApplicationLogger("rensoNoteList.log");
-		logger.log(logger.HIGH, "Setting up rensoNoteList");
+	public RensoNoteList(DatabaseConnection c, NeverNote p, SyncRunner syncRunner, ApplicationLogger logger) {
+		this.logger = logger;
+		this.logger.log(this.logger.HIGH, "Setting up rensoNoteList");
 		allPointSum = 0;
 
 		this.conn = c;
@@ -77,10 +77,10 @@ public class RensoNoteList extends QListWidget {
 		this.guid = new String();
 		mergedHistory = new HashMap<String, Integer>();
 		enRelatedNotesCache = new HashMap<String, List<String>>();
-		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner, logger);
+		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner, this.logger);
 		this.enRelatedNotesRunner.enRelatedNotesSignal.getENRelatedNotesFinished.connect(this, "enRelatedNotesComplete()");
 		this.enRelatedNotesThread = new QThread(enRelatedNotesRunner, "ENRelatedNotes Thread");
-		this.enRelatedNotesThread.start();
+		this.getEnRelatedNotesThread().start();
 		
 		rensoNoteListItems = new HashMap<QListWidgetItem, String>();
 		rensoNoteListTrueItems = new ArrayList<RensoNoteListItem>();
@@ -110,12 +110,18 @@ public class RensoNoteList extends QListWidget {
 		menu.addAction(excludeNoteAction);
 		menu.aboutToHide.connect(this, "contextMenuHidden()");
 		
-		logger.log(logger.HIGH, "rensoNoteList setup complete");
+		this.logger.log(this.logger.HIGH, "rensoNoteList setup complete");
+	}
+	
+	// オーバーロード
+	// 現在開いているノートの連想ノートリストをリフレッシュ
+	public void refreshRensoNoteList() {
+		refreshRensoNoteList(guid);
 	}
 
 	// 連想ノートリストをリフレッシュ
 	public void refreshRensoNoteList(String guid) {
-		logger.log(logger.HIGH, "Entering RensoNoteList.refreshRensoNoteList");
+		logger.log(logger.HIGH, "Entering RensoNoteList.refreshRensoNoteList guid = " + guid);
 
 		this.clear();
 		rensoNoteListItems.clear();
@@ -149,6 +155,8 @@ public class RensoNoteList extends QListWidget {
 	
 	// 操作履歴をデータベースから取得してノートごとの関連度を算出、その後mergedHistoryに追加
 	private void calculateHistory(String guid) {
+		logger.log(logger.EXTREME, "Entering RensoNoteList.calculateHistory guid = " + guid);
+		
 		// browseHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> browseHistory = conn.getHistoryTable().getBehaviorHistory("browse", guid);
 		addWeight(browseHistory, Global.getBrowseWeight());
@@ -178,20 +186,27 @@ public class RensoNoteList extends QListWidget {
 		HashMap<String, Integer> sameNotebookHistory = conn.getHistoryTable().getBehaviorHistory("sameNotebook", guid);
 		addWeight(sameNotebookHistory, Global.getSameNotebookWeight());
 		mergedHistory = mergeHistory(sameNotebookHistory, mergedHistory);
+		logger.log(logger.EXTREME, "Leaving RensoNoteList.calculateHistory");
 	}
 	
 	// 操作回数に重み付けする
 	private void addWeight(HashMap<String, Integer> history, int weight){
+		logger.log(logger.EXTREME, "Entering RensoNoteList.addWeight");
+		
 		Set<String> keySet = history.keySet();
 		Iterator<String> hist_iterator = keySet.iterator();
 		while(hist_iterator.hasNext()){
 			String key = hist_iterator.next();
 			history.put(key, history.get(key) * weight);
 		}
+		
+		logger.log(logger.EXTREME, "Leaving RensoNoteList.addWeight");
 	}
 	
 	// 連想ノートリストを再描画
 	private void repaintRensoNoteList(boolean needClear) {
+		logger.log(logger.EXTREME, "Entering RensoNoteList.repaintRensoNoteList");
+		
 		if (needClear) {
 			this.clear();
 			rensoNoteListItems.clear();
@@ -209,10 +224,14 @@ public class RensoNoteList extends QListWidget {
 		}
 		
 		addRensoNoteList(mergedHistory);
+		
+		logger.log(logger.EXTREME, "Leaving RensoNoteList.repaintRensoNoteList");
 	}
 	
 	// 引数1と引数2をマージしたハッシュマップを返す
 	private HashMap<String, Integer> mergeHistory(HashMap<String, Integer> History1, HashMap<String, Integer> History2){
+		logger.log(logger.EXTREME, "Entering RensoNoteList.mergeHistory");
+		
 		HashMap<String, Integer> mergedHistory = new HashMap<String, Integer>();
 		
 		mergedHistory.putAll(History1);
@@ -227,12 +246,15 @@ public class RensoNoteList extends QListWidget {
 				mergedHistory.put(key, History2.get(key));
 			}
 		}
-
+		
+		logger.log(logger.EXTREME, "Leaving RensoNoteList.mergeHistory");
 		return mergedHistory;
 	}
 	
 	// 連想ノートリストにハッシュマップのデータを追加
 	private void addRensoNoteList(HashMap<String, Integer> History){
+		logger.log(logger.EXTREME, "Entering RensoNoteList.addRensoNoteList");
+		
 		String currentNoteGuid = new String(parent.getCurrentNoteGuid());
 		
 		// スター付きノートとスター無しノートを分ける
@@ -301,6 +323,7 @@ public class RensoNoteList extends QListWidget {
 				}
 			}
 		}
+		logger.log(logger.EXTREME, "Leaving RensoNoteList.addRensoNoteList");
 	}
 
 	// リストのアイテムから対象ノートのguidを取得
@@ -311,6 +334,8 @@ public class RensoNoteList extends QListWidget {
 	// 関連ノートリストの右クリックメニュー
 	@Override
 	public void contextMenuEvent(QContextMenuEvent event){
+		logger.log(logger.EXTREME, "Entering RensoNoteList.contextMenuEvent");
+		
 		if (rensoNotePressedItemGuid == null || rensoNotePressedItemGuid.equals("")) {
 			return;
 		}
@@ -337,6 +362,8 @@ public class RensoNoteList extends QListWidget {
 		menu.exec(event.globalPos());
 		
 		rensoNotePressedItemGuid = null;
+		
+		logger.log(logger.EXTREME, "Leaving RensoNoteList.contextMenuEvent");
 	}
 	
 	// コンテキストメニューが表示されているかどうか
@@ -356,16 +383,22 @@ public class RensoNoteList extends QListWidget {
 	// ユーザが連想ノートリストのアイテムを選択した時の処理
 	@SuppressWarnings("unused")
 	private void rensoNoteItemPressed(QListWidgetItem current) {
+		logger.log(logger.HIGH, "Entering RensoNoteList.rensoNoteItemPressed");
+		
 		rensoNotePressedItemGuid = null;
 		// 右クリックだったときの処理
 		if (QApplication.mouseButtons().isSet(MouseButton.RightButton)) {
 			rensoNotePressedItemGuid = getNoteGuid(current);
 		}
+		
+		logger.log(logger.HIGH, "Leaving RensoNoteList.rensoNoteItemPressed");
 	}
 	
 	// Evernoteの関連ノートの取得が完了
 	@SuppressWarnings("unused")
 	private void enRelatedNotesComplete() {
+		logger.log(logger.HIGH, "Entering RensoNoteList.enRelatedNotesComplete");
+		
 		Pair<String, List<String>> enRelatedNoteGuidPair = enRelatedNotesRunner.getENRelatedNoteGuids();	// <元ノートguid, 関連ノートguidリスト>
 		
 		if (enRelatedNoteGuidPair == null) {
@@ -388,10 +421,14 @@ public class RensoNoteList extends QListWidget {
 				}
 			}
 		}
+		
+		logger.log(logger.HIGH, "Leaving RensoNoteList.enRelatedNotesComplete");
 	}
 	
 	// Evernote関連ノートの関連度情報をmergedHistoryに追加
 	private void addENRelatedNotes(List<String> relatedNoteGuids) {
+		logger.log(logger.EXTREME, "Entering RensoNoteList.addENRelatedNotes");
+		
 		// Evernote関連ノート<guid, 関連ポイント>
 		HashMap<String, Integer> enRelatedNotes = new HashMap<String, Integer>();
 		
@@ -400,13 +437,27 @@ public class RensoNoteList extends QListWidget {
 		}
 		
 		mergedHistory = mergeHistory(enRelatedNotes, mergedHistory);
+		
+		logger.log(logger.EXTREME, "Leaving RensoNoteList.addENRelatedNotes");
 	}
 	
 	// Evernoteの関連ノート取得スレッドを終了させる
 	public boolean stopThread() {
+		logger.log(logger.HIGH, "Entering RensoNoteList.stopThread");
+		
 		if (enRelatedNotesRunner.addStop()) {
+			logger.log(logger.HIGH, "RensoNoteList.stopThread succeeded");
 			return true;
 		}
+		logger.log(logger.HIGH, "RensoNoteList.stopThread failed");
 		return false;
+	}
+
+	public QThread getEnRelatedNotesThread() {
+		return enRelatedNotesThread;
+	}
+	
+	public String getGuid() {
+		return guid;
 	}
 }
