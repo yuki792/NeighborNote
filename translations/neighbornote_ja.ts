@@ -2837,8 +2837,12 @@ If you don&apos;t wish to use Evernote&apos;s then please check the option at th
     </message>
     <message>
         <location filename="../src/cx/fbn/nevernote/dialog/UpgradeAvailableDialog.java" line="73"/>
-        <source>Do you want to download now?</source>
+        <source>Would you like to download now?</source>
         <translation>今すぐダウンロードしますか？</translation>
+    </message>
+    <message>
+        <source>Do you want to download now?</source>
+        <translation type="obsolete">今すぐダウンロードしますか？</translation>
     </message>
     <message>
         <location filename="../src/cx/fbn/nevernote/dialog/UpgradeAvailableDialog.java" line="82"/>
