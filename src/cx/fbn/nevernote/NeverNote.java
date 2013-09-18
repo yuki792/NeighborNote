@@ -3221,6 +3221,7 @@ public class NeverNote extends QMainWindow{
     	logger.log(logger.HIGH, "Entering NeverNote.setupToolBar");
     	toolBar = addToolBar(tr("Tool Bar"));	
     	toolBar.setObjectName("toolBar");
+    	toolBar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon);
     	menuBar.setupToolBarVisible();
     	if (!Global.isWindowVisible("toolBar"))
     		toolBar.setVisible(false);
@@ -3230,17 +3231,21 @@ public class NeverNote extends QMainWindow{
 //    	toolBar.addWidget(menuBar);
 //    	menuBar.setSizePolicy(Policy.Minimum, Policy.Minimum);
 //    	toolBar.addSeparator();
-    	prevButton = toolBar.addAction(tr("Previous"));
+    	prevButton = toolBar.addAction(tr(""));
+    	prevButton.setToolTip(tr("Previous"));
     	QIcon prevIcon = new QIcon(iconPath+"back.png");
     	prevButton.setIcon(prevIcon);
     	prevButton.triggered.connect(this, "previousViewedAction()");  	
     	togglePrevArrowButton(Global.isToolbarButtonVisible("prevArrow"));
     	
-    	nextButton = toolBar.addAction(tr("Next"));
+    	nextButton = toolBar.addAction(tr(""));
+    	nextButton.setToolTip(tr("Next"));
     	QIcon nextIcon = new QIcon(iconPath+"forward.png");
     	nextButton.setIcon(nextIcon);
     	nextButton.triggered.connect(this, "nextViewedAction()");  	
     	toggleNextArrowButton(Global.isToolbarButtonVisible("nextArrow"));
+    	
+    	toolBar.addSeparator();
     	
     	upButton = toolBar.addAction(tr("Up"));
     	QIcon upIcon = new QIcon(iconPath+"up.png");
