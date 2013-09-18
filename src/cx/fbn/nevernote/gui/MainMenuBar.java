@@ -684,7 +684,6 @@ public class MainMenuBar extends QMenuBar {
 	public void setupMenuBar() {
 		fileMenu = addMenu(tr("&File"));
 		
-		noteMenu = fileMenu.addMenu(tr("&Note"));
 		notebookMenu = fileMenu.addMenu(tr("Notebook"));
 		tagMenu = fileMenu.addMenu(tr("Tag"));
 		savedSearchMenu = fileMenu.addMenu(tr("Saved Searches"));
@@ -735,6 +734,8 @@ public class MainMenuBar extends QMenuBar {
 		viewMenu.addAction(hideTrash);
 		viewMenu.addAction(showEditorBar);
 		viewMenu.addAction(hideLeftSide);
+		
+		noteMenu = addMenu(tr("&Note"));
 		
 		formatMenu = addMenu(tr("F&ormat"));
 		formatMenu.addAction(formatBold);
@@ -862,6 +863,7 @@ public class MainMenuBar extends QMenuBar {
 		addMenu(fileMenu);
 		addMenu(editMenu);
 		addMenu(viewMenu);
+		addMenu(noteMenu);
 		addMenu(formatMenu);
 //		addMenu(onlineMenu);
 		addMenu(toolsMenu);
