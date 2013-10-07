@@ -45,9 +45,14 @@ public class StartupConfig {
     }
     
     public String getHomeDirPath() {
-    	if (homeDirPath == null) {
-    		homeDirPath = System.getProperty("user.home") + File.separator 
-    				+ "." +name.toLowerCase() + File.separator;
+    	if (homeDirPath == null) {	// Macで隠しディレクトリを作ったら問題が起きたので通常ディレクトリにする
+    		if (System.getProperty("os.name").toLowerCase().contains("mac os")) {
+    			homeDirPath = System.getProperty("user.home") + File.separator 
+        				+name.toLowerCase() + File.separator;
+    		} else {
+	    		homeDirPath = System.getProperty("user.home") + File.separator 
+	    				+ "." +name.toLowerCase() + File.separator;
+    		}
     	}
         return homeDirPath;
     }
