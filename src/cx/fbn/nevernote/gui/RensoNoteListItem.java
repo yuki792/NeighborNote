@@ -132,9 +132,9 @@ public class RensoNoteListItem extends QWidget{
 		// 関連度
 		double ratio = (double)relationPoints / allPointSum;
 		QColor relationColor;
-		if (ratio >= 0.8) {
+		if (ratio >= 0.5) {
 			relationColor = new QColor(255, 0, 0);
-		} else if (ratio >= 0.5) {
+		} else if (ratio >= 0.25) {
 			relationColor = new QColor(255, 100, 0);
 		} else {
 			relationColor = new QColor(255, 200, 0);
