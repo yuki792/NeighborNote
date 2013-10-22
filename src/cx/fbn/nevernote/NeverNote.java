@@ -49,6 +49,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.h2.tools.ChangeFileEncryption;
 
+import com.evernote.edam.error.EDAMErrorCode;
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
@@ -484,6 +485,7 @@ public class NeverNote extends QMainWindow{
         syncRunner.status.message.connect(this, "setMessage(String)");
         syncRunner.syncSignal.finished.connect(this, "syncThreadComplete(Boolean)");
         syncRunner.syncSignal.errorDisconnect.connect(this, "remoteErrorDisconnect()");
+        syncRunner.limitSignal.rateLimitReached.connect(this, "informRateLimit(Integer)");
         syncRunning = false;	
 		if (syncTime > 0) {
 			automaticSync = true;
@@ -6223,6 +6225,9 @@ public class NeverNote extends QMainWindow{
 			setMessage("EDAMUserException: " +e.getMessage());
 			return;
 		} catch (EDAMSystemException e) {
+			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+			}
 			setMessage("EDAMSystemException: " +e.getMessage());
 			return;
 		} catch (EDAMNotFoundException e) {
@@ -6283,6 +6288,9 @@ public class NeverNote extends QMainWindow{
 				waitCursor(false);
 				return null;
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+				}
 				setMessage("EDAMSystemException: " +e.getMessage());
 				waitCursor(false);
 				return null;
@@ -6347,6 +6355,9 @@ public class NeverNote extends QMainWindow{
 			setMessage("EDAMUserException: " +e.getMessage());
 			return;
 		} catch (EDAMSystemException e) {
+			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+			}
 			setMessage("EDAMSystemException: " +e.getMessage());
 			return;
 		} catch (TException e) {
@@ -7789,5 +7800,11 @@ public class NeverNote extends QMainWindow{
 	// 連想ノートリストのgetter
 	public RensoNoteList getRensoNoteList() {
 		return rensoNoteListDock.getRensoNoteList();
+	}
+	
+	// 帯域制限の超過をユーザに通知
+	@SuppressWarnings("unused")
+	private void informRateLimit(Integer rateLimitDuration) {
+		QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + rateLimitDuration + " seconds."));
 	}
 }

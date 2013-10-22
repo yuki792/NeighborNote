@@ -79,6 +79,7 @@ public class RensoNoteList extends QListWidget {
 		enRelatedNotesCache = new HashMap<String, List<String>>();
 		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner, this.logger);
 		this.enRelatedNotesRunner.enRelatedNotesSignal.getENRelatedNotesFinished.connect(this, "enRelatedNotesComplete()");
+		this.enRelatedNotesRunner.limitSignal.rateLimitReached.connect(parent, "informRateLimit(Integer)");
 		this.enRelatedNotesThread = new QThread(enRelatedNotesRunner, "ENRelatedNotes Thread");
 		this.getEnRelatedNotesThread().start();
 		

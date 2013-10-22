@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.evernote.edam.error.EDAMErrorCode;
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
@@ -37,18 +38,20 @@ import com.trolltech.qt.core.QObject;
 
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.signals.ENRelatedNotesSignal;
+import cx.fbn.nevernote.signals.LimitSignal;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 import cx.fbn.nevernote.utilities.Pair;
 
 public class ENRelatedNotesRunner extends QObject implements Runnable{
 	
-	private final ApplicationLogger logger;
-	private final SyncRunner syncRunner;
-	public volatile ENRelatedNotesSignal enRelatedNotesSignal;
-	public QMutex mutex;
-	private volatile boolean keepRunning;
-	private volatile LinkedBlockingQueue<String> workQueue;
+	private final ApplicationLogger					logger;
+	private final SyncRunner						syncRunner;
+	public volatile ENRelatedNotesSignal			enRelatedNotesSignal;
+	public QMutex									mutex;
+	private volatile boolean						keepRunning;
+	private volatile LinkedBlockingQueue<String>	workQueue;
 	private volatile LinkedBlockingQueue<Pair<String, List<String>>> resultQueue;	// ペア<元ノートguid, 関連ノートguidリスト>を溜めておくキュー
+	public volatile LimitSignal 					limitSignal;
 	
 	public ENRelatedNotesRunner(SyncRunner syncRunner, ApplicationLogger logger) {
 		this.logger = logger;
@@ -58,6 +61,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		this.keepRunning = true;
 		this.workQueue = new LinkedBlockingQueue<String>();
 		this.resultQueue = new LinkedBlockingQueue<Pair<String, List<String>>>();
+		this.limitSignal = new LimitSignal();
 	}
 
 	@Override
@@ -134,6 +138,9 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 			} catch (EDAMUserException e) {
 				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：EDAMUserException");
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：EDAMSystemException");
 			} catch (EDAMNotFoundException e) {
 				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：EDAMnotFoundException guid = " + guid);
