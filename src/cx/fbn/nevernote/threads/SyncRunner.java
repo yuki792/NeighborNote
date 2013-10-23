@@ -88,10 +88,7 @@ import cx.fbn.nevernote.signals.TagSignal;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.sql.DeletedItemRecord;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
-//import org.apache.thrift.transport.THttpClient;
-//import org.apache.thrift.transport.TTransportException;
-//import org.apache.thrift.protocol.TBinaryProtocol;
-//import org.apache.thrift.TException;
+
 
 public class SyncRunner extends QObject implements Runnable {
 	
@@ -151,7 +148,6 @@ public class SyncRunner extends QObject implements Runnable {
 	String dburl;
 	String indexUrl;
 	String resourceUrl;
-	// ICHANGED
 	String behaviorUrl;
 	
 	String dbpswd;
@@ -162,7 +158,6 @@ public class SyncRunner extends QObject implements Runnable {
 	private HashMap<String,String> badTagSync;
 
 	
-	// ICHANGED String bを追加	
 	public SyncRunner(String logname, String u, String i, String r, String b, String uid, String pswd, String cpswd) {
 		logger = new ApplicationLogger(logname);
 		
@@ -178,7 +173,6 @@ public class SyncRunner extends QObject implements Runnable {
 		limitSignal = new LimitSignal();
 		resourceUrl = r;
 		indexUrl = i;
-		// ICHANGED
 		behaviorUrl = b;
 		
 		dbuid = uid;
@@ -206,7 +200,6 @@ public class SyncRunner extends QObject implements Runnable {
 		errorSharedNotebooksIgnored = new HashMap<String,String>();
 		try {
 			logger.log(logger.EXTREME, "Starting thread");
-			// ICHANGED behaviorUrlを追加
 			conn = new DatabaseConnection(logger, dburl, indexUrl, resourceUrl, behaviorUrl, dbuid, dbpswd, dbcpswd, 200);
 			while(keepRunning) {
 				logger.log(logger.EXTREME, "Blocking until work is found");

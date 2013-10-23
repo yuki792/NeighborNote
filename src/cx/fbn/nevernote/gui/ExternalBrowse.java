@@ -33,8 +33,8 @@ import com.trolltech.qt.gui.QPrintDialog;
 import com.trolltech.qt.gui.QPrinter;
 
 import cx.fbn.nevernote.Global;
+import cx.fbn.nevernote.clipboard.ClipBoardObserver;
 import cx.fbn.nevernote.dialog.FindDialog;
-import cx.fbn.nevernote.neighbornote.ClipBoardObserver;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 
 public class ExternalBrowse extends QMdiSubWindow {
@@ -48,21 +48,18 @@ public class ExternalBrowse extends QMdiSubWindow {
 //	ExternalBrowserMenuBar		menu;
 	ExternalBrowserMenuBar	menu;
 	
-	// ICHANGED
 	private final ClipBoardObserver cbObserver;
 	
 	// Constructor
-	// ICHANGED cbObserver引数を追加
+	// cbObserver引数を追加
 	public ExternalBrowse(DatabaseConnection c, ClipBoardObserver cbObserver) {
 		setAttribute(WidgetAttribute.WA_QuitOnClose, false);
 		setWindowTitle(tr("NeighborNote"));
 		conn = c;
-		// ICHANGED
 		this.cbObserver = cbObserver;  
 		
 		contentsChanged = new Signal4<String, String, Boolean, BrowserWindow>();
 		windowClosing = new Signal1<String>();
-		// ICHANGED
 		browser = new BrowserWindow(conn, this.cbObserver);
 		
 		menu = new ExternalBrowserMenuBar(this);

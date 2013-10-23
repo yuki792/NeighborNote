@@ -54,7 +54,6 @@ import com.trolltech.qt.gui.QVBoxLayout;
 
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.threads.SyncRunner;
-//import org.apache.thrift.TException;
 
 public class ShareNotebook extends QDialog {
 	private final QPushButton				okButton;

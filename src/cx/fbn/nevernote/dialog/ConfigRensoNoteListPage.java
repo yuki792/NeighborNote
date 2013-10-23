@@ -17,7 +17,6 @@
  *
 */
 
-// ICHANGED
 package cx.fbn.nevernote.dialog;
 
 import com.trolltech.qt.core.Qt;

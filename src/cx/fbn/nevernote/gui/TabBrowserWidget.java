@@ -17,7 +17,6 @@
  *
 */
 
-// ICHANGED
 package cx.fbn.nevernote.gui;
 
 import com.trolltech.qt.core.QSize;

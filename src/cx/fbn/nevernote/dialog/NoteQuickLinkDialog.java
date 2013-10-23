@@ -42,8 +42,8 @@ import com.trolltech.qt.gui.QLabel;
 import com.trolltech.qt.gui.QPushButton;
 import com.trolltech.qt.gui.QVBoxLayout;
 
+import cx.fbn.nevernote.clipboard.ClipBoardObserver;
 import cx.fbn.nevernote.gui.BrowserWindow;
-import cx.fbn.nevernote.neighbornote.ClipBoardObserver;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 import cx.fbn.nevernote.utilities.Pair;
@@ -60,10 +60,8 @@ public class NoteQuickLinkDialog extends QDialog {
 	public boolean okPressed;
 	private List<QTemporaryFile> tempFiles;
 	private final String iconPath = new String("classpath:cx/fbn/nevernote/icons/");
-	// ICHANGED
 	private final ClipBoardObserver cbObserver;
 	
-	// ICHANGED 引数にcbObserver追加
 	// Constructor
 	public NoteQuickLinkDialog(ApplicationLogger l, DatabaseConnection c, String text, ClipBoardObserver cbObserver) {
 		okPressed = false;
@@ -82,7 +80,6 @@ public class NoteQuickLinkDialog extends QDialog {
 				
 		conn = c;
 		
-		// ICHANGED
 		this.cbObserver = cbObserver;
 		browser = new BrowserWindow(conn, this.cbObserver);
 		

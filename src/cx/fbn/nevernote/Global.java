@@ -68,7 +68,6 @@ import cx.fbn.nevernote.utilities.Pair;
 
 public class Global {
 	// Set current version and the known versions.
-	// ICHANGED 自分用に変更
 	public static String version = "0.3";
 	public static String[] validVersions = {"0.3", "0.2", "0.1.3", "0.1.2", "0.1.1", "0.1"};
 	
@@ -161,8 +160,6 @@ public class Global {
 	public static String	databaseName = new String("NeverNote");  // database name.  used for multiple databases to separate settings.
 	public static String	indexDatabaseName = new String("Index"); // searchable words database
 	public static String	resourceDatabaseName = new String("Resources");  // attachments database
-	
-	// ICHANGED
 	public static String behaviorDatabaseName = new String("Behavior"); // 操作履歴データベース	
 	
 	public static DateAttributeFilterTable createdSinceFilter;
@@ -1244,7 +1241,6 @@ public class Global {
 		return val;
     }
     
-	// ICHANGED
 	// 操作履歴データベースのURL（フルパス）をゲット
 	public static String getBehaviorDatabaseUrl() {
 		settings.beginGroup("General");
@@ -1273,7 +1269,6 @@ public class Global {
 		settings.endGroup();
     }
     
-	// ICHANGED
 	public static void setBehaviorDatabaseUrl(String value) {
 		settings.beginGroup("General");
 		settings.setValue("BehaviorDatabaseURL", value);
@@ -2082,7 +2077,6 @@ public class Global {
 		databaseCache = value;
     }
     
-    // ICHANGED
     // 複数ノート同時閲覧操作に対する重み付け
     public static void setBrowseWeight(int weight) {
 		settings.beginGroup("RensoNoteList");
@@ -2106,7 +2100,6 @@ public class Global {
 		return value;
     }
     
-    // ICHANGED
     // ノート内容のコピー＆ペースト操作に対する重み付け
     public static void setCopyPasteWeight(int weight) {
 		settings.beginGroup("RensoNoteList");
@@ -2130,7 +2123,6 @@ public class Global {
 		return value;
     }
     
-    // ICHANGED
     // 新規ノート追加操作に対する重み付け
     public static void setAddNewNoteWeight(int weight) {
 		settings.beginGroup("RensoNoteList");
@@ -2154,7 +2146,6 @@ public class Global {
 		return value;
 	}
 	
-	// ICHANGED
 	// 連想ノートクリック操作に対する重み付け
     public static void setRensoItemClickWeight(int weight) {
 		settings.beginGroup("RensoNoteList");
@@ -2178,7 +2169,6 @@ public class Global {
 		return value;
 	}
 	
-	// ICHANGED
 	// タグ付け操作に対する重み付け
     public static void setSameTagWeight(int weight) {
 		settings.beginGroup("RensoNoteList");
@@ -2202,7 +2192,6 @@ public class Global {
 		return value;
 	}
 	
-	// ICHANGED
 	// ノートブック変更操作に対する重み付け
     public static void setSameNotebookWeight(int weight) {
 		settings.beginGroup("RensoNoteList");
@@ -2252,13 +2241,12 @@ public class Global {
     //*******************
     // ノートのマージ・複製の関連ノートリストへの適用
     //*******************
-    // ICHANGED
     public static void setMergeRensoNote(boolean value) {
 		settings.beginGroup("RensoNoteList");
 		settings.setValue("mergeRensoNoteList", value);
 		settings.endGroup();	
     }
-    // ICHANGED
+    
     public static boolean getMergeRensoNote() {
 		settings.beginGroup("RensoNoteList");
 		try {
@@ -2274,13 +2262,13 @@ public class Global {
 			return value;
 		}
     }
-    // ICHANGED
+    
     public static void setDuplicateRensoNote(boolean value) {
 		settings.beginGroup("RensoNoteList");
 		settings.setValue("duplicateRensoNoteList", value);
 		settings.endGroup();	
     }
-    // ICHANGED
+    
     public static boolean getDuplicateRensoNote() {
 		settings.beginGroup("RensoNoteList");
 		try {
@@ -2297,7 +2285,6 @@ public class Global {
 		}
     }
     
-    // ICHANGED
     // 連想ノートリストからノートを除外するときに確認メッセージを表示するかどうか
     public static boolean verifyExclude() {
 		settings.beginGroup("RensoNoteList");
@@ -2314,7 +2301,7 @@ public class Global {
 			return value;
 		}
     }
-    // ICHANGED
+    
     public static void setVerifyExclude(boolean val) {
 		settings.beginGroup("RensoNoteList");
 		if (val)
@@ -2324,7 +2311,6 @@ public class Global {
 		settings.endGroup();
     }
     
-	// ICHANGED
 	// 連想ノートリスト最大表示アイテム数
     public static void setRensoListItemMaximum(int maximum) {
 		settings.beginGroup("RensoNoteList");
@@ -2453,7 +2439,7 @@ public class Global {
 		settings.endGroup();
     }
     
-    //ordinal から指定した Enum の要素に変換する汎用関数
+    // ordinal から指定した Enum の要素に変換する汎用関数
 	public static <E extends Enum<E>> E fromOrdinal(Class<E> enumClass, int ordinal) {
 	    E[] enumArray = enumClass.getEnumConstants();
 	    return enumArray[ordinal];

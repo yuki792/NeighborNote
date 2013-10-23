@@ -87,11 +87,9 @@ public class IndexRunner extends QObject implements Runnable {
 	private final TreeSet<String>		foundWords;
 	int uncommittedCount = 0;
 
-	// ICHANGED String bを追加
 	public IndexRunner(String logname, String u, String i, String r, String b, String uid, String pswd, String cpswd) {
 		foundWords = new TreeSet<String>();
 		logger = new ApplicationLogger(logname);
-		// ICHANGED bを追加
 		conn = new DatabaseConnection(logger, u, i, r, b, uid, pswd, cpswd, 500);
 		indexType = SCAN;
 		guid = null;

@@ -17,7 +17,6 @@
  *
 */
 
-// ICHANGED
 package cx.fbn.nevernote.gui;
 
 import java.awt.Desktop;
@@ -30,8 +29,8 @@ import com.trolltech.qt.gui.QPrinter;
 import com.trolltech.qt.gui.QVBoxLayout;
 import com.trolltech.qt.gui.QWidget;
 
+import cx.fbn.nevernote.clipboard.ClipBoardObserver;
 import cx.fbn.nevernote.dialog.FindDialog;
-import cx.fbn.nevernote.neighbornote.ClipBoardObserver;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 
 public class TabBrowse extends QWidget {
@@ -81,49 +80,6 @@ public class TabBrowse extends QWidget {
 			parent.setTabTitle(index, value);
 		}
 	}
-	
-	/*
-	@SuppressWarnings("unused")
-	private void updateTitle(String guid, String title) {
-		if (guid.equals(getBrowserWindow().getNote().getGuid())
-				&& (saveTitle != null && !title.equals(saveTitle) || saveTitle == null)) {
-			saveTitle = title;
-			getBrowserWindow().loadingData(true);
-			getBrowserWindow().setTitle(title);
-			getBrowserWindow().getNote().setTitle(title);
-			getBrowserWindow().loadingData(false);
-		}
-	}
-	*/
-
-	/*
-	@SuppressWarnings("unused")
-	private void updateNotebook(String guid, String notebook) {
-		if (guid.equals(getBrowserWindow().getNote().getGuid())) {
-			getBrowserWindow().loadingData(true);
-			getBrowserWindow().setNotebook(notebook);
-			getBrowserWindow().loadingData(false);
-		}
-	}
-	*/
-
-	/*
-	@SuppressWarnings("unused")
-	private void updateTags(String guid, List<String> tags) {
-		if (guid.equals(getBrowserWindow().getNote().getGuid())) {
-			StringBuffer tagLine = new StringBuffer(100);
-			for (int i = 0; i < tags.size(); i++) {
-				if (i > 0)
-					tagLine.append(Global.tagDelimeter + " ");
-				tagLine.append(tags.get(i));
-
-			}
-			getBrowserWindow().loadingData(true);
-			getBrowserWindow().getTagLine().setText(tagLine.toString());
-			getBrowserWindow().loadingData(false);
-		}
-	}
-	*/
 
 	@SuppressWarnings("unused")
 	private void findText() {

@@ -44,7 +44,6 @@ public class DatabaseConnection {
 	private InkImagesTable				inkImagesTable;
 	private SyncTable					syncTable;
 	private SystemIconTable				systemIconTable;
-	// ICHANGED
 	private HistoryTable historyTable;
 	private ExcludedTable excludedTable;
 	private StaredTable staredTable;
@@ -53,17 +52,14 @@ public class DatabaseConnection {
 	private Connection					conn;
 	private Connection					indexConn;
 	private Connection					resourceConn;
-	// ICHANGED
 	private Connection behaviorConn;
 	
 	int throttle;
 	int id;
 
-	// ICHANGED String burlを追加
 	public DatabaseConnection(ApplicationLogger l, String url, String iurl, String rurl, String burl, String userid, String password, String cypherPassword, int throttle) {
 		logger = l;
 		this.throttle = throttle;
-		// ICHANGED burlを追加
 		dbSetup(url, iurl, rurl, burl, userid, password, cypherPassword);
 	}
 	
@@ -81,7 +77,6 @@ public class DatabaseConnection {
 		sharedNotebookTable = new SharedNotebookTable(logger, this);
 		systemIconTable = new SystemIconTable(logger, this);
 		inkImagesTable = new InkImagesTable(logger, this);
-		// ICHANGED
 		historyTable = new HistoryTable(logger, this);
 		excludedTable = new ExcludedTable(logger, this);
 		staredTable = new StaredTable(logger, this);
@@ -95,7 +90,6 @@ public class DatabaseConnection {
 	}
 	
 	// Initialize the database connection
-	// ICHANGED String behaviorUrlを追加
 	public void dbSetup(String url,String indexUrl, String resourceUrl, String behaviorUrl, String userid, String userPassword, String cypherPassword) {
 		logger.log(logger.HIGH, "Entering DatabaseConnection.dbSetup " +id);
 
@@ -117,7 +111,6 @@ public class DatabaseConnection {
 		boolean indexDbExists = f.exists(); 
 		f = Global.getFileManager().getDbDirFile(Global.resourceDatabaseName + ".h2.db");
 		boolean resourceDbExists = f.exists();
-		// ICHANGED
 		f = Global.getFileManager().getDbDirFile(Global.behaviorDatabaseName + ".h2.db");
 		boolean behaviorDbExists = f.exists();
 		
@@ -140,7 +133,6 @@ public class DatabaseConnection {
 			}
 			indexConn = DriverManager.getConnection(indexUrl,userid,passwordString);
 			resourceConn = DriverManager.getConnection(resourceUrl,userid,passwordString);
-			// ICHANGED
 			behaviorConn = DriverManager.getConnection(behaviorUrl, userid, passwordString);
 			
 //			conn = DriverManager.getConnection(url+";AUTO_SERVER=TRUE",userid,passwordString);
@@ -173,7 +165,6 @@ public class DatabaseConnection {
 			executeSql("Update note set indexneeded='true'");
 		}
 		
-		// ICHANGED
 		// 操作履歴テーブルと除外ノートテーブルとスター付きノートテーブルを作る
 		if (!behaviorDbExists) {
 			createHistoryTables();
@@ -377,17 +368,14 @@ public class DatabaseConnection {
 		noteTable.noteResourceTable.createTable();
 	}
 	
-	// ICHANGED
 	public void createHistoryTables() {
 		historyTable.createTable();
 	}
 	
-	// ICHANGED
 	public void createExcludedTables() {
 		excludedTable.createTable();
 	}
 	
-	// ICHANGED
 	public void createStaredTables() {
 		staredTable.createTable();
 	}
@@ -402,7 +390,6 @@ public class DatabaseConnection {
 		return resourceConn;
 	}
 	
-	// ICHANGED
 	public Connection getBehaviorConnection() {
 		return behaviorConn;
 	}
@@ -450,17 +437,14 @@ public class DatabaseConnection {
 		return inkImagesTable;
 	}
 	
-	// ICHANGED
 	public HistoryTable getHistoryTable() {
 		return historyTable;
 	}
 	
-	// ICHANGED
 	public ExcludedTable getExcludedTable() {
 		return excludedTable;
 	}
 	
-	// ICHANGED
 	public StaredTable getStaredTable() {
 		return staredTable;
 	}

@@ -59,7 +59,6 @@ public class TableView extends QTableView {
     private QAction noteHistoryAction;
     private QAction duplicateAction;
     private QAction	mergeNotesAction;
-	// ICHANGED
 	private QAction openNewTabAction;
 	private QAction addNoteNewTabAction;
     
@@ -84,12 +83,9 @@ public class TableView extends QTableView {
     public Signal0	resetViewport;
     public NoteSignal noteSignal;
 	
-	// ICHANGED
 	private final NeverNote parent;
 	
-	// ICHANGED parent引数を追加
 	public TableView(ApplicationLogger l, ListManager m, NeverNote parent) {
-		// ICHANGED
 		this.parent = parent;
 		
 		logger = l;
@@ -373,12 +369,10 @@ public class TableView extends QTableView {
 		duplicateAction = d;
 	}
 	
-	// ICHANGED
 	public void setOpenNewTabAction(QAction t) {
 		openNewTabAction = t;
 	}
 	
-	// ICHANGED
 	public void setAddNoteNewTabAction(QAction t) {
 		addNoteNewTabAction = t;
 	}
@@ -404,10 +398,8 @@ public class TableView extends QTableView {
 	public void contextMenuEvent(QContextMenuEvent event) {
 		QMenu menu = new QMenu(this);
 		
-		// ICHANGED
 		menu.addAction(openNewTabAction);
 		
-		// ICHANGED
 		menu.addSeparator();
 		if (Global.showDeleted) {
 			menu.addAction(restoreAction);
