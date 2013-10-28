@@ -1858,6 +1858,10 @@ public class BrowserWindow extends QWidget {
 		if (tagEdit.text().equalsIgnoreCase(saveTagList))
 			return;
 
+		if (saveTagList == null) {
+			return;
+		}
+		
 		// We know something has changed...
 		String oldTagArray[] = saveTagList.split(Global.tagDelimeter);
 		String newTagArray[];

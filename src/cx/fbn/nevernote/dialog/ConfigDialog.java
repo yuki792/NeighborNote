@@ -148,6 +148,11 @@ public class ConfigDialog extends QDialog {
 			Global.setCheckVersionUpgrade(true);
 		else
 			Global.setCheckVersionUpgrade(false);
+		
+		if (appearancePage.getNewAction())
+			Global.setToolBarNewAction(true);
+		else
+			Global.setToolBarNewAction(false);
 
 		
 		if (appearancePage.getNewNoteWithTags())
@@ -265,6 +270,13 @@ public class ConfigDialog extends QDialog {
 		Global.rebuildFullTextNoteTarget(conn);
 		Global.rebuildFullTextResourceTarget(conn);
 		
+		// ツールバーの「新規」ボタンを押した時の動作を再設定
+    	if (Global.toolBarNewAction()) {
+        	parent.connectNewButtonSlot("noteAddNewTab()");
+    	} else {
+    		parent.connectNewButtonSlot("addNote()");
+    	}
+		
 		close();
 	}
 	
@@ -370,6 +382,7 @@ public class ConfigDialog extends QDialog {
 		appearancePage.setIncludeTagChildren(Global.includeTagChildren());
 		appearancePage.setDisplayRightToLeft(Global.displayRightToLeft());
 		appearancePage.setStartupNotebook(Global.getStartupNotebook());
+		appearancePage.setNewAction(Global.toolBarNewAction());
 		
 //		indexPage.setRegex(Global.getWordRegex());
 		indexPage.setSleepInterval(Global.getIndexThreadSleepInterval());

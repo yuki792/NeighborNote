@@ -2599,5 +2599,27 @@ public class Global {
 		settings.setValue("customENRelatedNotesWeight", weight);
 		settings.endGroup();
 	}
+
+	// ツールバーの「新規」ボタンを押した時、新規ノートをタブで開くかどうか
+	public static boolean toolBarNewAction() {
+		settings.beginGroup("General");
+		try {
+			String text = (String)settings.value("toolBarNewAction", "true");
+			settings.endGroup();
+			if (text.equalsIgnoreCase("true"))
+				return true;
+			else
+				return false;
+		} catch (java.lang.ClassCastException e) {
+			Boolean value = (Boolean) settings.value("toolBarNewAction", true);
+			settings.endGroup();
+			return value;
+		}
+	}
+	public static void setToolBarNewAction(boolean value) {
+		settings.beginGroup("General");
+		settings.setValue("toolBarNewAction", value);
+		settings.endGroup();	
+	}
 }
 

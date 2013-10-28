@@ -3263,7 +3263,12 @@ public class NeverNote extends QMainWindow{
 
     	newButton = toolBar.addAction(tr("New"));
     	QIcon newIcon = new QIcon(iconPath+"new.png");
-    	newButton.triggered.connect(this, "addNote()");
+    	if (Global.toolBarNewAction()) {
+        	newButton.triggered.connect(this, "noteAddNewTab()");
+    	} else {
+    		newButton.triggered.connect(this, "addNote()");
+    	}
+
     	newButton.setIcon(newIcon);
     	toggleNewButton(Global.isToolbarButtonVisible("new"));
     	
@@ -7721,5 +7726,11 @@ public class NeverNote extends QMainWindow{
 	@SuppressWarnings("unused")
 	private void informRateLimit(Integer rateLimitDuration) {
 		QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + rateLimitDuration + " seconds."));
+	}
+	
+	// ツールバーの「新規」ボタンの接続スロットを設定
+	public void connectNewButtonSlot(String slot) {
+		newButton.triggered.disconnect();
+		newButton.triggered.connect(this, slot);
 	}
 }

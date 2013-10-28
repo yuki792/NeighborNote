@@ -57,6 +57,7 @@ public class ConfigAppearancePage extends QWidget {
 	private final QCheckBox minimizeOnClose;
 	private final QCheckBox includeTagChildren;
 	private final QCheckBox displayRightToLeft;
+	private final QCheckBox toolBarNewAction;
 	private final QComboBox startupNotebook;
 	private final QSpinBox autoSaveInterval;
 	
@@ -155,6 +156,7 @@ public class ConfigAppearancePage extends QWidget {
 		anyTagSelection = new QCheckBox(tr("Display Notes Matching Any Selected Tags"));
 		includeTagChildren = new QCheckBox(tr("Include Children In Tag Selection"));
 		displayRightToLeft = new QCheckBox(tr("Display Notes Right-To-Left"));
+		toolBarNewAction = new QCheckBox(tr("Add Note in New Tab When Click Tool Bar New Button"));
 		
 		QHBoxLayout startupNotebookLayout = new QHBoxLayout();
 		startupNotebook = new QComboBox();
@@ -193,6 +195,7 @@ public class ConfigAppearancePage extends QWidget {
 		checkboxLayout.addWidget(includeTagChildren);
 		checkboxLayout.addWidget(displayRightToLeft);
 		checkboxLayout.addWidget(checkForUpdates);
+		checkboxLayout.addWidget(toolBarNewAction);
 		checkboxLayout.addStretch(1);
 
 		
@@ -349,6 +352,16 @@ public class ConfigAppearancePage extends QWidget {
 	}
 	public boolean getCheckForUpdates() {
 		return checkForUpdates.isChecked();
+	}
+	
+	//*******************************************
+	//* tool bar new button action get/set
+	//*******************************************
+	public void setNewAction(boolean val) {
+		toolBarNewAction.setChecked(val);
+	}
+	public boolean getNewAction() {
+		return toolBarNewAction.isChecked();
 	}
 
 	
