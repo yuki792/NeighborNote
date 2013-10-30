@@ -150,7 +150,7 @@ public class RensoNoteListItem extends QWidget{
 		painter.setPen(tmpPen);
 		// サムネイル
 		QImage img;
-		String thumbnailName = Global.getFileManager().getResDirPath("thumbnail-" + noteGuid + ".png");
+		String thumbnailName = Global.getFileManager().getResDirPath("enThumbnail-" + noteGuid + ".png");
 		QFile thumbnail = new QFile(thumbnailName);
 		if (!thumbnail.exists()) {
 			img = new QImage();

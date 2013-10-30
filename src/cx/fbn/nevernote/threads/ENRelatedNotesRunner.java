@@ -159,7 +159,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		this.keepRunning = keepRunning;
 	}
 	
-	public synchronized boolean addGuid(String guid) {
+	public boolean addGuid(String guid) {
 		if (workQueue.offer("GET " + guid)) {
 			return true;
 		}
@@ -167,7 +167,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		return false;
 	}
 	
-	public synchronized boolean addStop() {
+	public boolean addStop() {
 		if (workQueue.offer("STOP")) {
 			return true;
 		}
