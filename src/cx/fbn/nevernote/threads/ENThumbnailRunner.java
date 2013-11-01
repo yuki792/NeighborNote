@@ -47,12 +47,14 @@ import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.oauth.OAuthTokenizer;
 import cx.fbn.nevernote.signals.ENThumbnailSignal;
 import cx.fbn.nevernote.signals.LimitSignal;
+import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.utilities.AESEncrypter;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
 public class ENThumbnailRunner extends QObject implements Runnable{
 	
 	private final ApplicationLogger					logger;
+	private final DatabaseConnection				conn;
 	public volatile ENThumbnailSignal				enThumbnailSignal;
 	public QMutex									mutex;
 	private volatile boolean						keepRunning;
@@ -61,8 +63,9 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 	private volatile User							user;
 	private volatile String							serverUrl;
 	
-	public ENThumbnailRunner(ApplicationLogger logger) {
+	public ENThumbnailRunner(ApplicationLogger logger, DatabaseConnection conn) {
 		this.logger = logger;
+		this.conn = conn;
 		this.enThumbnailSignal = new ENThumbnailSignal();
 		this.mutex = new QMutex();
 		this.keepRunning = true;
@@ -85,12 +88,15 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 					String guid = work.replace("GET ", "");
 					logger.log(logger.EXTREME, "Evernoteサムネイル取得開始 guid = " + guid);
 					
-					QPixmap thumbnail_p = getENThumbnail(guid);
-					if (thumbnail_p == null) {				// 取得に失敗
+					QByteArray thumbnailData = getENThumbnailData(guid);
+					if (thumbnailData == null) {				// 取得に失敗
 						logger.log(logger.EXTREME, "Evernoteサムネイルの取得に失敗");
 					} else {
+						QPixmap thumbnail_p = new QPixmap();
+						thumbnail_p.loadFromData(thumbnailData);
 						logger.log(logger.EXTREME, "Evernoteサムネイルの取得に成功");
 						saveImage(thumbnail_p, guid);
+						registImage(thumbnailData, guid);
 					}
 					
 					enThumbnailSignal.getENThumbnailFinished.emit(guid);
@@ -108,7 +114,7 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 	}
 	
 	// Evernoteサーバからサムネイルを取得
-	private synchronized QPixmap getENThumbnail(String guid) {
+	private synchronized QByteArray getENThumbnailData(String guid) {
 		// サムネイルをEvernoteサーバから取得
 		String shardId = user.getShardId();
 		if (shardId == null || shardId.equals("")) {
@@ -139,18 +145,14 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 		nameValuePairs.add(new BasicNameValuePair("auth", oauthToken));
 		nameValuePairs.add(new BasicNameValuePair("size", "80"));
 		
-		QPixmap p = new QPixmap();
+		QByteArray data = new QByteArray();
 		try {
 			httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 			// Webサーバからのレスポンスを処理
 			HttpResponse response = null;
 			response = httpClient.execute(httpPost);
 			byte[] bytes = EntityUtils.toByteArray(response.getEntity());
-			QByteArray data = new QByteArray(bytes);
-			// データベースにEvernoteサーバから取得したサムネイルを保存。例↓
-			// conn.getNoteTable().setThumbnail(guid, data);
-			
-			p.loadFromData(data);
+			data = new QByteArray(bytes);
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 			return null;
@@ -164,12 +166,18 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 			httpClient.getConnectionManager().shutdown();
 		}
 
-		return p;
+		return data;
 	}
 	
+	// サムネイルをpng形式のファイルとしてresディレクトリに保存
 	private synchronized void saveImage(QPixmap thumbnail, String guid) {
 		String thumbnailName = Global.getFileManager().getResDirPath("enThumbnail-" + guid + ".png");
 		thumbnail.save(thumbnailName, "PNG");
+	}
+	
+	// サムネイルのバイナリデータをデータベースに登録
+	private synchronized void registImage(QByteArray data, String guid) {
+		conn.getNoteTable().setENThumbnail(guid, data);
 	}
 
 	public boolean isKeepRunning() {

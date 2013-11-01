@@ -1783,6 +1783,44 @@ public class NoteTable {
 
 		return noteContentText;
 	}
+	
+	// Evernoteサムネイルを取得
+	public QByteArray getENThumbnail(String guid) {
+		boolean check;			
+        NSqlQuery query = new NSqlQuery(db.getConnection());
+        				
+		check = query.prepare("Select enThumbnail from note where guid=:guid");
+		query.bindValue(":guid", guid);
+		check = query.exec();
+		if (!check) {
+			logger.log(logger.EXTREME, "Note SQL get enThumbail failed: " +query.lastError().toString());
+		}
+		
+		if (query.next())  {
+			try {
+				if (query.getBlob(0) != null) {
+					return new QByteArray(query.getBlob(0)); 
+				}
+			} catch (java.lang.IllegalArgumentException e) {
+				return null;
+			}
+		}
+		return null;
+	}
+	
+	// Evernoteサムネイルを登録
+	public void setENThumbnail(String guid, QByteArray thumbnail) {
+		boolean check;
+        NSqlQuery query = new NSqlQuery(db.getConnection());
+        				
+		check = query.prepare("Update note set enThumbnail = :enThumbnail where guid=:guid");
+		query.bindValue(":guid", guid);
+		query.bindValue(":enThumbnail", thumbnail.toByteArray());
+		check = query.exec();
+		if (!check) {
+			logger.log(logger.EXTREME, "Note SQL set enThumbail failed: " +query.lastError().toString());
+		}
+	}
 }	
 
 

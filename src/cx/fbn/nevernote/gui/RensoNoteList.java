@@ -28,6 +28,7 @@ import java.util.Set;
 
 import com.evernote.edam.type.Note;
 import com.trolltech.qt.QThread;
+import com.trolltech.qt.core.QByteArray;
 import com.trolltech.qt.core.QFile;
 import com.trolltech.qt.core.QSize;
 import com.trolltech.qt.core.Qt.MouseButton;
@@ -87,7 +88,7 @@ public class RensoNoteList extends QListWidget {
 		this.enRelatedNotesThread = new QThread(enRelatedNotesRunner, "ENRelatedNotes Thread");
 		this.getEnRelatedNotesThread().start();
 		
-		this.enThumbnailRunner = new ENThumbnailRunner(this.logger);
+		this.enThumbnailRunner = new ENThumbnailRunner(this.logger, this.conn);
 		this.enThumbnailRunner.enThumbnailSignal.getENThumbnailFinished.connect(this, "enThumbnailComplete(String)");
 		this.enThumbnailRunner.limitSignal.rateLimitReached.connect(parent, "informRateLimit(Integer)");
 		this.enThumbnailThread = new QThread(enThumbnailRunner, "ENThumbnail Thread");
@@ -322,12 +323,14 @@ public class RensoNoteList extends QListWidget {
 				// 存在していて、かつ関連度0でなければノート情報を取得して連想ノートリストに追加
 				if (isNoteActive && maxNum > 0) {
 					// Evernoteサムネイルが取得済みか確認。未取得ならサムネイル取得スレッドにキュー
-					// TODO 今はとりあえずresディレクトリを確認。あとでデータベースにカラムを追加する
 					if (Global.isConnected) {
 						String thumbnailName = Global.getFileManager().getResDirPath("enThumbnail-" + maxGuid + ".png");
 						QFile thumbnail = new QFile(thumbnailName);
-						if (!thumbnail.exists()) {
-							enThumbnailRunner.addGuid(maxGuid);
+						if (!thumbnail.exists()) {	// Evernoteサムネイルがファイルとして存在しない
+							QByteArray data = conn.getNoteTable().getENThumbnail(maxGuid);
+							if (data == null) {	// Evernoteサムネイル未取得
+								enThumbnailRunner.addGuid(maxGuid);
+							}
 						}
 					}
 					
