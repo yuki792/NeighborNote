@@ -4889,6 +4889,12 @@ public class NeverNote extends QMainWindow{
 	private void noteAddNewTab() {
 		saveNote();
 		
+		// ノートを何も開いていないときは現在のタブにノート追加
+		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+			addNote();
+			return;
+		}
+		
 		// ノート追加前に開いていたノートとの関連性を記録するためにguidをとっておく
 		TabBrowse prevTab = (TabBrowse)tabBrowser.currentWidget();
 		String prevTabGuid = null;
