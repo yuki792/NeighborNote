@@ -160,32 +160,32 @@ public class RensoNoteList extends QListWidget {
 		// browseHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> browseHistory = conn.getHistoryTable().getBehaviorHistory("browse", guid);
 		addWeight(browseHistory, Global.getBrowseWeight());
-		mergedHistory = mergeHistory(browseHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(browseHistory), mergedHistory);
 		
 		// copy&pasteHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> copyAndPasteHistory = conn.getHistoryTable().getBehaviorHistory("copy & paste", guid);
 		addWeight(copyAndPasteHistory, Global.getCopyPasteWeight());
-		mergedHistory = mergeHistory(copyAndPasteHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(copyAndPasteHistory), mergedHistory);
 		
 		// addNewNoteHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> addNewNoteHistory = conn.getHistoryTable().getBehaviorHistory("addNewNote", guid);
 		addWeight(addNewNoteHistory, Global.getAddNewNoteWeight());
-		mergedHistory = mergeHistory(addNewNoteHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(addNewNoteHistory), mergedHistory);
 		
 		// rensoItemClickHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> rensoItemClickHistory = conn.getHistoryTable().getBehaviorHistory("rensoItemClick", guid);
 		addWeight(rensoItemClickHistory, Global.getRensoItemClickWeight());
-		mergedHistory = mergeHistory(rensoItemClickHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(rensoItemClickHistory), mergedHistory);
 		
 		// sameTagHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> sameTagHistory = conn.getHistoryTable().getBehaviorHistory("sameTag", guid);
 		addWeight(sameTagHistory, Global.getSameTagWeight());
-		mergedHistory = mergeHistory(sameTagHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(sameTagHistory), mergedHistory);
 		
 		// sameNotebookNoteHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> sameNotebookHistory = conn.getHistoryTable().getBehaviorHistory("sameNotebook", guid);
 		addWeight(sameNotebookHistory, Global.getSameNotebookWeight());
-		mergedHistory = mergeHistory(sameNotebookHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(sameNotebookHistory), mergedHistory);
 		logger.log(logger.EXTREME, "Leaving RensoNoteList.calculateHistory");
 	}
 	
@@ -436,7 +436,7 @@ public class RensoNoteList extends QListWidget {
 			enRelatedNotes.put(relatedGuid, Global.getENRelatedNotesWeight());
 		}
 		
-		mergedHistory = mergeHistory(enRelatedNotes, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(enRelatedNotes), mergedHistory);
 		
 		logger.log(logger.EXTREME, "Leaving RensoNoteList.addENRelatedNotes");
 	}
@@ -459,5 +459,20 @@ public class RensoNoteList extends QListWidget {
 	
 	public String getGuid() {
 		return guid;
+	}
+	
+	// ローカルに存在していて、かつアクティブなノートだけを返す
+	private HashMap<String, Integer> filterHistory(HashMap<String, Integer> sourceHistory) {
+		HashMap<String, Integer> dstHistory = new HashMap<String, Integer>();
+		
+		for (String guid : sourceHistory.keySet()) {
+			if (conn.getNoteTable().exists(guid)) {
+				if (conn.getNoteTable().getNote(guid, false, false, false, false, false).isActive()) {
+					dstHistory.put(guid, sourceHistory.get(guid));
+				}
+			}
+		}
+		
+		return dstHistory;
 	}
 }
