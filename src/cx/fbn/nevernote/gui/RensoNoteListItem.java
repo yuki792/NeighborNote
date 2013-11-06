@@ -22,6 +22,7 @@ package cx.fbn.nevernote.gui;
 import java.text.SimpleDateFormat;
 
 import com.evernote.edam.type.Note;
+import com.trolltech.qt.core.QByteArray;
 import com.trolltech.qt.core.QEvent;
 import com.trolltech.qt.core.QFile;
 import com.trolltech.qt.core.QRectF;
@@ -149,14 +150,26 @@ public class RensoNoteListItem extends QWidget{
 		painter.drawText(70, size().height() - 33, size().width() - 70, 33, Qt.AlignmentFlag.AlignRight.value(), String.valueOf((int)(ratio * 100)) + "%");		
 		painter.setPen(tmpPen);
 		// サムネイル
-		QImage img;
-		String thumbnailName = Global.getFileManager().getResDirPath("thumbnail-" + noteGuid + ".png");
-		QFile thumbnail = new QFile(thumbnailName);
-		if (!thumbnail.exists()) {
-			img = new QImage();
-			img.loadFromData(conn.getNoteTable().getThumbnail(noteGuid));
+		// 優先順位   1.Evernoteサムネイル（ファイル）, 2.Evernoteサムネイル（DB）, 3.生成サムネイル（ファイル）, 4.生成サムネイル（DB）
+		QImage img = new QImage();
+		String enThumbnailName = Global.getFileManager().getResDirPath("enThumbnail-" + noteGuid + ".png");
+		QFile enThumbnail = new QFile(enThumbnailName);
+		if (!enThumbnail.exists()) {	// Evernoteサムネイルがファイルとして存在しない
+			QByteArray b =conn.getNoteTable().getENThumbnail(noteGuid);
+			if (b == null) {	// Evernoteサムネイルがデータベースにも存在しない
+				String thumbnailName = Global.getFileManager().getResDirPath("thumbnail-" + noteGuid + ".png");
+				QFile thumbnail = new QFile(thumbnailName);
+				if (!thumbnail.exists()) {	// 生成サムネイルがファイルとして存在しない
+					img = new QImage();
+					img.loadFromData(conn.getNoteTable().getThumbnail(noteGuid));
+				}
+			} else {
+				img = new QImage();
+				img.loadFromData(b);
+				saveImage(img, noteGuid);
+			}
 		} else {
-			img = new QImage(thumbnailName);
+			img = new QImage(enThumbnailName);
 		}
 		painter.drawImage(2, 4, img, 0, 0, 80, rect().height() - 10);
 		painter.setPen(QColor.lightGray);
@@ -199,5 +212,11 @@ public class RensoNoteListItem extends QWidget{
 	public void setDefaultBackground() {
 		palette.setColor(QPalette.ColorRole.Window, new QColor(255, 255, 255));
 		this.setPalette(palette);
+	}
+	
+	// サムネイルをpng形式のファイルとしてresディレクトリに保存
+	private void saveImage(QImage thumbnail, String guid) {
+		String thumbnailName = Global.getFileManager().getResDirPath("enThumbnail-" + guid + ".png");
+		thumbnail.save(thumbnailName, "PNG");
 	}
 }

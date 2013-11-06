@@ -2321,13 +2321,13 @@ public class Global {
 		settings.beginGroup("RensoNoteList");
 		Integer value;
 		try {
-			String val  = (String)settings.value("rensoListMaximum", 20);
+			String val  = (String)settings.value("rensoListMaximum", 10);
 			value = new Integer(val.trim());
 		} catch (Exception e) {
 			try {
-				value = (Integer)settings.value("rensoListMaximum", 20);
+				value = (Integer)settings.value("rensoListMaximum", 10);
 			} catch (Exception e1) {
-				value = 20;
+				value = 10;
 			}
 		}
 		settings.endGroup();

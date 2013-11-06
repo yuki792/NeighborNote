@@ -306,6 +306,11 @@ public class DatabaseConnection {
 			Global.rebuildFullTextNoteTarget(this);
 		}
 		
+		// Evernoteサムネイルカラムを追加
+		if (!dbTableColumnExists("NOTE", "ENTHUMBNAIL")) {
+			executeSql("alter table note add column enThumbNail Blob");
+		}
+		
 		// Apache Luceneを使った日本語検索のためのプレーンテキストノートリソースカラムを準備
 		NSqlQuery rQuery = new NSqlQuery(resourceConn);
 		rQuery.exec("select TABLE_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='NOTERESOURCES' and COLUMN_NAME='RESOURCETEXT'");

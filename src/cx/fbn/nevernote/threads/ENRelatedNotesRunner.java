@@ -27,7 +27,6 @@ import com.evernote.edam.error.EDAMErrorCode;
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
-import com.evernote.edam.limits.Constants;
 import com.evernote.edam.notestore.RelatedQuery;
 import com.evernote.edam.notestore.RelatedResult;
 import com.evernote.edam.notestore.RelatedResultSpec;
@@ -53,8 +52,8 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 	private volatile LinkedBlockingQueue<Pair<String, List<String>>> resultQueue;	// ペア<元ノートguid, 関連ノートguidリスト>を溜めておくキュー
 	public volatile LimitSignal 					limitSignal;
 	
-	public ENRelatedNotesRunner(SyncRunner syncRunner, ApplicationLogger logger) {
-		this.logger = logger;
+	public ENRelatedNotesRunner(SyncRunner syncRunner, String logname) {
+		this.logger = new ApplicationLogger(logname);
 		this.syncRunner = syncRunner;
 		this.enRelatedNotesSignal = new ENRelatedNotesSignal();
 		this.mutex = new QMutex();
@@ -130,7 +129,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		RelatedQuery rquery = new RelatedQuery();
 		rquery.setNoteGuid(guid);
 		RelatedResultSpec resultSpec = new RelatedResultSpec();
-		resultSpec.setMaxNotes(Constants.EDAM_RELATED_MAX_NOTES);
+		resultSpec.setMaxNotes(5);
 		if (syncRunner != null && syncRunner.localNoteStore != null) {
 			try {
 				RelatedResult result = syncRunner.localNoteStore.findRelated(syncRunner.authToken, rquery, resultSpec);
@@ -159,7 +158,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		this.keepRunning = keepRunning;
 	}
 	
-	public synchronized boolean addGuid(String guid) {
+	public boolean addGuid(String guid) {
 		if (workQueue.offer("GET " + guid)) {
 			return true;
 		}
@@ -167,7 +166,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		return false;
 	}
 	
-	public synchronized boolean addStop() {
+	public boolean addStop() {
 		if (workQueue.offer("STOP")) {
 			return true;
 		}
