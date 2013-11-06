@@ -53,8 +53,8 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 	private volatile LinkedBlockingQueue<Pair<String, List<String>>> resultQueue;	// ペア<元ノートguid, 関連ノートguidリスト>を溜めておくキュー
 	public volatile LimitSignal 					limitSignal;
 	
-	public ENRelatedNotesRunner(SyncRunner syncRunner, ApplicationLogger logger) {
-		this.logger = logger;
+	public ENRelatedNotesRunner(SyncRunner syncRunner, String logname) {
+		this.logger = new ApplicationLogger(logname);
 		this.syncRunner = syncRunner;
 		this.enRelatedNotesSignal = new ENRelatedNotesSignal();
 		this.mutex = new QMutex();

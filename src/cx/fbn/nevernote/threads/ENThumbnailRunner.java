@@ -63,9 +63,9 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 	private volatile User							user;
 	private volatile String							serverUrl;
 	
-	public ENThumbnailRunner(ApplicationLogger logger, DatabaseConnection conn) {
-		this.logger = logger;
-		this.conn = conn;
+	public ENThumbnailRunner(String logname, int t, String u, String i, String r, String b, String uid, String pswd, String cpswd) {
+		this.logger = new ApplicationLogger(logname);
+		this.conn = new DatabaseConnection(logger, u, i, r, b, uid, pswd, cpswd, 0);
 		this.enThumbnailSignal = new ENThumbnailSignal();
 		this.mutex = new QMutex();
 		this.keepRunning = true;
@@ -126,6 +126,7 @@ public class ENThumbnailRunner extends QObject implements Runnable{
     	try {
 			aes.decrypt(new FileInputStream(Global.getFileManager().getHomeDirFile("oauth.txt")));
 		} catch (FileNotFoundException e) {
+			logger.log(logger.HIGH, "Evernoteサムネイル取得中に例外発生：FileNotFoundException");
 			e.printStackTrace();
 		}
 		String authString = aes.getString();
@@ -154,12 +155,15 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 			byte[] bytes = EntityUtils.toByteArray(response.getEntity());
 			data = new QByteArray(bytes);
 		} catch (UnsupportedEncodingException e) {
+			logger.log(logger.HIGH, "Evernoteサムネイル取得中に例外発生：UnsupportedEncodingException");
 			e.printStackTrace();
 			return null;
 		} catch (ClientProtocolException e) {
+			logger.log(logger.HIGH, "Evernoteサムネイル取得中に例外発生：ClientProtocolException");
 			e.printStackTrace();
 			return null;
 		} catch (IOException e) {
+			logger.log(logger.HIGH, "Evernoteサムネイル取得中に例外発生：IOException");
 			e.printStackTrace();
 			return null;
 		} finally {

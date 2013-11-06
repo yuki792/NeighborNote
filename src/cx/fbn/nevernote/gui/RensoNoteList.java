@@ -42,6 +42,7 @@ import com.trolltech.qt.gui.QMenu;
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.NeverNote;
 import cx.fbn.nevernote.sql.DatabaseConnection;
+import cx.fbn.nevernote.threads.CounterRunner;
 import cx.fbn.nevernote.threads.ENRelatedNotesRunner;
 import cx.fbn.nevernote.threads.ENThumbnailRunner;
 import cx.fbn.nevernote.threads.SyncRunner;
@@ -82,13 +83,15 @@ public class RensoNoteList extends QListWidget {
 		this.guid = new String();
 		mergedHistory = new HashMap<String, Integer>();
 		enRelatedNotesCache = new HashMap<String, List<String>>();
-		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner, this.logger);
+		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner, "enRelatedNotesRunner.log");
 		this.enRelatedNotesRunner.enRelatedNotesSignal.getENRelatedNotesFinished.connect(this, "enRelatedNotesComplete()");
 		this.enRelatedNotesRunner.limitSignal.rateLimitReached.connect(parent, "informRateLimit(Integer)");
 		this.enRelatedNotesThread = new QThread(enRelatedNotesRunner, "ENRelatedNotes Thread");
 		this.getEnRelatedNotesThread().start();
 		
-		this.enThumbnailRunner = new ENThumbnailRunner(this.logger, this.conn);
+		this.enThumbnailRunner = new ENThumbnailRunner("enThumbnailRunner.log", CounterRunner.NOTEBOOK, 
+					Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
+					Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
 		this.enThumbnailRunner.enThumbnailSignal.getENThumbnailFinished.connect(this, "enThumbnailComplete(String)");
 		this.enThumbnailRunner.limitSignal.rateLimitReached.connect(parent, "informRateLimit(Integer)");
 		this.enThumbnailThread = new QThread(enThumbnailRunner, "ENThumbnail Thread");
