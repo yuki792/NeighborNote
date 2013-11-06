@@ -42,6 +42,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.Vector;
 
@@ -599,7 +600,7 @@ public class NeverNote extends QMainWindow{
 		int index = tabBrowser.addNewTab(tab, "");
 		tabWindows.put(index, tab);
 		tabBrowser.currentChanged.connect(this, "tabWindowChanged(int)");
-		tabBrowser.tabCloseRequested.connect(this, "tabWindowClosing(int)");
+		tabBrowser.tabCloseRequested.connect(this, "tabCloseRequested(int)");
 		
 		noteDirty = new HashMap<Integer, Boolean>();
 		noteDirty.put(index, false);
@@ -4807,20 +4808,26 @@ public class NeverNote extends QMainWindow{
 			}
 		}
 	}
+	
+	// タブが閉じられた
+	@SuppressWarnings("unused")
+	private void tabCloseRequested(int index) {
+		tabWindowClosing((TabBrowse)tabBrowser.widget(index));
+	}
 
 	// タブが閉じられた
-	private void tabWindowClosing(int index) {
+	private void tabWindowClosing(TabBrowse tab) {
 		// タブが1つしかなかったら閉じない
 		if (tabBrowser.count() <= 1) {
 			return;
 		}
 
-		TabBrowse t = (TabBrowse) tabBrowser.widget(index);
-		String guid = t.getBrowserWindow().getNote().getGuid();
-		String content = t.getBrowserWindow().getContent();
-		BrowserWindow browser = t.getBrowserWindow();
+		int index = tabBrowser.indexOf(tab);
+		String guid = tab.getBrowserWindow().getNote().getGuid();
+		String content = tab.getBrowserWindow().getContent();
+		BrowserWindow browser = tab.getBrowserWindow();
 		// ノートが変更されていたら保存
-		if (t.getNoteDirty()) {
+		if (tab.getNoteDirty()) {
 			saveNoteTabBrowser(guid, content, true, browser);
 		}
 
@@ -4847,8 +4854,8 @@ public class NeverNote extends QMainWindow{
 		// タブのインデックスを更新（削除によって空いた部分を詰める）
 		for(int i = index ; tabWindows.containsKey(i + 1) ; i++){
 			// tabWindows
-			TabBrowse tab = tabWindows.get(i + 1);
-			tabWindows.put(i, tab);
+			TabBrowse nextTab = tabWindows.get(i + 1);
+			tabWindows.put(i, nextTab);
 			tabWindows.remove(i + 1);
 			// noteDirty
 			boolean isNoteDirty = noteDirty.get(i + 1);
@@ -5397,6 +5404,7 @@ public class NeverNote extends QMainWindow{
     		return;
     	if (currentNoteGuid.equals(""))
     		return;
+    	
     	String title = null;
     	if (selectedNoteGUIDs.size() == 1)
     		title = conn.getNoteTable().getNote(selectedNoteGUIDs.get(0),false,false,false,false,false).getTitle();
@@ -5419,12 +5427,17 @@ public class NeverNote extends QMainWindow{
     					return;
     			}
     		}
-    		if (selectedNoteGUIDs.size() == 0 && !currentNoteGuid.equals("")) 
+    		if (selectedNoteGUIDs.size() == 0 && !currentNoteGuid.equals("")) {
     			selectedNoteGUIDs.add(currentNoteGuid);
-    		closeTabs(selectedNoteGUIDs);
-    		for (int i=0; i<selectedNoteGUIDs.size(); i++) {
-    			listManager.deleteNote(selectedNoteGUIDs.get(i));
     		}
+    		
+    		List<String> deleteNoteGUIDs = new ArrayList<String>(selectedNoteGUIDs);	// タブを閉じるとselectedNoteGUIDsが変わってしまうのでその前にコピー
+    		closeTabs(selectedNoteGUIDs);
+    		for (String guid : deleteNoteGUIDs) {
+    			listManager.deleteNote(guid);
+    		}
+    		
+    		closeExternalWindows(deleteNoteGUIDs);
     	} else { 
     		// If we are deleting from the trash.
     		if (Global.verifyDelete()) {
@@ -5445,29 +5458,31 @@ public class NeverNote extends QMainWindow{
     		}
     		if (selectedNoteGUIDs.size() == 0 && !currentNoteGuid.equals("")) 
     			selectedNoteGUIDs.add(currentNoteGuid);
-    		for (int i=selectedNoteGUIDs.size()-1; i>=0; i--) {
+    		
+    		List<String> deleteNoteGUIDs = new ArrayList<String>(selectedNoteGUIDs);	// タブを閉じるとselectedNoteGUIDsが変わってしまうのでその前にコピー
+    		for (int i=deleteNoteGUIDs.size()-1; i>=0; i--) {
     			for (int j=listManager.getNoteTableModel().rowCount()-1; j>=0; j--) {
     	    		QModelIndex modelIndex =  listManager.getNoteTableModel().index(j, Global.noteTableGuidPosition);
     	    		if (modelIndex != null) {
     	    			SortedMap<Integer, Object> ix = listManager.getNoteTableModel().itemData(modelIndex);
     	    			String tableGuid =  (String)ix.values().toArray()[0];
-    	    			if (tableGuid.equals(selectedNoteGUIDs.get(i))) {
+    	    			if (tableGuid.equals(deleteNoteGUIDs.get(i))) {
     	    				listManager.getNoteTableModel().removeRow(j);
     	    				j=-1;
     	    			}
     	    		}
     	    	}
-    			closeTabs(selectedNoteGUIDs);
-    			listManager.expungeNote(selectedNoteGUIDs.get(i));
+    			closeTab(deleteNoteGUIDs.get(i));
+    			listManager.expungeNote(deleteNoteGUIDs.get(i));
     			
-    			conn.getHistoryTable().expungeHistory(selectedNoteGUIDs.get(i));
-    			conn.getExcludedTable().expungeExcludedNote(selectedNoteGUIDs.get(i));
-    			conn.getStaredTable().expungeStaredNote(selectedNoteGUIDs.get(i));
-    			
+    			conn.getHistoryTable().expungeHistory(deleteNoteGUIDs.get(i));
+    			conn.getExcludedTable().expungeExcludedNote(deleteNoteGUIDs.get(i));
+    			conn.getStaredTable().expungeStaredNote(deleteNoteGUIDs.get(i));
     		}
+    		
+    		closeExternalWindows(deleteNoteGUIDs);
     	}
-    	currentNoteGuid = "";
-    	closeExternalWindows(selectedNoteGUIDs);
+    	
 		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
 			menuBar.noteAddNewTab.setEnabled(false);
 		}
@@ -5481,50 +5496,42 @@ public class NeverNote extends QMainWindow{
     
     // 対象ノートをタブで開いていたら閉じる
     private void closeTabs(List<String> noteGUIDs) {
-		Collection<TabBrowse> tabBrowsers = tabWindows.values();
-		Iterator<TabBrowse> tabIterator = tabBrowsers.iterator();
-		Collection<Integer> tabIndexes = tabWindows.keySet();
-		Iterator<Integer>	indexIterator = tabIndexes.iterator();
-		List<Integer> closeIndexes = new ArrayList<Integer>();	//イテレータ操作中に中身をいじっちゃダメなので
-
-		while (tabIterator.hasNext()) {
-			TabBrowse tab = tabIterator.next();
-			int index = indexIterator.next();
-			String guid = tab.getBrowserWindow().getNote().getGuid();
-			
-			for(int i = 0; i < noteGUIDs.size(); i++){
-				if(guid.equals(noteGUIDs.get(i))){
-					closeIndexes.add(index);
-				}
-			}
-		}
-		
-		for(int i = closeIndexes.size() - 1; i >= 0; i--){
-			tabWindowClosing(closeIndexes.get(i));
-		}
+    	for (String guid : noteGUIDs) {
+    		closeTab(guid);
+    	}
+    }
+    
+    // 対象ノートをタブで開いていたら閉じる
+    private void closeTab(String noteGUID) {
+    	List<TabBrowse> closeTabs = new ArrayList<TabBrowse>();
+    	
+    	for (TabBrowse tab : tabWindows.values()) {
+    		String guid = tab.getBrowserWindow().getNote().getGuid();
+    		
+    		if (guid.equals(noteGUID)) {
+    			closeTabs.add(tab);
+    		}
+    	}
+    	
+    	for (TabBrowse tab : closeTabs) {
+    		tabWindowClosing(tab);
+    	}
     }
     
     // 対象ノートを外部ウィンドウで開いていたら閉じる
     private void closeExternalWindows(List<String> noteGUIDs) {
-		Collection<ExternalBrowse> 	windows = externalWindows.values();
-		Iterator<ExternalBrowse> 	windowIterator = windows.iterator();
-		Collection<String> 			guids = externalWindows.keySet();
-		Iterator<String> 			guidIterator = guids.iterator();
-		List<ExternalBrowse>		closeWindows = new ArrayList<ExternalBrowse>();	// イテレータ操作中に中身をいじっちゃダメなので
+		List<ExternalBrowse> closeWindows = new ArrayList<ExternalBrowse>();
 		
-		while (windowIterator.hasNext()) {
-			ExternalBrowse browser = windowIterator.next();
-			String guid = guidIterator.next();
-			
-			for (int i = 0; i < noteGUIDs.size(); i++) {
-				if (guid.equals(noteGUIDs.get(i))) {
-					closeWindows.add(browser);
+		for (Map.Entry<String, ExternalBrowse> e : externalWindows.entrySet()) {
+			for (String guid : noteGUIDs) {
+				if (guid.equals(e.getKey())) {
+					closeWindows.add(e.getValue());
 				}
 			}
 		}
 		
-		for (int i = closeWindows.size() - 1; i >= 0; i--) {
-			closeWindows.get(i).close();
+		for (ExternalBrowse externalBrowse : closeWindows) {
+			externalBrowse.close();
 		}
     }
     
@@ -5973,26 +5980,18 @@ public class NeverNote extends QMainWindow{
 		}
 		
     	// マージしたノート（child）をタブで開いていたら、閉じる
-		Collection<TabBrowse> tabBrowsers = tabWindows.values();
-		Iterator<TabBrowse> tabIterator = tabBrowsers.iterator();
-		Collection<Integer> tabIndexes = tabWindows.keySet();
-		Iterator<Integer>	indexIterator = tabIndexes.iterator();
-		List<Integer> closeIndexes = new ArrayList<Integer>();
-
-		while (tabIterator.hasNext()) {
-			TabBrowse tab = tabIterator.next();
-			int tabIndex = indexIterator.next();
+		List<TabBrowse> closeTabs = new ArrayList<TabBrowse>();
+		for (TabBrowse tab : tabWindows.values()) {
 			String guid = tab.getBrowserWindow().getNote().getGuid();
 			
-			for(int i = 0; i < sources.size(); i++){
-				if(guid.equals(sources.get(i))){
-					closeIndexes.add(tabIndex);
+			for (String source : sources) {
+				if (guid.equals(source)) {
+					closeTabs.add(tab);
 				}
 			}
 		}
-		
-		for(int i = closeIndexes.size() - 1; i >= 0; i--){
-			tabWindowClosing(closeIndexes.get(i));
+		for (TabBrowse tab : closeTabs) {
+			tabWindowClosing(tab);
 		}
 		
 		noteIndexUpdated(false);
