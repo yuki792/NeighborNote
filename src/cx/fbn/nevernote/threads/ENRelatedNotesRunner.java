@@ -27,7 +27,6 @@ import com.evernote.edam.error.EDAMErrorCode;
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
-import com.evernote.edam.limits.Constants;
 import com.evernote.edam.notestore.RelatedQuery;
 import com.evernote.edam.notestore.RelatedResult;
 import com.evernote.edam.notestore.RelatedResultSpec;
@@ -130,7 +129,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		RelatedQuery rquery = new RelatedQuery();
 		rquery.setNoteGuid(guid);
 		RelatedResultSpec resultSpec = new RelatedResultSpec();
-		resultSpec.setMaxNotes(Constants.EDAM_RELATED_MAX_NOTES);
+		resultSpec.setMaxNotes(5);
 		if (syncRunner != null && syncRunner.localNoteStore != null) {
 			try {
 				RelatedResult result = syncRunner.localNoteStore.findRelated(syncRunner.authToken, rquery, resultSpec);
