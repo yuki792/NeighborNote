@@ -69,12 +69,10 @@ public class RensoNoteList extends QListWidget {
 	private final ENThumbnailRunner enThumbnailRunner;
 	private final QThread enThumbnailThread;
 	private String guid;
-	private int allPointSum;
 
 	public RensoNoteList(DatabaseConnection c, NeverNote p, SyncRunner syncRunner, ApplicationLogger logger) {
 		this.logger = logger;
 		this.logger.log(this.logger.HIGH, "Setting up rensoNoteList");
-		allPointSum = 0;
 
 		this.conn = c;
 		this.parent = p;
@@ -232,12 +230,6 @@ public class RensoNoteList extends QListWidget {
 			return;
 		}
 		
-		// すべての関連ポイントの合計を取得（関連度のパーセント算出に利用）
-		allPointSum = 0;
-		for (int p : mergedHistory.values()) {
-			allPointSum += p;
-		}
-		
 		addRensoNoteList(mergedHistory);
 		
 		logger.log(logger.EXTREME, "Leaving RensoNoteList.repaintRensoNoteList");
@@ -274,6 +266,20 @@ public class RensoNoteList extends QListWidget {
 		enThumbnailRunner.setServerUrl(Global.getServer());
 		
 		String currentNoteGuid = new String(parent.getCurrentNoteGuid());
+		
+		// 除外されているノートを連想ノート候補から除去する
+		Iterator<String> historyIterator = History.keySet().iterator();
+		while (historyIterator.hasNext()) {
+			if (conn.getExcludedTable().existNote(guid, historyIterator.next())) {
+				historyIterator.remove();
+			}
+		}
+		
+		// すべての関連ポイントの合計を取得（関連度のパーセント算出に利用）
+		int allPointSum = 0;
+		for (int p : History.values()) {
+			allPointSum += p;
+		}
 		
 		// スター付きノートとスター無しノートを分ける
 		HashMap<String, Integer> staredNotes = new HashMap<String, Integer>();	// スター付きノートのマップ
