@@ -3202,14 +3202,14 @@ public class NeverNote extends QMainWindow{
     	QIcon prevIcon = new QIcon(iconPath+"back.png");
     	prevButton.setIcon(prevIcon);
     	prevButton.triggered.connect(this, "previousViewedAction()");  	
-    	togglePrevArrowButton(Global.isToolbarButtonVisible("prevArrow"));
+    	togglePrevArrowButton(Global.isToolbarButtonVisible("prevArrow", true));
     	
     	nextButton = toolBar.addAction(tr(""));
     	nextButton.setToolTip(tr("Next"));
     	QIcon nextIcon = new QIcon(iconPath+"forward.png");
     	nextButton.setIcon(nextIcon);
     	nextButton.triggered.connect(this, "nextViewedAction()");  	
-    	toggleNextArrowButton(Global.isToolbarButtonVisible("nextArrow"));
+    	toggleNextArrowButton(Global.isToolbarButtonVisible("nextArrow", true));
     	
     	toolBar.addSeparator();
     	
@@ -3217,50 +3217,50 @@ public class NeverNote extends QMainWindow{
     	QIcon upIcon = new QIcon(iconPath+"up.png");
     	upButton.setIcon(upIcon);
     	upButton.triggered.connect(this, "upAction()");  	
-    	toggleUpArrowButton(Global.isToolbarButtonVisible("upArrow"));
+    	toggleUpArrowButton(Global.isToolbarButtonVisible("upArrow", false));
 
     	
     	downButton = toolBar.addAction(tr("Down"));
     	QIcon downIcon = new QIcon(iconPath+"down.png");
     	downButton.setIcon(downIcon);
     	downButton.triggered.connect(this, "downAction()");
-    	toggleDownArrowButton(Global.isToolbarButtonVisible("downArrow"));
+    	toggleDownArrowButton(Global.isToolbarButtonVisible("downArrow", false));
     	
     	synchronizeButton = toolBar.addAction(tr("Synchronize"));
     	synchronizeButton.setIcon(new QIcon(iconPath+"synchronize.png"));
     	synchronizeIconAngle = 0;
     	synchronizeButton.triggered.connect(this, "evernoteSync()");
-    	toggleSynchronizeButton(Global.isToolbarButtonVisible("synchronize"));
+    	toggleSynchronizeButton(Global.isToolbarButtonVisible("synchronize", true));
     	
     	printButton = toolBar.addAction(tr("Print"));
     	QIcon printIcon = new QIcon(iconPath+"print.png");
     	printButton.setIcon(printIcon);
     	printButton.triggered.connect(this, "printNote()");
-    	togglePrintButton(Global.isToolbarButtonVisible("print"));
+    	togglePrintButton(Global.isToolbarButtonVisible("print", false));
 
     	tagButton = toolBar.addAction(tr("Tag")); 
     	QIcon tagIcon = new QIcon(iconPath+"tag.png");
     	tagButton.setIcon(tagIcon);
     	tagButton.triggered.connect(browserWindow, "modifyTags()");
-    	toggleTagButton(Global.isToolbarButtonVisible("tag"));
+    	toggleTagButton(Global.isToolbarButtonVisible("tag", false));
 
     	attributeButton = toolBar.addAction(tr("Attributes")); 
     	QIcon attributeIcon = new QIcon(iconPath+"attribute.png");
     	attributeButton.setIcon(attributeIcon);
     	attributeButton.triggered.connect(this, "toggleNoteAttributes()");
-    	toggleAttributeButton(Global.isToolbarButtonVisible("attribute"));
+    	toggleAttributeButton(Global.isToolbarButtonVisible("attribute", true));
     	    	
     	emailButton = toolBar.addAction(tr("Email"));
     	QIcon emailIcon = new QIcon(iconPath+"email.png");
     	emailButton.setIcon(emailIcon);
     	emailButton.triggered.connect(this, "emailNote()");
-    	toggleEmailButton(Global.isToolbarButtonVisible("email"));
+    	toggleEmailButton(Global.isToolbarButtonVisible("email", false));
 
     	deleteButton = toolBar.addAction(tr("Delete"));   	
     	QIcon deleteIcon = new QIcon(iconPath+"delete.png");
     	deleteButton.setIcon(deleteIcon);
     	deleteButton.triggered.connect(this, "deleteNote()");
-    	toggleDeleteButton(Global.isToolbarButtonVisible("delete"));
+    	toggleDeleteButton(Global.isToolbarButtonVisible("delete", true));
 
     	newButton = toolBar.addAction(tr("New"));
     	QIcon newIcon = new QIcon(iconPath+"new.png");
@@ -3271,13 +3271,13 @@ public class NeverNote extends QMainWindow{
     	}
 
     	newButton.setIcon(newIcon);
-    	toggleNewButton(Global.isToolbarButtonVisible("new"));
+    	toggleNewButton(Global.isToolbarButtonVisible("new", true));
     	
     	allNotesButton = toolBar.addAction(tr("All Notes"));
     	QIcon allIcon = new QIcon(iconPath+"books.png");
     	allNotesButton.triggered.connect(this, "allNotes()");
     	allNotesButton.setIcon(allIcon);
-    	toggleAllNotesButton(Global.isToolbarButtonVisible("allNotes"));
+    	toggleAllNotesButton(Global.isToolbarButtonVisible("allNotes", true));
     	
      	//toolBar.addSeparator();
       	//toolBar.addWidget(new QLabel(tr("Quota:")));
@@ -3362,9 +3362,9 @@ public class NeverNote extends QMainWindow{
     	contextMenu.addAction(allNotesAction);
     	allNotesAction.triggered.connect(this, "toggleAllNotesButton(Boolean)");
     	
-    	QAction searchClearAction = addContextAction("searchClear", tr("Search Clear"));
-    	contextMenu.addAction(searchClearAction);
-    	searchClearAction.triggered.connect(this, "toggleSearchClearButton(Boolean)");
+//    	QAction searchClearAction = addContextAction("searchClear", tr("Search Clear"));
+//    	contextMenu.addAction(searchClearAction);
+//    	searchClearAction.triggered.connect(this, "toggleSearchClearButton(Boolean)");
     	
     	return contextMenu;
     	
@@ -3373,7 +3373,7 @@ public class NeverNote extends QMainWindow{
     	QAction newAction = new QAction(this);
 		newAction.setText(name);
 		newAction.setCheckable(true);
-		newAction.setChecked(Global.isToolbarButtonVisible(config));
+		newAction.setChecked(Global.isToolbarButtonVisible(config, true));
 		return newAction;
     }
     private void togglePrevArrowButton(Boolean toggle) {
@@ -3424,11 +3424,11 @@ public class NeverNote extends QMainWindow{
 		allNotesButton.setVisible(toggle);
 		Global.saveToolbarButtonsVisible("allNotes", toggle);
     }
-    @SuppressWarnings("unused")
-	private void toggleSearchClearButton(Boolean toggle) {
-		searchClearButton.setVisible(toggle);
-		Global.saveToolbarButtonsVisible("searchClear", toggle);
-    }
+//    @SuppressWarnings("unused")
+//	private void toggleSearchClearButton(Boolean toggle) {
+//		searchClearButton.setVisible(toggle);
+//		Global.saveToolbarButtonsVisible("searchClear", toggle);
+//    }
 
 
 

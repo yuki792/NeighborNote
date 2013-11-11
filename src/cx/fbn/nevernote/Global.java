@@ -1526,17 +1526,17 @@ public class Global {
 
     
 	// Should the toolbar be visible?
-	public static boolean isToolbarButtonVisible(String window) {
+	public static boolean isToolbarButtonVisible(String window, Boolean val) {
 		settings.beginGroup("ToolbarButtonsVisible");
 		try {
-			String text = (String)settings.value(window, "true");
+			String text = (String)settings.value(window, val.toString());
 			settings.endGroup();
 			if (text.equalsIgnoreCase("true"))
 				return true;
 			else
 				return false;	
 		} catch (java.lang.ClassCastException e) {
-			Boolean value = (Boolean) settings.value(window, true);
+			Boolean value = (Boolean) settings.value(window, val);
 			settings.endGroup();
 			return value;
 		}
