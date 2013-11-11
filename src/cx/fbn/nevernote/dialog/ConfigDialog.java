@@ -80,7 +80,6 @@ public class ConfigDialog extends QDialog {
 		indexPage = new ConfigIndexPage(this);
 		debugPage = new ConfigDebugPage(this);
 		spellPage = new ConfigSpellPage(this);
-		// ICHANGED
 		rensoNoteListPage = new ConfigRensoNoteListPage(this);
 		
 		pagesWidget.addWidget(appearancePage);
@@ -89,7 +88,6 @@ public class ConfigDialog extends QDialog {
 		pagesWidget.addWidget(spellPage);
 		pagesWidget.addWidget(connectionPage);
 		pagesWidget.addWidget(debugPage);
-		// ICHANGED
 		pagesWidget.addWidget(rensoNoteListPage);
 		
 		QPushButton cancelButton = new QPushButton(tr("Cancel"));
@@ -150,6 +148,11 @@ public class ConfigDialog extends QDialog {
 			Global.setCheckVersionUpgrade(true);
 		else
 			Global.setCheckVersionUpgrade(false);
+		
+		if (appearancePage.getNewAction())
+			Global.setToolBarNewAction(true);
+		else
+			Global.setToolBarNewAction(false);
 
 		
 		if (appearancePage.getNewNoteWithTags())
@@ -267,6 +270,13 @@ public class ConfigDialog extends QDialog {
 		Global.rebuildFullTextNoteTarget(conn);
 		Global.rebuildFullTextResourceTarget(conn);
 		
+		// ツールバーの「新規」ボタンを押した時の動作を再設定
+    	if (Global.toolBarNewAction()) {
+        	parent.connectNewButtonSlot("noteAddNewTab()");
+    	} else {
+    		parent.connectNewButtonSlot("addNote()");
+    	}
+		
 		close();
 	}
 	
@@ -328,7 +338,6 @@ public class ConfigDialog extends QDialog {
 		debugButton.setFlags(ItemFlag.ItemIsSelectable, ItemFlag.ItemIsEnabled);
 		debugButton.setIcon(new QIcon(iconPath+"debug.jpg"));
 		
-		// ICHANGED
 		QListWidgetItem rensoListButton = new QListWidgetItem(contentsWidget);
 		rensoListButton.setText(tr("Renso Note List"));
 		rensoListButton.setTextAlignment(AlignmentFlag.AlignCenter.value());
@@ -352,7 +361,6 @@ public class ConfigDialog extends QDialog {
 		debugPage.setEnableThumbnails(Global.enableThumbnails());
 //		if (Global.getUpdateSequenceNumber() > 0)
 		
-		// ICHANGED
 		// TODO ↓のコメントアウトは最終的に外す（設定のデバッグページのサーバー選択を使用不可にする）
 		//	debugPage.serverCombo.setEnabled(false);
 
@@ -374,6 +382,7 @@ public class ConfigDialog extends QDialog {
 		appearancePage.setIncludeTagChildren(Global.includeTagChildren());
 		appearancePage.setDisplayRightToLeft(Global.displayRightToLeft());
 		appearancePage.setStartupNotebook(Global.getStartupNotebook());
+		appearancePage.setNewAction(Global.toolBarNewAction());
 		
 //		indexPage.setRegex(Global.getWordRegex());
 		indexPage.setSleepInterval(Global.getIndexThreadSleepInterval());

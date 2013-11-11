@@ -114,7 +114,6 @@ public class TrashTreeWidget extends QTreeWidget {
 		event.accept();
 	}
 	
-	// ICHANGED
 	public QTreeWidgetItem getTrashItem() {
 		return trashItem;
 	}

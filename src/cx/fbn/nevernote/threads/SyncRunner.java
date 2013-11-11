@@ -46,6 +46,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
+import com.evernote.edam.error.EDAMErrorCode;
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
@@ -75,6 +76,7 @@ import com.trolltech.qt.core.QObject;
 import com.trolltech.qt.core.QTextCodec;
 import com.trolltech.qt.gui.QMessageBox;
 
+import cx.fbn.nevernote.signals.LimitSignal;
 import cx.fbn.nevernote.signals.NoteIndexSignal;
 import cx.fbn.nevernote.signals.NoteResourceSignal;
 import cx.fbn.nevernote.signals.NoteSignal;
@@ -86,10 +88,7 @@ import cx.fbn.nevernote.signals.TagSignal;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.sql.DeletedItemRecord;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
-//import org.apache.thrift.transport.THttpClient;
-//import org.apache.thrift.transport.TTransportException;
-//import org.apache.thrift.protocol.TBinaryProtocol;
-//import org.apache.thrift.TException;
+
 
 public class SyncRunner extends QObject implements Runnable {
 	
@@ -118,6 +117,7 @@ public class SyncRunner extends QObject implements Runnable {
 	public volatile SavedSearchSignal		searchSignal;
 	public volatile NoteResourceSignal		resourceSignal;
 	public volatile SyncSignal				syncSignal;
+	public volatile LimitSignal				limitSignal;
 	public volatile boolean					authRefreshNeeded;
 	public volatile boolean					syncNeeded;
 	public volatile boolean					disableUploads;
@@ -148,7 +148,6 @@ public class SyncRunner extends QObject implements Runnable {
 	String dburl;
 	String indexUrl;
 	String resourceUrl;
-	// ICHANGED
 	String behaviorUrl;
 	
 	String dbpswd;
@@ -159,7 +158,6 @@ public class SyncRunner extends QObject implements Runnable {
 	private HashMap<String,String> badTagSync;
 
 	
-	// ICHANGED String bを追加	
 	public SyncRunner(String logname, String u, String i, String r, String b, String uid, String pswd, String cpswd) {
 		logger = new ApplicationLogger(logname);
 		
@@ -172,9 +170,9 @@ public class SyncRunner extends QObject implements Runnable {
 		searchSignal = new SavedSearchSignal();
 		syncSignal = new SyncSignal();
 		resourceSignal = new NoteResourceSignal();
+		limitSignal = new LimitSignal();
 		resourceUrl = r;
 		indexUrl = i;
-		// ICHANGED
 		behaviorUrl = b;
 		
 		dbuid = uid;
@@ -202,7 +200,6 @@ public class SyncRunner extends QObject implements Runnable {
 		errorSharedNotebooksIgnored = new HashMap<String,String>();
 		try {
 			logger.log(logger.EXTREME, "Starting thread");
-			// ICHANGED behaviorUrlを追加
 			conn = new DatabaseConnection(logger, dburl, indexUrl, resourceUrl, behaviorUrl, dbuid, dbpswd, dbcpswd, 200);
 			while(keepRunning) {
 				logger.log(logger.EXTREME, "Blocking until work is found");
@@ -324,6 +321,10 @@ public class SyncRunner extends QObject implements Runnable {
 				enDisconnect();
 				return;
 			} catch (EDAMSystemException e1) {
+				if (e1.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e1.getRateLimitDuration());
+				}
+				
 				e1.printStackTrace();
 				status.message.emit(tr("System error user account information.  Aborting sync and disconnecting!"));
 				syncSignal.errorDisconnect.emit();
@@ -354,6 +355,9 @@ public class SyncRunner extends QObject implements Runnable {
 				enDisconnect();
 				return;
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				e.printStackTrace();
 				status.message.emit(tr("Error getting sync state! Aborting sync and disconnecting!"));
 				syncSignal.errorDisconnect.emit();
@@ -423,7 +427,7 @@ public class SyncRunner extends QObject implements Runnable {
 			//*****************************************
 			//* Sync linked/shared notebooks 
 			//*****************************************
-			//syncLinkedNotebooks();
+			syncLinkedNotebooks();
 			//conn.getNoteTable().getDirty();
 			//disableUploads = true;   /// DELETE THIS LINE!!!!
 			if (!disableUploads) {
@@ -522,6 +526,9 @@ public class SyncRunner extends QObject implements Runnable {
 			} catch (EDAMUserException e) {
 				logger.log(logger.LOW, "EDAM User Excepton in syncExpunged: " +expunged.get(i).guid);   // This can happen if we try to delete a deleted note
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				logger.log(logger.LOW, "EDAM System Excepton in syncExpunged: "+expunged.get(i).guid);
 				logger.log(logger.LOW, e.getStackTrace());
 				error=true;
@@ -586,6 +593,9 @@ public class SyncRunner extends QObject implements Runnable {
 				//logger.log(logger.LOW, e.toString());	
 				//error = true;
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				logger.log(logger.LOW, "*** EDAM System Excepton syncLocalNotes "+e);
 				status.message.emit(tr("Error: ") +e);
 				logger.log(logger.LOW, e.toString());		
@@ -670,6 +680,9 @@ public class SyncRunner extends QObject implements Runnable {
 				logger.log(logger.LOW, e.toString());	
 				error = true;
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				logger.log(logger.LOW, "*** EDAM System Excepton syncLocalNotes "+e);
 				status.message.emit(tr("Error: ") +e);
 				logger.log(logger.LOW, e.toString());		
@@ -705,6 +718,9 @@ public class SyncRunner extends QObject implements Runnable {
 			logger.log(logger.LOW, e1.toString());		
 			error = true;
 		} catch (EDAMSystemException e1) {
+			if (e1.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e1.getRateLimitDuration());
+			}
 			logger.log(logger.LOW, "*** EDAM System Excepton syncLocalNotebooks getting remote Notebook List");
 			status.message.emit(tr("Error: ") +e1);
 			logger.log(logger.LOW, e1.toString());	
@@ -764,6 +780,9 @@ public class SyncRunner extends QObject implements Runnable {
 				logger.log(logger.LOW, e.toString() + ": Stack : " +enNotebook.getStack());	
 				error = true;
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				logger.log(logger.LOW, "*** EDAM System Excepton syncLocalNotebooks");
 				logger.log(logger.LOW, e.toString());		
 				error = true;
@@ -795,6 +814,9 @@ public class SyncRunner extends QObject implements Runnable {
 			logger.log(logger.LOW, e1.toString());	
 			error = true;
 		} catch (EDAMSystemException e1) {
+			if (e1.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e1.getRateLimitDuration());
+			}
 			logger.log(logger.LOW, "*** EDAM System Excepton syncLocalTags getting remote Tag List");
 			status.message.emit(tr("Error: ") +e1);
 			logger.log(logger.LOW, e1.toString());		
@@ -869,6 +891,9 @@ public class SyncRunner extends QObject implements Runnable {
 				badTagSync.put(enTag.getGuid(),null);
 				error = true;
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				logger.log(logger.LOW, "** EDAM System Excepton syncLocalTags: " +enTag.getName());
 				logger.log(logger.LOW, e.toString());	
 				badTagSync.put(enTag.getGuid(),null);
@@ -912,6 +937,9 @@ public class SyncRunner extends QObject implements Runnable {
 				error = true;
 				e.printStackTrace();
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				logger.log(logger.LOW, "*** EDAM System Excepton syncLocalLinkedNotebooks");
 				status.message.emit(tr("Error: ") +e);
 				logger.log(logger.LOW, e.toString());		
@@ -942,6 +970,9 @@ public class SyncRunner extends QObject implements Runnable {
 			logger.log(logger.LOW, e1.toString());	
 			error = true;
 		} catch (EDAMSystemException e1) {
+			if (e1.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e1.getRateLimitDuration());
+			}
 			logger.log(logger.LOW, "*** EDAM System Excepton syncLocalTags getting remote saved search List");
 			status.message.emit(tr("Error: ") +e1);
 			logger.log(logger.LOW, e1.toString());		
@@ -1001,6 +1032,9 @@ public class SyncRunner extends QObject implements Runnable {
 				logger.log(logger.LOW, e.toString());	
 				error = true;
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				logger.log(logger.LOW, "** EDAM System Excepton syncLocalTags");
 				logger.log(logger.LOW, e.toString());	
 				error = true;
@@ -1055,6 +1089,9 @@ public class SyncRunner extends QObject implements Runnable {
 				e.printStackTrace();
 				status.message.emit(e.getMessage());
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				error = true;
 				e.printStackTrace();
 				status.message.emit(e.getMessage());
@@ -1357,6 +1394,9 @@ public class SyncRunner extends QObject implements Runnable {
 			error = true;
 			e.printStackTrace();
 		} catch (EDAMSystemException e) {
+			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+			}
 			logger.log(logger.LOW, "*** EDAM System Excepton getEvernoteNote");
 			logger.log(logger.LOW, e.toString());	
 			error = true;
@@ -1386,6 +1426,9 @@ public class SyncRunner extends QObject implements Runnable {
 			error = true;
 			e.printStackTrace();
 		} catch (EDAMSystemException e) {
+			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+			}
 			logger.log(logger.LOW, "*** EDAM System Excepton getEvernoteNote");
 			logger.log(logger.LOW, e.toString());	
 			error = true;
@@ -1567,6 +1610,9 @@ public class SyncRunner extends QObject implements Runnable {
 			isConnected = false;
 			return false;
 		} catch (EDAMSystemException e) {
+			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+			}
 			QMessageBox mb = new QMessageBox(QMessageBox.Icon.Critical, "EDAM System Excepton", e.getLocalizedMessage());
 			mb.exec();
 			e.printStackTrace();
@@ -1632,6 +1678,9 @@ public class SyncRunner extends QObject implements Runnable {
 		} catch (EDAMUserException e1) {
 			e1.printStackTrace();
 		} catch (EDAMSystemException e1) {
+			if (e1.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e1.getRateLimitDuration());
+			}
 			e1.printStackTrace();
 		} catch (TException e1) {
 			e1.printStackTrace();
@@ -1759,6 +1808,9 @@ public class SyncRunner extends QObject implements Runnable {
 			logger.log(logger.LOW, e1.getMessage());
 			return;
 		} catch (EDAMSystemException e1) {
+			if (e1.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e1.getRateLimitDuration());
+			}
 			e1.printStackTrace();
 			status.message.emit(tr("System exception Listing shared notebooks."));
 			logger.log(logger.LOW, e1.getMessage());
@@ -1788,6 +1840,9 @@ public class SyncRunner extends QObject implements Runnable {
 			logger.log(logger.LOW, e1.getMessage());
 			return;
 		} catch (EDAMSystemException e1) {
+			if (e1.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e1.getRateLimitDuration());
+			}
 			e1.printStackTrace();
 			status.message.emit(tr("System exception Listing notebooks."));
 			logger.log(logger.LOW, e1.getMessage());
@@ -1813,6 +1868,9 @@ public class SyncRunner extends QObject implements Runnable {
 			logger.log(logger.LOW, e1.getMessage());
 			return;
 		} catch (EDAMSystemException e1) {
+			if (e1.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				limitSignal.rateLimitReached.emit(e1.getRateLimitDuration());
+			}
 			e1.printStackTrace();
 			status.message.emit(tr("System exception Listing linked notebooks."));
 			logger.log(logger.LOW, e1.getMessage());
@@ -1960,6 +2018,9 @@ public class SyncRunner extends QObject implements Runnable {
     			error = true;
     			e.printStackTrace();
     		} catch (EDAMSystemException e) {
+    			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+    				limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+    			}
     			error = true;
     			logger.log(logger.LOW, "System error authenticating against shared notebook. "+
     					"Key: "+books.get(i).getShareKey() +" Error:" +e.getMessage());
@@ -2036,6 +2097,9 @@ public class SyncRunner extends QObject implements Runnable {
 				e.printStackTrace();
 				logger.log(logger.LOW, tr("EDAM UserException synchronizing linked notbook ")+ e.getMessage());
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				syncError = true;
 				status.message.emit(tr("EDAM SystemException synchronizing linked notbook.  See the log for datails."));
 				e.printStackTrace();
@@ -2091,6 +2155,9 @@ public class SyncRunner extends QObject implements Runnable {
 					readOnly = true;
 					e.printStackTrace();
 				} catch (EDAMSystemException e) {
+					if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+						limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+					}
 					readOnly = true;
 					e.printStackTrace();
 				} catch (TException e) {
@@ -2118,6 +2185,9 @@ public class SyncRunner extends QObject implements Runnable {
 					} catch (EDAMUserException e) {
 						e.printStackTrace();
 					} catch (EDAMSystemException e) {
+						if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+							limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+						}
 						e.printStackTrace();
 					} catch (EDAMNotFoundException e) {
 						e.printStackTrace();

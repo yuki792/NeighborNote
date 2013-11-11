@@ -23,10 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.evernote.edam.error.EDAMErrorCode;
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
-import com.evernote.edam.limits.Constants;
 import com.evernote.edam.notestore.RelatedQuery;
 import com.evernote.edam.notestore.RelatedResult;
 import com.evernote.edam.notestore.RelatedResultSpec;
@@ -37,27 +37,30 @@ import com.trolltech.qt.core.QObject;
 
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.signals.ENRelatedNotesSignal;
+import cx.fbn.nevernote.signals.LimitSignal;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 import cx.fbn.nevernote.utilities.Pair;
 
 public class ENRelatedNotesRunner extends QObject implements Runnable{
 	
-	private final ApplicationLogger logger;
-	private final SyncRunner syncRunner;
-	public volatile ENRelatedNotesSignal enRelatedNotesSignal;
-	public QMutex mutex;
-	private volatile boolean keepRunning;
-	private volatile LinkedBlockingQueue<String> workQueue;
+	private final ApplicationLogger					logger;
+	private final SyncRunner						syncRunner;
+	public volatile ENRelatedNotesSignal			enRelatedNotesSignal;
+	public QMutex									mutex;
+	private volatile boolean						keepRunning;
+	private volatile LinkedBlockingQueue<String>	workQueue;
 	private volatile LinkedBlockingQueue<Pair<String, List<String>>> resultQueue;	// ペア<元ノートguid, 関連ノートguidリスト>を溜めておくキュー
+	public volatile LimitSignal 					limitSignal;
 	
-	public ENRelatedNotesRunner(SyncRunner syncRunner, ApplicationLogger logger) {
-		this.logger = logger;
+	public ENRelatedNotesRunner(SyncRunner syncRunner, String logname) {
+		this.logger = new ApplicationLogger(logname);
 		this.syncRunner = syncRunner;
 		this.enRelatedNotesSignal = new ENRelatedNotesSignal();
 		this.mutex = new QMutex();
 		this.keepRunning = true;
 		this.workQueue = new LinkedBlockingQueue<String>();
 		this.resultQueue = new LinkedBlockingQueue<Pair<String, List<String>>>();
+		this.limitSignal = new LimitSignal();
 	}
 
 	@Override
@@ -126,7 +129,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		RelatedQuery rquery = new RelatedQuery();
 		rquery.setNoteGuid(guid);
 		RelatedResultSpec resultSpec = new RelatedResultSpec();
-		resultSpec.setMaxNotes(Constants.EDAM_RELATED_MAX_NOTES);
+		resultSpec.setMaxNotes(5);
 		if (syncRunner != null && syncRunner.localNoteStore != null) {
 			try {
 				RelatedResult result = syncRunner.localNoteStore.findRelated(syncRunner.authToken, rquery, resultSpec);
@@ -134,6 +137,9 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 			} catch (EDAMUserException e) {
 				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：EDAMUserException");
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					limitSignal.rateLimitReached.emit(e.getRateLimitDuration());
+				}
 				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：EDAMSystemException");
 			} catch (EDAMNotFoundException e) {
 				logger.log(logger.HIGH, "Evernote関連ノート取得中に例外発生：EDAMnotFoundException guid = " + guid);
@@ -152,7 +158,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		this.keepRunning = keepRunning;
 	}
 	
-	public synchronized boolean addGuid(String guid) {
+	public boolean addGuid(String guid) {
 		if (workQueue.offer("GET " + guid)) {
 			return true;
 		}
@@ -160,7 +166,7 @@ public class ENRelatedNotesRunner extends QObject implements Runnable{
 		return false;
 	}
 	
-	public synchronized boolean addStop() {
+	public boolean addStop() {
 		if (workQueue.offer("STOP")) {
 			return true;
 		}

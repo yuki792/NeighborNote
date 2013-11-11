@@ -17,7 +17,7 @@
  *
 */
 
-package cx.fbn.nevernote.neighbornote;
+package cx.fbn.nevernote.clipboard;
 
 import com.trolltech.qt.gui.QApplication;
 

@@ -17,17 +17,19 @@
  *
 */
 
-// ICHANGED
 package cx.fbn.nevernote.gui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.evernote.edam.type.Note;
 import com.trolltech.qt.QThread;
+import com.trolltech.qt.core.QByteArray;
+import com.trolltech.qt.core.QFile;
 import com.trolltech.qt.core.QSize;
 import com.trolltech.qt.core.Qt.MouseButton;
 import com.trolltech.qt.gui.QAction;
@@ -40,7 +42,9 @@ import com.trolltech.qt.gui.QMenu;
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.NeverNote;
 import cx.fbn.nevernote.sql.DatabaseConnection;
+import cx.fbn.nevernote.threads.CounterRunner;
 import cx.fbn.nevernote.threads.ENRelatedNotesRunner;
+import cx.fbn.nevernote.threads.ENThumbnailRunner;
 import cx.fbn.nevernote.threads.SyncRunner;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 import cx.fbn.nevernote.utilities.Pair;
@@ -49,7 +53,7 @@ public class RensoNoteList extends QListWidget {
 	private final DatabaseConnection conn;
 	private final ApplicationLogger logger;
 	private final HashMap<QListWidgetItem, String> rensoNoteListItems;
-	private final List<RensoNoteListItem> rensoNoteListTrueItems;
+	private final HashMap<String, RensoNoteListItem> rensoNoteListTrueItems;
 	private String rensoNotePressedItemGuid;
 	private final QAction openNewTabAction;
 	private final QAction starAction;
@@ -62,13 +66,13 @@ public class RensoNoteList extends QListWidget {
 	private final ENRelatedNotesRunner enRelatedNotesRunner;
 	private final QThread enRelatedNotesThread;
 	private final HashMap<String, List<String>> enRelatedNotesCache;	// Evernote関連ノートのキャッシュ<guid, 関連ノートリスト>
+	private final ENThumbnailRunner enThumbnailRunner;
+	private final QThread enThumbnailThread;
 	private String guid;
-	private int allPointSum;
 
 	public RensoNoteList(DatabaseConnection c, NeverNote p, SyncRunner syncRunner, ApplicationLogger logger) {
 		this.logger = logger;
 		this.logger.log(this.logger.HIGH, "Setting up rensoNoteList");
-		allPointSum = 0;
 
 		this.conn = c;
 		this.parent = p;
@@ -77,13 +81,22 @@ public class RensoNoteList extends QListWidget {
 		this.guid = new String();
 		mergedHistory = new HashMap<String, Integer>();
 		enRelatedNotesCache = new HashMap<String, List<String>>();
-		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner, this.logger);
+		this.enRelatedNotesRunner = new ENRelatedNotesRunner(this.syncRunner, "enRelatedNotesRunner.log");
 		this.enRelatedNotesRunner.enRelatedNotesSignal.getENRelatedNotesFinished.connect(this, "enRelatedNotesComplete()");
+		this.enRelatedNotesRunner.limitSignal.rateLimitReached.connect(parent, "informRateLimit(Integer)");
 		this.enRelatedNotesThread = new QThread(enRelatedNotesRunner, "ENRelatedNotes Thread");
 		this.getEnRelatedNotesThread().start();
 		
+		this.enThumbnailRunner = new ENThumbnailRunner("enThumbnailRunner.log", CounterRunner.NOTEBOOK, 
+					Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
+					Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
+		this.enThumbnailRunner.enThumbnailSignal.getENThumbnailFinished.connect(this, "enThumbnailComplete(String)");
+		this.enThumbnailRunner.limitSignal.rateLimitReached.connect(parent, "informRateLimit(Integer)");
+		this.enThumbnailThread = new QThread(enThumbnailRunner, "ENThumbnail Thread");
+		this.enThumbnailThread.start();
+		
 		rensoNoteListItems = new HashMap<QListWidgetItem, String>();
-		rensoNoteListTrueItems = new ArrayList<RensoNoteListItem>();
+		rensoNoteListTrueItems = new HashMap<String, RensoNoteListItem>();
 		
 		this.itemPressed.connect(this, "rensoNoteItemPressed(QListWidgetItem)");
 		
@@ -160,32 +173,32 @@ public class RensoNoteList extends QListWidget {
 		// browseHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> browseHistory = conn.getHistoryTable().getBehaviorHistory("browse", guid);
 		addWeight(browseHistory, Global.getBrowseWeight());
-		mergedHistory = mergeHistory(browseHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(browseHistory), mergedHistory);
 		
 		// copy&pasteHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> copyAndPasteHistory = conn.getHistoryTable().getBehaviorHistory("copy & paste", guid);
 		addWeight(copyAndPasteHistory, Global.getCopyPasteWeight());
-		mergedHistory = mergeHistory(copyAndPasteHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(copyAndPasteHistory), mergedHistory);
 		
 		// addNewNoteHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> addNewNoteHistory = conn.getHistoryTable().getBehaviorHistory("addNewNote", guid);
 		addWeight(addNewNoteHistory, Global.getAddNewNoteWeight());
-		mergedHistory = mergeHistory(addNewNoteHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(addNewNoteHistory), mergedHistory);
 		
 		// rensoItemClickHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> rensoItemClickHistory = conn.getHistoryTable().getBehaviorHistory("rensoItemClick", guid);
 		addWeight(rensoItemClickHistory, Global.getRensoItemClickWeight());
-		mergedHistory = mergeHistory(rensoItemClickHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(rensoItemClickHistory), mergedHistory);
 		
 		// sameTagHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> sameTagHistory = conn.getHistoryTable().getBehaviorHistory("sameTag", guid);
 		addWeight(sameTagHistory, Global.getSameTagWeight());
-		mergedHistory = mergeHistory(sameTagHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(sameTagHistory), mergedHistory);
 		
 		// sameNotebookNoteHistory<guid, 回数（ポイント）>
 		HashMap<String, Integer> sameNotebookHistory = conn.getHistoryTable().getBehaviorHistory("sameNotebook", guid);
 		addWeight(sameNotebookHistory, Global.getSameNotebookWeight());
-		mergedHistory = mergeHistory(sameNotebookHistory, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(sameNotebookHistory), mergedHistory);
 		logger.log(logger.EXTREME, "Leaving RensoNoteList.calculateHistory");
 	}
 	
@@ -215,12 +228,6 @@ public class RensoNoteList extends QListWidget {
 		
 		if (!this.isEnabled()) {
 			return;
-		}
-		
-		// すべての関連ポイントの合計を取得（関連度のパーセント算出に利用）
-		allPointSum = 0;
-		for (int p : mergedHistory.values()) {
-			allPointSum += p;
 		}
 		
 		addRensoNoteList(mergedHistory);
@@ -255,7 +262,24 @@ public class RensoNoteList extends QListWidget {
 	private void addRensoNoteList(HashMap<String, Integer> History){
 		logger.log(logger.EXTREME, "Entering RensoNoteList.addRensoNoteList");
 		
+		enThumbnailRunner.setUser(Global.getUserInformation());
+		enThumbnailRunner.setServerUrl(Global.getServer());
+		
 		String currentNoteGuid = new String(parent.getCurrentNoteGuid());
+		
+		// 除外されているノートを連想ノート候補から除去する
+		Iterator<String> historyIterator = History.keySet().iterator();
+		while (historyIterator.hasNext()) {
+			if (conn.getExcludedTable().existNote(guid, historyIterator.next())) {
+				historyIterator.remove();
+			}
+		}
+		
+		// すべての関連ポイントの合計を取得（関連度のパーセント算出に利用）
+		int allPointSum = 0;
+		for (int p : History.values()) {
+			allPointSum += p;
+		}
 		
 		// スター付きノートとスター無しノートを分ける
 		HashMap<String, Integer> staredNotes = new HashMap<String, Integer>();	// スター付きノートのマップ
@@ -307,6 +331,18 @@ public class RensoNoteList extends QListWidget {
 				
 				// 存在していて、かつ関連度0でなければノート情報を取得して連想ノートリストに追加
 				if (isNoteActive && maxNum > 0) {
+					// Evernoteサムネイルが取得済みか確認。未取得ならサムネイル取得スレッドにキュー
+					if (Global.isConnected) {
+						String thumbnailName = Global.getFileManager().getResDirPath("enThumbnail-" + maxGuid + ".png");
+						QFile thumbnail = new QFile(thumbnailName);
+						if (!thumbnail.exists()) {	// Evernoteサムネイルがファイルとして存在しない
+							QByteArray data = conn.getNoteTable().getENThumbnail(maxGuid);
+							if (data == null) {	// Evernoteサムネイル未取得
+								enThumbnailRunner.addGuid(maxGuid);
+							}
+						}
+					}
+					
 					// スター付きか確認
 					boolean isStared;
 					isStared = conn.getStaredTable().existNote(currentNoteGuid, maxGuid);
@@ -317,7 +353,7 @@ public class RensoNoteList extends QListWidget {
 					this.addItem(item);
 					this.setItemWidget(item, myItem);
 					rensoNoteListItems.put(item, maxGuid);
-					rensoNoteListTrueItems.add(myItem);
+					rensoNoteListTrueItems.put(maxGuid, myItem);
 				} else {
 					break;
 				}
@@ -374,8 +410,7 @@ public class RensoNoteList extends QListWidget {
 	// コンテキストメニューが閉じられた時
 	@SuppressWarnings("unused")
 	private void contextMenuHidden() {
-		for (int i = 0; i < rensoNoteListTrueItems.size(); i++) {
-			RensoNoteListItem item = rensoNoteListTrueItems.get(i);
+		for (RensoNoteListItem item : rensoNoteListTrueItems.values()) {
 			item.setDefaultBackground();
 		}
 	}
@@ -436,7 +471,7 @@ public class RensoNoteList extends QListWidget {
 			enRelatedNotes.put(relatedGuid, Global.getENRelatedNotesWeight());
 		}
 		
-		mergedHistory = mergeHistory(enRelatedNotes, mergedHistory);
+		mergedHistory = mergeHistory(filterHistory(enRelatedNotes), mergedHistory);
 		
 		logger.log(logger.EXTREME, "Leaving RensoNoteList.addENRelatedNotes");
 	}
@@ -445,12 +480,17 @@ public class RensoNoteList extends QListWidget {
 	public boolean stopThread() {
 		logger.log(logger.HIGH, "Entering RensoNoteList.stopThread");
 		
-		if (enRelatedNotesRunner.addStop()) {
-			logger.log(logger.HIGH, "RensoNoteList.stopThread succeeded");
-			return true;
+		if (!enRelatedNotesRunner.addStop()) {
+			logger.log(logger.HIGH, "RensoNoteList.stopThread failed(enRelatedNotesRunner)");
+			return false;
 		}
-		logger.log(logger.HIGH, "RensoNoteList.stopThread failed");
-		return false;
+		if (!enThumbnailRunner.addStop()) {
+			logger.log(logger.HIGH, "RensoNoteList.stopThread failed(enThumbnailRunner)");
+			return false;
+		}
+		
+		logger.log(logger.HIGH, "RensoNoteList.stopThread succeeded");
+		return true;
 	}
 
 	public QThread getEnRelatedNotesThread() {
@@ -459,5 +499,39 @@ public class RensoNoteList extends QListWidget {
 	
 	public String getGuid() {
 		return guid;
+	}
+	
+	// ローカルに存在していて、かつアクティブなノートだけを返す
+	private HashMap<String, Integer> filterHistory(HashMap<String, Integer> sourceHistory) {
+		HashMap<String, Integer> dstHistory = new HashMap<String, Integer>();
+		
+		for (String guid : sourceHistory.keySet()) {
+			if (conn.getNoteTable().exists(guid)) {
+				if (conn.getNoteTable().getNote(guid, false, false, false, false, false).isActive()) {
+					dstHistory.put(guid, sourceHistory.get(guid));
+				}
+			}
+		}
+		
+		return dstHistory;
+	}
+	
+	/**
+	 * Evernoteサムネイルの取得が完了
+	 * 
+	 * @param guid 現在開いているノートのguid
+	 */
+	@SuppressWarnings("unused")
+	private void enThumbnailComplete(String guid) {
+		logger.log(logger.HIGH, "Entering RensoNoteList.enThumbnailComplete");
+		
+		for (Map.Entry<String, RensoNoteListItem> e : rensoNoteListTrueItems.entrySet()) {
+			// サムネイル取得が完了したノートが現在の連想ノートリストに表示されていたら再描画
+			if (guid.equals(e.getKey())) {
+				e.getValue().repaint();
+			}
+		}
+		
+		logger.log(logger.HIGH, "Leaving RensoNoteList.enThumbnailComplete");
 	}
 }

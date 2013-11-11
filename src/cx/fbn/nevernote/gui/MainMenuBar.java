@@ -56,7 +56,6 @@ public class MainMenuBar extends QMenuBar {
 	public QAction			noteExportAction;			// Export notes
 	public QAction			noteImportAction;			// Import notes
 	public QAction			noteCopyAsUrlAction;		// Copy the note as a URL
-	// ICHANGED
 	public QAction 			noteOpenNewTab; 			// 新しいタブで開く
 	public QAction			noteAddNewTab;				// 新しいタブでノート追加
 	
@@ -153,7 +152,6 @@ public class MainMenuBar extends QMenuBar {
 	
 	private QMenu			helpMenu;
 	
-	// ICHANGED
 	private QMenu tableMenu;
 	private QMenu imageMenu;
 	private BrowserWindow prevBW;
@@ -161,7 +159,6 @@ public class MainMenuBar extends QMenuBar {
 	public MainMenuBar(NeverNote p) {
 		parent = p;
 		
-		// ICHANGED
 		prevBW = parent.browserWindow;
 		
 		fullReindexAction = new QAction(tr("Reindex Database"), this);
@@ -263,13 +260,13 @@ public class MainMenuBar extends QMenuBar {
 		noteDelete.triggered.connect(parent, "deleteNote()");
 		setupShortcut(noteDelete, "File_Note_Delete");
 		
-		// ICHANGED 新しいタブで開くアクション生成
+		// 新しいタブで開くアクション生成
 		noteOpenNewTab = new QAction(tr("Open in New Tab"), this);
 		noteOpenNewTab.setToolTip(tr("Open this note in new tab"));
 		noteOpenNewTab.triggered.connect(parent, "openNewTab()");
 		setupShortcut(noteOpenNewTab, "File_Note_Open_New_Tab");
 		
-		// ICHANGED 新しいタブでノート追加アクション生成
+		// 新しいタブでノート追加アクション生成
 		noteAddNewTab = new QAction(tr("Add in New Tab"), this);
 		noteAddNewTab.setToolTip(tr("Add a new note in new tab"));
 		noteAddNewTab.triggered.connect(parent, "noteAddNewTab()");
@@ -684,7 +681,6 @@ public class MainMenuBar extends QMenuBar {
 	public void setupMenuBar() {
 		fileMenu = addMenu(tr("&File"));
 		
-		noteMenu = fileMenu.addMenu(tr("&Note"));
 		notebookMenu = fileMenu.addMenu(tr("Notebook"));
 		tagMenu = fileMenu.addMenu(tr("Tag"));
 		savedSearchMenu = fileMenu.addMenu(tr("Saved Searches"));
@@ -736,6 +732,8 @@ public class MainMenuBar extends QMenuBar {
 		viewMenu.addAction(showEditorBar);
 		viewMenu.addAction(hideLeftSide);
 		
+		noteMenu = addMenu(tr("&Note"));
+		
 		formatMenu = addMenu(tr("F&ormat"));
 		formatMenu.addAction(formatBold);
 		formatMenu.addAction(formatUnderline);
@@ -756,7 +754,6 @@ public class MainMenuBar extends QMenuBar {
 		formatMenu.addMenu(parent.browserWindow.browser.imageMenu);
 		formatMenu.addSeparator();
 		
-		// ICHANGED
 		// ライブラリにremoveMenu()が存在しないので、removeAction()で消せるようにTable,Imageメニューをここで再定義
 		tableMenu = new QMenu();
 		tableMenu.setTitle(tr("Table"));
@@ -786,11 +783,9 @@ public class MainMenuBar extends QMenuBar {
 		indentMenu.addAction(outdentAction);
 		
 		noteAttributes.setCheckable(true);
-		// ICHANGED
 		noteMenu.addAction(noteOpenNewTab);
 		
 		noteMenu.addAction(noteAdd);
-		// ICHANGED
 		noteMenu.addAction(noteAddNewTab);
 		
 		noteMenu.addAction(noteDelete);
@@ -862,6 +857,7 @@ public class MainMenuBar extends QMenuBar {
 		addMenu(fileMenu);
 		addMenu(editMenu);
 		addMenu(viewMenu);
+		addMenu(noteMenu);
 		addMenu(formatMenu);
 //		addMenu(onlineMenu);
 		addMenu(toolsMenu);
@@ -880,7 +876,7 @@ public class MainMenuBar extends QMenuBar {
 		action.setShortcut(Global.shortcutKeys.getShortcut(text));
 	}
 	
-	// ICHANGED
+	// メインメニューのアクションのターゲットを現在のタブに更新
 	public void refreshTargetWindow() {
 		// 以前のブラウザウィンドウとの接続を切断
 		noteTags.triggered.disconnect(prevBW, "modifyTags()");

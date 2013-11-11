@@ -28,6 +28,7 @@ package cx.fbn.nevernote.dialog;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.evernote.edam.error.EDAMErrorCode;
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
@@ -45,6 +46,7 @@ import com.trolltech.qt.gui.QFontMetrics;
 import com.trolltech.qt.gui.QHBoxLayout;
 import com.trolltech.qt.gui.QIcon;
 import com.trolltech.qt.gui.QLabel;
+import com.trolltech.qt.gui.QMessageBox;
 import com.trolltech.qt.gui.QPushButton;
 import com.trolltech.qt.gui.QTableWidget;
 import com.trolltech.qt.gui.QTableWidgetItem;
@@ -52,7 +54,6 @@ import com.trolltech.qt.gui.QVBoxLayout;
 
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.threads.SyncRunner;
-//import org.apache.thrift.TException;
 
 public class ShareNotebook extends QDialog {
 	private final QPushButton				okButton;
@@ -231,6 +232,9 @@ public class ShareNotebook extends QDialog {
 			} catch (EDAMNotFoundException e) {
 				e.printStackTrace();
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+				}
 				e.printStackTrace();
 			} catch (TException e) {
 				e.printStackTrace();

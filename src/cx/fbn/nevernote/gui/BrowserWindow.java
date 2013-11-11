@@ -124,6 +124,7 @@ import com.trolltech.qt.webkit.QWebSettings;
 import com.trolltech.qt.webkit.QWebView;
 
 import cx.fbn.nevernote.Global;
+import cx.fbn.nevernote.clipboard.ClipBoardObserver;
 import cx.fbn.nevernote.dialog.EnCryptDialog;
 import cx.fbn.nevernote.dialog.EnDecryptDialog;
 import cx.fbn.nevernote.dialog.GeoDialog;
@@ -135,7 +136,6 @@ import cx.fbn.nevernote.dialog.TableDialog;
 import cx.fbn.nevernote.dialog.TagAssign;
 import cx.fbn.nevernote.evernote.EnCrypt;
 import cx.fbn.nevernote.filters.FilterEditorTags;
-import cx.fbn.nevernote.neighbornote.ClipBoardObserver;
 import cx.fbn.nevernote.signals.NoteResourceSignal;
 import cx.fbn.nevernote.signals.NoteSignal;
 import cx.fbn.nevernote.sql.DatabaseConnection;
@@ -268,7 +268,6 @@ public class BrowserWindow extends QWidget {
 	private final QTimer setSourceTimer;
 	String latexGuid;  // This is set if we are editing an existing LaTeX formula.  Useful to track guid.
 
-	// ICHANGED
 	private final ClipBoardObserver cbObserver;
 	
 	public static class SuggestionListener implements SpellCheckListener {
@@ -312,7 +311,7 @@ public class BrowserWindow extends QWidget {
 	}
 
 	
-	// ICHANGED 引数にcbObserverを追加
+	// 引数にcbObserverを追加
 	public BrowserWindow(DatabaseConnection c, ClipBoardObserver cbObserver) {
 		logger = new ApplicationLogger("browser.log");
 		logger.log(logger.HIGH, "Setting up browser");
@@ -336,7 +335,6 @@ public class BrowserWindow extends QWidget {
 		authorLabel = new QLabel();
 		conn = c;
 		
-		// ICHANGED
 		this.cbObserver = cbObserver;
 		
 		focusLost = new Signal0();
@@ -776,7 +774,6 @@ public class BrowserWindow extends QWidget {
 //		QIcon icon = new QIcon(iconPath + name + ".gif");
 		QIcon icon = new QIcon(iconPath + name + ".png");
 		button.setIcon(icon);
-		// ICHANGED
 		button.setIconSize(new QSize(16, 16));
 		
 		button.setToolTip(toolTip);
@@ -789,7 +786,6 @@ public class BrowserWindow extends QWidget {
 //		QIcon icon = new QIcon(iconPath + name + ".gif");
 		QIcon icon = new QIcon(iconPath + name + ".png");
 		button.setIcon(icon);
-		// ICHANGED
 		button.setIconSize(new QSize(16, 16));
 		
 		button.setToolTip(toolTip);
@@ -1096,7 +1092,6 @@ public class BrowserWindow extends QWidget {
 	// Listener for when cut is clicked
 	@SuppressWarnings("unused")
 	private void cutClicked() {
-		// ICHANGED
 		cbObserver.setCopySourceGuid(currentNote.getGuid(), browser.page().selectedText());
 		
 		browser.page().triggerAction(WebAction.Cut);
@@ -1106,7 +1101,6 @@ public class BrowserWindow extends QWidget {
 	// Listener when COPY is clicked
 	@SuppressWarnings("unused")
 	private void copyClicked() {
-		// ICHANGED
 		cbObserver.setCopySourceGuid(currentNote.getGuid(), browser.page().selectedText());
 		
 		browser.page().triggerAction(WebAction.Copy);
@@ -1121,7 +1115,7 @@ public class BrowserWindow extends QWidget {
 			return;
 		}
 		
-		// ICHANGED コピー＆ペーストの操作履歴をデータベースに登録
+		// コピー＆ペーストの操作履歴をデータベースに登録
 		String srcGuid = cbObserver.getSourceGuid();
 		String dstGuid = currentNote.getGuid();
 		if(srcGuid != null && dstGuid != null){
@@ -1174,7 +1168,7 @@ public class BrowserWindow extends QWidget {
 		if (!mime.hasText())
 			return;
 		
-		// ICHANGED コピー＆ペーストの操作履歴をデータベースに登録
+		// コピー＆ペーストの操作履歴をデータベースに登録
 		String srcGuid = cbObserver.getSourceGuid();
 		String dstGuid = currentNote.getGuid();
 		if(srcGuid != null && dstGuid != null){
@@ -1449,7 +1443,6 @@ public class BrowserWindow extends QWidget {
 		if (text.trim().equalsIgnoreCase(""))
 			return;
 		
-		// ICHANGED
 		NoteQuickLinkDialog dialog = new NoteQuickLinkDialog(logger, conn, text, cbObserver);
 
 		if (dialog.getResults().size() == 0) {
@@ -1865,6 +1858,10 @@ public class BrowserWindow extends QWidget {
 		if (tagEdit.text().equalsIgnoreCase(saveTagList))
 			return;
 
+		if (saveTagList == null) {
+			return;
+		}
+		
 		// We know something has changed...
 		String oldTagArray[] = saveTagList.split(Global.tagDelimeter);
 		String newTagArray[];

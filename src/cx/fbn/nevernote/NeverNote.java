@@ -42,6 +42,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.Vector;
 
@@ -49,6 +50,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.h2.tools.ChangeFileEncryption;
 
+import com.evernote.edam.error.EDAMErrorCode;
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
 import com.evernote.edam.error.EDAMUserException;
@@ -145,6 +147,7 @@ import com.trolltech.qt.network.QNetworkRequest;
 import com.trolltech.qt.webkit.QWebPage.WebAction;
 import com.trolltech.qt.webkit.QWebSettings;
 
+import cx.fbn.nevernote.clipboard.ClipBoardObserver;
 import cx.fbn.nevernote.config.InitializationException;
 import cx.fbn.nevernote.config.StartupConfig;
 import cx.fbn.nevernote.dialog.AccountDialog;
@@ -190,7 +193,6 @@ import cx.fbn.nevernote.gui.TagTreeWidget;
 import cx.fbn.nevernote.gui.Thumbnailer;
 import cx.fbn.nevernote.gui.TrashTreeWidget;
 import cx.fbn.nevernote.gui.controls.QuotaProgressBar;
-import cx.fbn.nevernote.neighbornote.ClipBoardObserver;
 import cx.fbn.nevernote.oauth.OAuthTokenizer;
 import cx.fbn.nevernote.oauth.OAuthWindow;
 import cx.fbn.nevernote.sql.DatabaseConnection;
@@ -208,7 +210,6 @@ import cx.fbn.nevernote.xml.ExportData;
 import cx.fbn.nevernote.xml.ImportData;
 import cx.fbn.nevernote.xml.ImportEnex;
 import cx.fbn.nevernote.xml.NoteFormatter;
-//import org.apache.thrift.TException;
 
 
 public class NeverNote extends QMainWindow{
@@ -251,7 +252,6 @@ public class NeverNote extends QMainWindow{
     NoteFilter				filter;						// Note filter
     String					currentNoteGuid;			// GUID of the current note 
     Note 					currentNote;				// The currently viewed note
-    // ICHANGED
     HashMap<Integer, Boolean>	noteDirty;				// Has the note been changed?
     HashMap<Integer, Boolean>	inkNote;                // if this is an ink note, it is read only
     HashMap<Integer, Boolean>	readOnly;				// Is this note read-only?
@@ -341,7 +341,6 @@ public class NeverNote extends QMainWindow{
     HashMap<String, String>		noteCache;			// Cash of note content	
     HashMap<String, Boolean>	readOnlyCache;		// List of cashe notes that are read-only
     HashMap<String, Boolean>	inkNoteCache;		// List of cache notes that are ink notes 
-	// ICHANGED
 	HashMap<Integer, ArrayList<String>> historyGuids;  // タブごとの以前見たノートのGUID
 	HashMap<Integer, Integer> historyPosition; // Position within the viewed items
 	HashMap<Integer, Boolean> fromHistory; // Is this from the history queue?
@@ -363,10 +362,9 @@ public class NeverNote extends QMainWindow{
     private QTimer		blockTimer;
     BrowserWindow		blockingWindow;
     
-	// ICHANGED
-	private final TabBrowserWidget tabBrowser; // ブラウザウィンドウをタブ化
-	private final HashMap<Integer, TabBrowse> tabWindows; // タブウィンドウ
-	private final RensoNoteListDock rensoNoteListDock; // 連想ノートリストドックウィジェット
+	private final TabBrowserWidget tabBrowser;				// ブラウザウィンドウをタブ化
+	private final HashMap<Integer, TabBrowse> tabWindows;	// タブウィンドウ
+	private final RensoNoteListDock rensoNoteListDock;		// 連想ノートリストドックウィジェット
 	ClipBoardObserver cbObserver;
 	String rensoNotePressedItemGuid;
 	
@@ -381,7 +379,6 @@ public class NeverNote extends QMainWindow{
     // Application Constructor	
 	@SuppressWarnings("static-access")
 	public NeverNote(DatabaseConnection dbConn)  {
-		// ICHANGED
 		cbObserver = new ClipBoardObserver();
 		
 		conn = dbConn;		
@@ -426,7 +423,6 @@ public class NeverNote extends QMainWindow{
         setWindowTitle(tr("NeighborNote"));
 
         mainLeftRightSplitter = new QSplitter();
-		// ICHANGED
 		mainLeftRightSplitter.setOrientation(Qt.Orientation.Horizontal);
 		
         setCentralWidget(mainLeftRightSplitter);
@@ -445,7 +441,6 @@ public class NeverNote extends QMainWindow{
         listManager = new ListManager(conn, logger);
         
 		logger.log(logger.EXTREME, "Building index runners & timers");
-		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
 		indexRunner = new IndexRunner("indexRunner.log",
 				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(),
 				Global.getResourceDatabaseUrl(),
@@ -472,7 +467,6 @@ public class NeverNote extends QMainWindow{
 				
 		logger.log(logger.EXTREME, "Setting sync thread & timers");
 		syncThreadsReady=1;
-		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
 		syncRunner = new SyncRunner("syncRunner.log", Global.getDatabaseUrl(),
 				Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(),
 				Global.getBehaviorDatabaseUrl(), Global.getDatabaseUserid(),
@@ -484,6 +478,7 @@ public class NeverNote extends QMainWindow{
         syncRunner.status.message.connect(this, "setMessage(String)");
         syncRunner.syncSignal.finished.connect(this, "syncThreadComplete(Boolean)");
         syncRunner.syncSignal.errorDisconnect.connect(this, "remoteErrorDisconnect()");
+        syncRunner.limitSignal.rateLimitReached.connect(this, "informRateLimit(Integer)");
         syncRunning = false;	
 		if (syncTime > 0) {
 			automaticSync = true;
@@ -499,7 +494,6 @@ public class NeverNote extends QMainWindow{
 		
 		logger.log(logger.EXTREME, "Starting thumnail thread");
 		pdfReadyQueue = new ArrayList<String>();
-		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
 		thumbnailRunner = new ThumbnailRunner("thumbnailRunner.log",
 				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(),
 				Global.getResourceDatabaseUrl(),
@@ -549,7 +543,6 @@ public class NeverNote extends QMainWindow{
         tagTree = new TagTreeWidget(conn);
         savedSearchTree = new SavedSearchTreeWidget();
         trashTree = new TrashTreeWidget();
-		// ICHANGED
 		noteTableView = new TableView(logger, listManager, this);     
         
         searchField = new QComboBox();
@@ -589,15 +582,14 @@ public class NeverNote extends QMainWindow{
         noteCache = new HashMap<String,String>();
         readOnlyCache = new HashMap<String, Boolean>();
         inkNoteCache = new HashMap<String, Boolean>();
-        // ICHANGED
         browserWindow = new BrowserWindow(conn, cbObserver);
 
-		// ICHANGED 下から移動してきた。
+		// 下から移動してきた。
 		historyGuids = new HashMap<Integer, ArrayList<String>>();
 		historyPosition = new HashMap<Integer, Integer>();
 		fromHistory = new HashMap<Integer, Boolean>();
 		
-		// ICHANGED タブブラウザ作成
+		// タブブラウザ作成
 		tabWindows = new HashMap<Integer, TabBrowse>();
 		tabBrowser = new TabBrowserWidget(this);
 		tabBrowser.setStyleSheet("QTabBar::tab{width:150px;}");
@@ -608,7 +600,7 @@ public class NeverNote extends QMainWindow{
 		int index = tabBrowser.addNewTab(tab, "");
 		tabWindows.put(index, tab);
 		tabBrowser.currentChanged.connect(this, "tabWindowChanged(int)");
-		tabBrowser.tabCloseRequested.connect(this, "tabWindowClosing(int)");
+		tabBrowser.tabCloseRequested.connect(this, "tabCloseRequested(int)");
 		
 		noteDirty = new HashMap<Integer, Boolean>();
 		noteDirty.put(index, false);
@@ -616,7 +608,6 @@ public class NeverNote extends QMainWindow{
 		inkNote = new HashMap<Integer, Boolean>();
 		readOnly = new HashMap<Integer, Boolean>();
 
-		// ICHANGED
 		// 履歴記録のハッシュマップを初期化
 		historyGuids.put(index, new ArrayList<String>());
 		historyPosition.put(index, 0);
@@ -625,21 +616,16 @@ public class NeverNote extends QMainWindow{
         mainLeftRightSplitter.addWidget(leftSplitter1);
         mainLeftRightSplitter.addWidget(browserIndexSplitter);
         
-		// ICHANGED
 		// 連想ノートリストをセットアップ
         rensoNoteListDock = new RensoNoteListDock(conn, this, syncRunner, iconPath, tr("Renso Note List"));
 		addDockWidget(DockWidgetArea.RightDockWidgetArea, rensoNoteListDock);
 
 		if (Global.getListView() == Global.View_List_Wide) {
 			browserIndexSplitter.addWidget(noteTableView);
-			// ICHANGED
 			browserIndexSplitter.addWidget(tabBrowser);
-			// browserIndexSplitter.addWidget(browserWindow);
 		} else {
 			mainLeftRightSplitter.addWidget(noteTableView);
-			// ICHANGED
 			mainLeftRightSplitter.addWidget(tabBrowser);
-			// mainLeftRightSplitter.addWidget(browserWindow);
 		}
     	
     	// Setup the thumbnail viewer
@@ -703,12 +689,12 @@ public class NeverNote extends QMainWindow{
 		savedSearchTree.setVisible(Global.isWindowVisible("savedSearchTree"));
 		menuBar.hideSavedSearches.setChecked(Global.isWindowVisible("savedSearchTree"));
 		
-		// ICHANGED noteTableViewに新しいタブで開くを追加
+		// noteTableViewに新しいタブで開くを追加
 		noteTableView.setOpenNewTabAction(menuBar.noteOpenNewTab);
 			
 		noteTableView.setAddAction(menuBar.noteAdd);
 		
-		// ICHANGED noteTableViewに新しいタブでノート追加を追加
+		// noteTableViewに新しいタブでノート追加を追加
 		noteTableView.setAddNoteNewTabAction(menuBar.noteAddNewTab);
 		
 		noteTableView.setDeleteAction(menuBar.noteDelete);
@@ -736,7 +722,6 @@ public class NeverNote extends QMainWindow{
 		noteTableView.setVisible(Global.isWindowVisible("noteList"));
 		menuBar.hideNoteList.setChecked(Global.isWindowVisible("noteList"));
 		
-		// ICHANGED
 		if (!Global.isWindowVisible("editorButtonBar")) {
 			menuBar.showEditorBar.setChecked(false);
 			toggleEditorButtonBar();
@@ -745,7 +730,6 @@ public class NeverNote extends QMainWindow{
 		if (!Global.isWindowVisible("leftPanel"))
 			menuBar.hideLeftSide.setChecked(true);
 		
-		// ICHANGED
 		if (Global.isWindowVisible("noteInformation")) {
 			menuBar.noteAttributes.setChecked(true);
 			toggleNoteInformation();
@@ -796,12 +780,11 @@ public class NeverNote extends QMainWindow{
 		if (currentNoteGuid.equals(""))
 			currentNote = new Note();
 		
-		// ICHANGED
-		/* 上に移動したので要らない
-		historyGuids = new ArrayList<String>();
-		historyPosition = 0;
-		fromHistory = false;
-		*/
+		/* 上に移動したのでここには不要
+		 * historyGuids = new ArrayList<String>();
+		 * historyPosition = 0;
+		 * fromHistory = false;
+		 */
 		
 		if (!currentNoteGuid.trim().equals("")) {
 			currentNote = conn.getNoteTable().getNote(currentNoteGuid, true,true,false,false,true);
@@ -853,12 +836,11 @@ public class NeverNote extends QMainWindow{
     	threadMonitorTimer.timeout.connect(this, "threadMonitorCheck()");
     	threadMonitorTimer.start(1000*10);  // Check for threads every 10 seconds;	   	
     	
-		// ICHANGED たぶんこれはいらない
-		// IFIXED ?
+		// IFIXED 恐らく不要なのでコメントアウト
 		/*
-		historyGuids.add(currentNoteGuid);
-		historyPosition = 1;
-		*/
+		 * historyGuids.add(currentNoteGuid);
+		 * historyPosition = 1;
+		 */
     	
     	menuBar.blockSignals(true);
     	menuBar.narrowListView.blockSignals(true);
@@ -873,14 +855,13 @@ public class NeverNote extends QMainWindow{
     	menuBar.narrowListView.blockSignals(false);
     	menuBar.wideListView.blockSignals(false);
     	
-		// IFIXED
-		// 上に同じコードがあるよね？　とりあえずコメントアウト
+		// IFIXED 上に同じコードがあるのでコメントアウト
 		/*
 		 * if (Global.getListView() == Global.View_List_Wide) {
-		 * browserIndexSplitter.addWidget(noteTableView); // ICHANGED //
+		 * browserIndexSplitter.addWidget(noteTableView);
 		 * browserIndexSplitter.addWidget(tabBrowser);
 		 * browserIndexSplitter.addWidget(browserWindow); } else {
-		 * mainLeftRightSplitter.addWidget(noteTableView); // ICHANGED //
+		 * mainLeftRightSplitter.addWidget(noteTableView);
 		 * mainLeftRightSplitter.addWidget(tabBrowser);
 		 * mainLeftRightSplitter.addWidget(browserWindow); }
 		 */
@@ -917,7 +898,6 @@ public class NeverNote extends QMainWindow{
 			checkForUpdates();
 		}
 		
-		// ICHANGED
 		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
 			menuBar.noteAddNewTab.setEnabled(false);
 		}
@@ -1038,7 +1018,6 @@ public class NeverNote extends QMainWindow{
     	File fr = Global.getFileManager().getDbDirFile(Global.resourceDatabaseName + ".h2.db");
 		// IFIXED resourceDatabaseNameになっていたので修正
 		File fi = Global.getFileManager().getDbDirFile(Global.indexDatabaseName + ".h2.db");
-		// ICHANGED
 		File fb = Global.getFileManager().getDbDirFile(Global.behaviorDatabaseName + ".h2.db");
 				
 		if (!f.exists())
@@ -1047,7 +1026,6 @@ public class NeverNote extends QMainWindow{
 			Global.setResourceDatabaseUrl("");		
 		if (!fi.exists())
 			Global.setIndexDatabaseUrl("");	
-		// ICHANGED
 		if (!fb.exists())
 			Global.setBehaviorDatabaseUrl("");
     	
@@ -1063,7 +1041,6 @@ public class NeverNote extends QMainWindow{
                         Global.getDatabaseUserPassword(), Global.cipherPassword);
             }
         }
-        // ICHANGED Global.getBehaviorDatabaserUrl()を追加
        	DatabaseConnection dbConn = new DatabaseConnection(logger,Global.getDatabaseUrl(), 
        			Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
        			Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword, 0);
@@ -1081,7 +1058,6 @@ public class NeverNote extends QMainWindow{
         	st.execute("shutdown");
         	st = conn.getIndexConnection().createStatement();
         	st.execute("shutdown");
-        	// ICHANGED
         	st = conn.getBehaviorConnection().createStatement();
         	st.execute("shutdown");
         	
@@ -1092,13 +1068,11 @@ public class NeverNote extends QMainWindow{
         		ChangeFileEncryption.execute(dbPath, "NeverNote", encryptCipher, null, Global.cipherPassword.toCharArray(), true);
         		ChangeFileEncryption.execute(dbPath, "Resources", encryptCipher, null, Global.cipherPassword.toCharArray(), true);
         		ChangeFileEncryption.execute(dbPath, "Index", encryptCipher, null, Global.cipherPassword.toCharArray(), true);
-        		// ICHANGED
         		ChangeFileEncryption.execute(dbPath, "Behavior", encryptCipher, null, Global.cipherPassword.toCharArray(), true);
         		
         		Global.setDatabaseUrl(Global.getDatabaseUrl() + ";CIPHER="+encryptCipher);
         		Global.setResourceDatabaseUrl(Global.getResourceDatabaseUrl() + ";CIPHER="+encryptCipher);
         		Global.setIndexDatabaseUrl(Global.getIndexDatabaseUrl() + ";CIPHER="+encryptCipher);
-        		// ICHANGED
 				Global.setBehaviorDatabaseUrl(Global.getBehaviorDatabaseUrl() + ";CIPHER=" + encryptCipher);
 
         		QMessageBox.information(this, tr("Encryption Complete"), tr("Encryption is complete"));
@@ -1221,7 +1195,7 @@ public class NeverNote extends QMainWindow{
 			browser.close();
 		}
 		
-		// ICHANGED タブブラウザに対してクローズ処理を行う
+		// タブブラウザに対してクローズ処理を行う
 		Collection<TabBrowse> win = tabWindows.values();
 		Iterator<TabBrowse> it = win.iterator();
 		tabBrowser.currentChanged.disconnect();
@@ -1472,7 +1446,6 @@ public class NeverNote extends QMainWindow{
         	trayIcon.hide();
         showColumns();
         if (menuBar.showEditorBar.isChecked()){
-        	// ICHANGED 
         	for(int i = 0; i < tabBrowser.count(); i++){
         		BrowserWindow browser = ((TabBrowse) tabBrowser.widget(i)).getBrowserWindow();
         		showEditorButtons(browser);
@@ -1512,7 +1485,6 @@ public class NeverNote extends QMainWindow{
 		mainLeftRightSplitter.setObjectName("mainLeftRightSplitter");
 		browserIndexSplitter.setObjectName("browserIndexSplitter");
 		leftSplitter1.setObjectName("leftSplitter1");
-		// ICHANGED
 		rensoNoteListDock.setObjectName("rensoNoteListDock");
 		
 		// Restore the actual positions.
@@ -1521,7 +1493,6 @@ public class NeverNote extends QMainWindow{
         mainLeftRightSplitter.restoreState(Global.restoreState(mainLeftRightSplitter.objectName()));
         browserIndexSplitter.restoreState(Global.restoreState(browserIndexSplitter.objectName()));
         leftSplitter1.restoreState(Global.restoreState(leftSplitter1.objectName()));
-        // ICHANGED
      	rensoNoteListDock.restoreGeometry(Global.restoreGeometry(rensoNoteListDock.objectName()));
        
 	}
@@ -1532,7 +1503,6 @@ public class NeverNote extends QMainWindow{
 		Global.saveState(browserIndexSplitter.objectName(), browserIndexSplitter.saveState());
 		Global.saveState(leftSplitter1.objectName(), leftSplitter1.saveState());
 		Global.saveState(objectName(), saveState());
-		// ICHANGED
 		Global.saveGeometry(rensoNoteListDock.objectName(), rensoNoteListDock.saveGeometry());
 	}    
 	// Load the style sheet
@@ -1673,7 +1643,7 @@ public class NeverNote extends QMainWindow{
     	menuBar.notebookIconAction.setEnabled(true);
     	menuBar.notebookStackAction.setEnabled(true);
     	
-		// ICHANGED ゴミ箱から元の画面に戻す。連想ノートリストをONに。
+		// ゴミ箱から元の画面に戻す。連想ノートリストをONに。
 		if (!rensoNoteListDock.isEnabled()) {
 			rensoNoteListDock.setEnabled(true);
 		}
@@ -1946,7 +1916,6 @@ public class NeverNote extends QMainWindow{
 		while(set.hasNext())
 			externalWindows.get(set.next()).getBrowserWindow().setNotebookList(filteredBooks);
 		
-		// ICHANGED
 		Iterator<Integer>it = tabWindows.keySet().iterator();
 		while (it.hasNext()) {
 			tabWindows.get(it.next()).getBrowserWindow()
@@ -2098,7 +2067,7 @@ public class NeverNote extends QMainWindow{
 	// A note's notebook has been updated
 	@SuppressWarnings("unused")
 	private void updateNoteNotebook(String guid, String notebookGuid) {
-		// ICHANGED 同じノートブックに入れられたノート間の履歴を登録
+		// 同じノートブックに入れられたノート間の履歴を登録
 		conn.getHistoryTable().addSameNotebookHistory(guid, notebookGuid);
 		
 		// Update the list manager
@@ -2193,7 +2162,6 @@ public class NeverNote extends QMainWindow{
 		while(set.hasNext())
 			externalWindows.get(set.next()).getBrowserWindow().setNotebookList(filteredBooks);
 		
-		// ICHANGED
 		// 全てのタブウィンドウを更新
 		Iterator<Integer> it = tabWindows.keySet().iterator();
 		while (it.hasNext()) {
@@ -2446,7 +2414,7 @@ public class NeverNote extends QMainWindow{
     	
 		menuBar.noteRestoreAction.setVisible(false);
 		
-		// ICHANGED ゴミ箱から元の画面に戻す。連想ノートリストをONに。
+		// ゴミ箱から元の画面に戻す。連想ノートリストをONに。
 		if (!rensoNoteListDock.isEnabled()) {
 			rensoNoteListDock.setEnabled(true);
 		}
@@ -2541,7 +2509,6 @@ public class NeverNote extends QMainWindow{
 		}
 		browserWindow.setTag(names.toString());
 		
-		// ICHANGED
 		for (TabBrowse tab: tabWindows.values()) {
 			if (tab.getBrowserWindow().getNote().getGuid().equals(guid)) {
 				int index = tabBrowser.indexOf(tab);
@@ -2813,7 +2780,7 @@ public class NeverNote extends QMainWindow{
     	menuBar.savedSearchDeleteAction.setEnabled(true);
     	menuBar.savedSearchIconAction.setEnabled(true);
     	
-		// ICHANGED ゴミ箱から元の画面に戻す。連想ノートリストをONに。
+		// ゴミ箱から元の画面に戻す。連想ノートリストをONに。
 		if (!rensoNoteListDock.isEnabled()) {
 			rensoNoteListDock.setEnabled(true);
 		}
@@ -3006,7 +2973,7 @@ public class NeverNote extends QMainWindow{
 		if (!file.open(new QIODevice.OpenMode(QIODevice.OpenModeFlag.ReadOnly,
                 QIODevice.OpenModeFlag.Text)))
 			return;
-		// ICHANGED 日本語文字化け対策
+		// 日本語文字化け対策
 		QTextCodec codec = QTextCodec.codecForName("UTF-8");
 		QTextStream textStream = new QTextStream(file);
 		textStream.setCodec(codec);
@@ -3030,11 +2997,10 @@ public class NeverNote extends QMainWindow{
 	@SuppressWarnings("unused")
 	private void about() {
 		logger.log(logger.HIGH, "Entering NeverNote.about");
-		// ICHANGED based on...の記述を付加
 		QMessageBox.about(this, 
 						tr("About NeighborNote"),
 						tr("<h4><center><b>NeighborNote</b></center></h4><hr><center>Version ")
-						+Global.version + "(based on NixNote 1.5)"
+						+Global.version + "(based on NixNote 1.6)"
 						//+"1.2.120724"
 						+tr("<hr>"
 								+"Open Source Evernote Client.<br><br>" 
@@ -3221,6 +3187,7 @@ public class NeverNote extends QMainWindow{
     	logger.log(logger.HIGH, "Entering NeverNote.setupToolBar");
     	toolBar = addToolBar(tr("Tool Bar"));	
     	toolBar.setObjectName("toolBar");
+    	toolBar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon);
     	menuBar.setupToolBarVisible();
     	if (!Global.isWindowVisible("toolBar"))
     		toolBar.setVisible(false);
@@ -3230,78 +3197,87 @@ public class NeverNote extends QMainWindow{
 //    	toolBar.addWidget(menuBar);
 //    	menuBar.setSizePolicy(Policy.Minimum, Policy.Minimum);
 //    	toolBar.addSeparator();
-    	prevButton = toolBar.addAction(tr("Previous"));
+    	prevButton = toolBar.addAction(tr(""));
+    	prevButton.setToolTip(tr("Previous"));
     	QIcon prevIcon = new QIcon(iconPath+"back.png");
     	prevButton.setIcon(prevIcon);
     	prevButton.triggered.connect(this, "previousViewedAction()");  	
-    	togglePrevArrowButton(Global.isToolbarButtonVisible("prevArrow"));
+    	togglePrevArrowButton(Global.isToolbarButtonVisible("prevArrow", true));
     	
-    	nextButton = toolBar.addAction(tr("Next"));
+    	nextButton = toolBar.addAction(tr(""));
+    	nextButton.setToolTip(tr("Next"));
     	QIcon nextIcon = new QIcon(iconPath+"forward.png");
     	nextButton.setIcon(nextIcon);
     	nextButton.triggered.connect(this, "nextViewedAction()");  	
-    	toggleNextArrowButton(Global.isToolbarButtonVisible("nextArrow"));
+    	toggleNextArrowButton(Global.isToolbarButtonVisible("nextArrow", true));
+    	
+    	toolBar.addSeparator();
     	
     	upButton = toolBar.addAction(tr("Up"));
     	QIcon upIcon = new QIcon(iconPath+"up.png");
     	upButton.setIcon(upIcon);
     	upButton.triggered.connect(this, "upAction()");  	
-    	toggleUpArrowButton(Global.isToolbarButtonVisible("upArrow"));
+    	toggleUpArrowButton(Global.isToolbarButtonVisible("upArrow", false));
 
     	
     	downButton = toolBar.addAction(tr("Down"));
     	QIcon downIcon = new QIcon(iconPath+"down.png");
     	downButton.setIcon(downIcon);
     	downButton.triggered.connect(this, "downAction()");
-    	toggleDownArrowButton(Global.isToolbarButtonVisible("downArrow"));
+    	toggleDownArrowButton(Global.isToolbarButtonVisible("downArrow", false));
     	
     	synchronizeButton = toolBar.addAction(tr("Synchronize"));
     	synchronizeButton.setIcon(new QIcon(iconPath+"synchronize.png"));
     	synchronizeIconAngle = 0;
     	synchronizeButton.triggered.connect(this, "evernoteSync()");
-    	toggleSynchronizeButton(Global.isToolbarButtonVisible("synchronize"));
+    	toggleSynchronizeButton(Global.isToolbarButtonVisible("synchronize", true));
     	
     	printButton = toolBar.addAction(tr("Print"));
     	QIcon printIcon = new QIcon(iconPath+"print.png");
     	printButton.setIcon(printIcon);
     	printButton.triggered.connect(this, "printNote()");
-    	togglePrintButton(Global.isToolbarButtonVisible("print"));
+    	togglePrintButton(Global.isToolbarButtonVisible("print", false));
 
     	tagButton = toolBar.addAction(tr("Tag")); 
     	QIcon tagIcon = new QIcon(iconPath+"tag.png");
     	tagButton.setIcon(tagIcon);
     	tagButton.triggered.connect(browserWindow, "modifyTags()");
-    	toggleTagButton(Global.isToolbarButtonVisible("tag"));
+    	toggleTagButton(Global.isToolbarButtonVisible("tag", false));
 
     	attributeButton = toolBar.addAction(tr("Attributes")); 
     	QIcon attributeIcon = new QIcon(iconPath+"attribute.png");
     	attributeButton.setIcon(attributeIcon);
     	attributeButton.triggered.connect(this, "toggleNoteAttributes()");
-    	toggleAttributeButton(Global.isToolbarButtonVisible("attribute"));
+    	toggleAttributeButton(Global.isToolbarButtonVisible("attribute", true));
     	    	
     	emailButton = toolBar.addAction(tr("Email"));
     	QIcon emailIcon = new QIcon(iconPath+"email.png");
     	emailButton.setIcon(emailIcon);
     	emailButton.triggered.connect(this, "emailNote()");
-    	toggleEmailButton(Global.isToolbarButtonVisible("email"));
+    	toggleEmailButton(Global.isToolbarButtonVisible("email", false));
 
     	deleteButton = toolBar.addAction(tr("Delete"));   	
     	QIcon deleteIcon = new QIcon(iconPath+"delete.png");
     	deleteButton.setIcon(deleteIcon);
     	deleteButton.triggered.connect(this, "deleteNote()");
-    	toggleDeleteButton(Global.isToolbarButtonVisible("delete"));
+    	toggleDeleteButton(Global.isToolbarButtonVisible("delete", true));
 
     	newButton = toolBar.addAction(tr("New"));
     	QIcon newIcon = new QIcon(iconPath+"new.png");
-    	newButton.triggered.connect(this, "addNote()");
+    	if (Global.toolBarNewAction()) {
+        	newButton.triggered.connect(this, "noteAddNewTab()");
+    	} else {
+    		newButton.triggered.connect(this, "addNote()");
+    	}
+
     	newButton.setIcon(newIcon);
-    	toggleNewButton(Global.isToolbarButtonVisible("new"));
+    	toggleNewButton(Global.isToolbarButtonVisible("new", true));
     	
     	allNotesButton = toolBar.addAction(tr("All Notes"));
     	QIcon allIcon = new QIcon(iconPath+"books.png");
     	allNotesButton.triggered.connect(this, "allNotes()");
     	allNotesButton.setIcon(allIcon);
-    	toggleAllNotesButton(Global.isToolbarButtonVisible("allNotes"));
+    	toggleAllNotesButton(Global.isToolbarButtonVisible("allNotes", true));
     	
      	//toolBar.addSeparator();
       	//toolBar.addWidget(new QLabel(tr("Quota:")));
@@ -3386,9 +3362,9 @@ public class NeverNote extends QMainWindow{
     	contextMenu.addAction(allNotesAction);
     	allNotesAction.triggered.connect(this, "toggleAllNotesButton(Boolean)");
     	
-    	QAction searchClearAction = addContextAction("searchClear", tr("Search Clear"));
-    	contextMenu.addAction(searchClearAction);
-    	searchClearAction.triggered.connect(this, "toggleSearchClearButton(Boolean)");
+//    	QAction searchClearAction = addContextAction("searchClear", tr("Search Clear"));
+//    	contextMenu.addAction(searchClearAction);
+//    	searchClearAction.triggered.connect(this, "toggleSearchClearButton(Boolean)");
     	
     	return contextMenu;
     	
@@ -3397,7 +3373,7 @@ public class NeverNote extends QMainWindow{
     	QAction newAction = new QAction(this);
 		newAction.setText(name);
 		newAction.setCheckable(true);
-		newAction.setChecked(Global.isToolbarButtonVisible(config));
+		newAction.setChecked(Global.isToolbarButtonVisible(config, true));
 		return newAction;
     }
     private void togglePrevArrowButton(Boolean toggle) {
@@ -3448,11 +3424,11 @@ public class NeverNote extends QMainWindow{
 		allNotesButton.setVisible(toggle);
 		Global.saveToolbarButtonsVisible("allNotes", toggle);
     }
-    @SuppressWarnings("unused")
-	private void toggleSearchClearButton(Boolean toggle) {
-		searchClearButton.setVisible(toggle);
-		Global.saveToolbarButtonsVisible("searchClear", toggle);
-    }
+//    @SuppressWarnings("unused")
+//	private void toggleSearchClearButton(Boolean toggle) {
+//		searchClearButton.setVisible(toggle);
+//		Global.saveToolbarButtonsVisible("searchClear", toggle);
+//    }
 
 
 
@@ -3579,7 +3555,7 @@ public class NeverNote extends QMainWindow{
     		Global.showDeleted = false;
     		menuBar.noteRestoreAction.setEnabled(false);
     		menuBar.noteRestoreAction.setVisible(false);
-			// ICHANGED ゴミ箱から元の画面に戻す。連想ノートリストをONに。
+			// ゴミ箱から元の画面に戻す。連想ノートリストをONに。
 			rensoNoteListDock.setEnabled(true);
     	}
     	else {
@@ -3587,7 +3563,7 @@ public class NeverNote extends QMainWindow{
     		currentNoteGuid = trashNoteGuid;
     		menuBar.noteRestoreAction.setEnabled(true);
     		menuBar.noteRestoreAction.setVisible(true);
-    		// ICHANGED ゴミ箱を開く。連想ノートリストをOFFに。
+    		// ゴミ箱を開く。連想ノートリストをOFFに。
     		rensoNoteListDock.setEnabled(false);
     					
     		Global.showDeleted = true;
@@ -3636,7 +3612,7 @@ public class NeverNote extends QMainWindow{
         	listManager.loadNotesIndex();
         	noteIndexUpdated(false);
         	
-    		// ICHANGED ゴミ箱から元の画面に戻す。連想ノートリストをONに。
+    		// ゴミ箱から元の画面に戻す。連想ノートリストをONに。
     		if (!rensoNoteListDock.isEnabled()) {
     			rensoNoteListDock.setEnabled(true);
     		}
@@ -3704,7 +3680,7 @@ public class NeverNote extends QMainWindow{
     	OAuthTokenizer tokenizer = new OAuthTokenizer();
     	AESEncrypter aes = new AESEncrypter();
     	try {
-			aes.decrypt(new FileInputStream(Global.getFileManager().getHomeDirFile("oauth.txt")));
+			aes.decrypt(new FileInputStream(Global.getFileManager().getHomeDirFile("oauthkey.txt")));
 		} catch (FileNotFoundException e) {
 			// File not found, so we'll just get empty strings anyway. 
 		}
@@ -3767,7 +3743,7 @@ public class NeverNote extends QMainWindow{
 	    	}
 	    	aes.setString(window.response);
 	    	try {
-				aes.encrypt(new FileOutputStream(Global.getFileManager().getHomeDirFile("oauth.txt")));
+				aes.encrypt(new FileOutputStream(Global.getFileManager().getHomeDirFile("oauthkey.txt")));
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -3823,7 +3799,7 @@ public class NeverNote extends QMainWindow{
     	clearTrashFilter();
 //    	clearSavedSearchFilter();
     	
-		// ICHANGED ゴミ箱から元の画面に戻す。連想ノートリストをONに。
+		// ゴミ箱から元の画面に戻す。連想ノートリストをONに。
 		if (!rensoNoteListDock.isEnabled()) {
 			rensoNoteListDock.setEnabled(true);
 		}
@@ -3938,7 +3914,6 @@ public class NeverNote extends QMainWindow{
 
 		saveNote();
 		
-		// ICHANGED
 		// 右クリックだったときの処理
 		if (QApplication.mouseButtons().isSet(MouseButton.RightButton)) {
 			// 選択されたノートのguidをselectedNoteGUIDsにセット
@@ -3964,7 +3939,6 @@ public class NeverNote extends QMainWindow{
 
 		// If the ctrl key is pressed, then they are selecting multiple 
 		// entries and we don't want to change the currently viewed note.
-		// ICHANGED
 		// Shiftキーを押しながらの場合の処理も追加
 		if ((QApplication.keyboardModifiers().isSet(KeyboardModifier.ControlModifier) ||
 				QApplication.keyboardModifiers().isSet(KeyboardModifier.ShiftModifier)) &&
@@ -3979,12 +3953,11 @@ public class NeverNote extends QMainWindow{
 			return;
 		}
 		
-		// ICHANGED たぶんこれは不要
-		// IFIXED ?
-		/*if (historyGuids.size() == 0) {
-			historyGuids.add(currentNoteGuid);
-			historyPosition = 1;
-		}*/
+		// IFIXED 恐らく不要なのでコメントアウト
+//		if (historyGuids.size() == 0) {
+//			historyGuids.add(currentNoteGuid);
+//			historyPosition = 1;
+//		}
 
     	noteTableView.showColumn(Global.noteTableGuidPosition);
     	
@@ -4030,13 +4003,11 @@ public class NeverNote extends QMainWindow{
     	nextButton.setEnabled(true);
    		prevButton.setEnabled(true);
    		
-		// ICHANGED
 		int currentIndex = tabBrowser.currentIndex();
 		ArrayList<String> histGuids = historyGuids.get(currentIndex);
 		int histPosition = historyPosition.get(currentIndex);
 		boolean fromHist = fromHistory.get(currentIndex);
 		
-		// ICHANGED
 		if (!fromHist) {
 			int endPosition = histGuids.size() - 1;
 
@@ -4058,14 +4029,12 @@ public class NeverNote extends QMainWindow{
     	scrollToGuid(currentNoteGuid);
     	refreshEvernoteNote(true);
     	
-		// ICHANGED
 		if (currentNoteGuid != null && !currentNoteGuid.equals("")) {
 			if (!Global.showDeleted) { // ゴミ箱じゃなければ
 				addBrowseHistory();
 			}
 		}
 
-		// ICHANGED
 		// 連想ノートリストを更新
 		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 		
@@ -4073,8 +4042,6 @@ public class NeverNote extends QMainWindow{
 		logger.log(logger.HIGH, "Leaving NeverNote.noteTableSelection");
     }
     
-
-	// ICHANGED
     // 複数ノートの同時閲覧履歴をデータベースに保存
 	private void addBrowseHistory() {
 		// このノートと他のタブウィンドウノートの関連性を内部データベースのHistoryテーブルに登録
@@ -4140,7 +4107,6 @@ public class NeverNote extends QMainWindow{
 		String saveCurrentNoteGuid = new String();
 		String tempNoteGuid = new String();
 		
-		// ICHANGED
 		int currentIndex = tabBrowser.currentIndex();
 		ArrayList<String> histGuids = historyGuids.get(currentIndex);
 		histGuids.clear();
@@ -4184,7 +4150,6 @@ public class NeverNote extends QMainWindow{
 		logger.log(logger.HIGH, "Leaving NeverNote.refreshEvernoteNoteList");
 	} 
     
-	// ICHANGED
 	// Called when the previous arrow button is clicked
 	@SuppressWarnings("unused")
 	private void previousViewedAction() {
@@ -4222,7 +4187,7 @@ public class NeverNote extends QMainWindow{
 	private void nextViewedAction() {
     	if (!nextButton.isEnabled())
     		return;
-		// ICHANGED
+    	
 		int currentIndex = tabBrowser.currentIndex();
 		ArrayList<String> histGuids = historyGuids.get(currentIndex);
 		int histPosition = historyPosition.get(currentIndex);
@@ -4617,7 +4582,6 @@ public class NeverNote extends QMainWindow{
     	menuBar.narrowListView.blockSignals(false);
     	
     	mainLeftRightSplitter.addWidget(noteTableView);
-    	// ICHANGED browserWindow → tabBrowser
     	mainLeftRightSplitter.addWidget(tabBrowser);
     	
     	restoreWindowState(false);
@@ -4658,7 +4622,6 @@ public class NeverNote extends QMainWindow{
     	menuBar.narrowListView.blockSignals(false);
     	browserIndexSplitter.setVisible(true);
         browserIndexSplitter.addWidget(noteTableView);
-		// ICHANGED browserWindow → tabBrowser
 		browserIndexSplitter.addWidget(tabBrowser);
 		
         restoreWindowState(false);
@@ -4732,7 +4695,6 @@ public class NeverNote extends QMainWindow{
     	Note note = conn.getNoteTable().getNote(guid, true, true, false, true, true);
     	// We have a new external editor to create
     	QIcon appIcon = new QIcon(iconPath+"nevernote.png");
-    	// ICHANGED
     	ExternalBrowse newBrowser = new ExternalBrowse(conn, cbObserver);
     	
     	newBrowser.setWindowIcon(appIcon);
@@ -4787,7 +4749,7 @@ public class NeverNote extends QMainWindow{
 		}
 	}
 	
-	// ICHANGED 連想ノートリストから新しいタブで開く
+	// 連想ノートリストから新しいタブで開く
 	@SuppressWarnings("unused")
 	private void openNewTabFromRNL(){
 		if(rensoNotePressedItemGuid != null){
@@ -4800,8 +4762,7 @@ public class NeverNote extends QMainWindow{
 			conn.getHistoryTable().addHistory("rensoItemClick", prevCurrentNoteGuid, rensoNotePressedItemGuid);
 		}
 	}
-
-	// ICHANGED
+	
 	private void openTabEditor(String guid) {
 		
 		Note note = conn.getNoteTable().getNote(guid, true, true, false, true, true);
@@ -4847,20 +4808,26 @@ public class NeverNote extends QMainWindow{
 			}
 		}
 	}
+	
+	// タブが閉じられた
+	@SuppressWarnings("unused")
+	private void tabCloseRequested(int index) {
+		tabWindowClosing((TabBrowse)tabBrowser.widget(index));
+	}
 
-	// ICHANGED タブが閉じられた
-	private void tabWindowClosing(int index) {
+	// タブが閉じられた
+	private void tabWindowClosing(TabBrowse tab) {
 		// タブが1つしかなかったら閉じない
 		if (tabBrowser.count() <= 1) {
 			return;
 		}
 
-		TabBrowse t = (TabBrowse) tabBrowser.widget(index);
-		String guid = t.getBrowserWindow().getNote().getGuid();
-		String content = t.getBrowserWindow().getContent();
-		BrowserWindow browser = t.getBrowserWindow();
+		int index = tabBrowser.indexOf(tab);
+		String guid = tab.getBrowserWindow().getNote().getGuid();
+		String content = tab.getBrowserWindow().getContent();
+		BrowserWindow browser = tab.getBrowserWindow();
 		// ノートが変更されていたら保存
-		if (t.getNoteDirty()) {
+		if (tab.getNoteDirty()) {
 			saveNoteTabBrowser(guid, content, true, browser);
 		}
 
@@ -4887,8 +4854,8 @@ public class NeverNote extends QMainWindow{
 		// タブのインデックスを更新（削除によって空いた部分を詰める）
 		for(int i = index ; tabWindows.containsKey(i + 1) ; i++){
 			// tabWindows
-			TabBrowse tab = tabWindows.get(i + 1);
-			tabWindows.put(i, tab);
+			TabBrowse nextTab = tabWindows.get(i + 1);
+			tabWindows.put(i, nextTab);
 			tabWindows.remove(i + 1);
 			// noteDirty
 			boolean isNoteDirty = noteDirty.get(i + 1);
@@ -4929,6 +4896,12 @@ public class NeverNote extends QMainWindow{
 	private void noteAddNewTab() {
 		saveNote();
 		
+		// ノートを何も開いていないときは現在のタブにノート追加
+		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
+			addNote();
+			return;
+		}
+		
 		// ノート追加前に開いていたノートとの関連性を記録するためにguidをとっておく
 		TabBrowse prevTab = (TabBrowse)tabBrowser.currentWidget();
 		String prevTabGuid = null;
@@ -4951,7 +4924,6 @@ public class NeverNote extends QMainWindow{
 		}
 	}
 	
-	// ICHANGED
 	private void openEmptyTabEditor() {
 		// 新しいタブエディタを作成
 		TabBrowse newBrowser = new TabBrowse(conn, tabBrowser, cbObserver);
@@ -4984,14 +4956,12 @@ public class NeverNote extends QMainWindow{
     //** These functions deal with Note specific things
     //***************************************************************
     //***************************************************************    
-	// ICHANGED
 	private void setNoteDirty() {
 		for (String guid: selectedNoteGUIDs) {
 			setNoteDirty(guid);
 		}
 	}
 	
-	// ICHANGED
 	private void setNoteDirty(String targetGuid) {
 		logger.log(logger.EXTREME, "Entering NeverNote.setNoteDirty()");
 		
@@ -5072,7 +5042,6 @@ public class NeverNote extends QMainWindow{
     	noteCache.remove(guid);
 		noteCache.put(guid, unicode.toString());
     	if (guid.equals(currentNoteGuid)) {
-    		// ICHANGED
     		int index = tabBrowser.currentIndex();
     		noteDirty.put(index, true);
     		browserWindow.setContent(unicode);
@@ -5084,7 +5053,6 @@ public class NeverNote extends QMainWindow{
     	
     }
     
-	// ICHANGED
 	private void saveNoteTabBrowser(String guid, String content, Boolean save,
 			BrowserWindow browser) {
 		QTextCodec codec = QTextCodec.codecForName("UTF-8");
@@ -5098,7 +5066,6 @@ public class NeverNote extends QMainWindow{
 	}
 	
     private void saveNote() {
-    	// ICHANGED
     	// すべてのタブに対して、Dirtyを確認し、trueならセーブする
     	Collection<Integer> dirtyIndex = noteDirty.keySet();
     	Iterator<Integer> indexIterator = dirtyIndex.iterator();
@@ -5150,7 +5117,6 @@ public class NeverNote extends QMainWindow{
 			browserWindow.setEnabled(false);
 			return;
 		}
-		// ICHANGED
 		inkNote.put(tabBrowser.currentIndex(), false);
 		readOnly.put(tabBrowser.currentIndex(), false);
 		
@@ -5174,13 +5140,11 @@ public class NeverNote extends QMainWindow{
 			return;
 		}
 		
-		// ICHANGED
 		tabBrowser.setTabTitle(tabBrowser.currentIndex(), currentNote.getTitle());
 		
 		loadNoteBrowserInformation(browserWindow, currentNoteGuid, currentNote);
 	}
 
-	// ICHANGED
 	private void loadNoteBrowserInformation(BrowserWindow browser, String guid, Note note) {
 		NoteFormatter	formatter = new NoteFormatter(logger, conn, tempFiles);
 		formatter.setNote(note, Global.pdfPreview());
@@ -5312,7 +5276,6 @@ public class NeverNote extends QMainWindow{
 		browser.setAllTags(tagList);
 		
 		browser.setCurrentTags(note.getTagNames());
-		// ICHANGED
 		for (TabBrowse tab: tabWindows.values()) {
 			if (tab.getBrowserWindow().getNote().getGuid().equals(guid)) {
 				int index = tabBrowser.indexOf(tab);
@@ -5334,7 +5297,6 @@ public class NeverNote extends QMainWindow{
 		logger.log(logger.HIGH, "Leaving NeverNote.refreshEvernoteNote");
 	}
 	
-	// ICHANGED
 	@SuppressWarnings("unused")
 	private void toggleNoteAttributes() {
 		menuBar.noteAttributes.setChecked(!menuBar.noteAttributes.isChecked());
@@ -5345,7 +5307,6 @@ public class NeverNote extends QMainWindow{
 	private void toggleNoteInformation() {
 		logger.log(logger.HIGH, "Entering NeverNote.toggleNoteInformation");
     	
-    	// ICHANGED
 		boolean isChecked = menuBar.noteAttributes.isChecked();
 		
     	for(int i = 0; i < tabBrowser.count(); i++){
@@ -5443,6 +5404,7 @@ public class NeverNote extends QMainWindow{
     		return;
     	if (currentNoteGuid.equals(""))
     		return;
+    	
     	String title = null;
     	if (selectedNoteGUIDs.size() == 1)
     		title = conn.getNoteTable().getNote(selectedNoteGUIDs.get(0),false,false,false,false,false).getTitle();
@@ -5465,12 +5427,17 @@ public class NeverNote extends QMainWindow{
     					return;
     			}
     		}
-    		if (selectedNoteGUIDs.size() == 0 && !currentNoteGuid.equals("")) 
+    		if (selectedNoteGUIDs.size() == 0 && !currentNoteGuid.equals("")) {
     			selectedNoteGUIDs.add(currentNoteGuid);
-    		closeTabs(selectedNoteGUIDs);
-    		for (int i=0; i<selectedNoteGUIDs.size(); i++) {
-    			listManager.deleteNote(selectedNoteGUIDs.get(i));
     		}
+    		
+    		List<String> deleteNoteGUIDs = new ArrayList<String>(selectedNoteGUIDs);	// タブを閉じるとselectedNoteGUIDsが変わってしまうのでその前にコピー
+    		closeTabs(selectedNoteGUIDs);
+    		for (String guid : deleteNoteGUIDs) {
+    			listManager.deleteNote(guid);
+    		}
+    		
+    		closeExternalWindows(deleteNoteGUIDs);
     	} else { 
     		// If we are deleting from the trash.
     		if (Global.verifyDelete()) {
@@ -5491,30 +5458,31 @@ public class NeverNote extends QMainWindow{
     		}
     		if (selectedNoteGUIDs.size() == 0 && !currentNoteGuid.equals("")) 
     			selectedNoteGUIDs.add(currentNoteGuid);
-    		for (int i=selectedNoteGUIDs.size()-1; i>=0; i--) {
+    		
+    		List<String> deleteNoteGUIDs = new ArrayList<String>(selectedNoteGUIDs);	// タブを閉じるとselectedNoteGUIDsが変わってしまうのでその前にコピー
+    		for (int i=deleteNoteGUIDs.size()-1; i>=0; i--) {
     			for (int j=listManager.getNoteTableModel().rowCount()-1; j>=0; j--) {
     	    		QModelIndex modelIndex =  listManager.getNoteTableModel().index(j, Global.noteTableGuidPosition);
     	    		if (modelIndex != null) {
     	    			SortedMap<Integer, Object> ix = listManager.getNoteTableModel().itemData(modelIndex);
     	    			String tableGuid =  (String)ix.values().toArray()[0];
-    	    			if (tableGuid.equals(selectedNoteGUIDs.get(i))) {
+    	    			if (tableGuid.equals(deleteNoteGUIDs.get(i))) {
     	    				listManager.getNoteTableModel().removeRow(j);
     	    				j=-1;
     	    			}
     	    		}
     	    	}
-    			closeTabs(selectedNoteGUIDs);
-    			listManager.expungeNote(selectedNoteGUIDs.get(i));
+    			closeTab(deleteNoteGUIDs.get(i));
+    			listManager.expungeNote(deleteNoteGUIDs.get(i));
     			
-    			// ICHANGED
-    			conn.getHistoryTable().expungeHistory(selectedNoteGUIDs.get(i));
-    			conn.getExcludedTable().expungeExcludedNote(selectedNoteGUIDs.get(i));
-    			conn.getStaredTable().expungeStaredNote(selectedNoteGUIDs.get(i));
-    			
+    			conn.getHistoryTable().expungeHistory(deleteNoteGUIDs.get(i));
+    			conn.getExcludedTable().expungeExcludedNote(deleteNoteGUIDs.get(i));
+    			conn.getStaredTable().expungeStaredNote(deleteNoteGUIDs.get(i));
     		}
+    		
+    		closeExternalWindows(deleteNoteGUIDs);
     	}
-    	currentNoteGuid = "";
-    	closeExternalWindows(selectedNoteGUIDs);
+    	
 		if (currentNoteGuid == null || currentNoteGuid.equals("")) {
 			menuBar.noteAddNewTab.setEnabled(false);
 		}
@@ -5528,50 +5496,42 @@ public class NeverNote extends QMainWindow{
     
     // 対象ノートをタブで開いていたら閉じる
     private void closeTabs(List<String> noteGUIDs) {
-		Collection<TabBrowse> tabBrowsers = tabWindows.values();
-		Iterator<TabBrowse> tabIterator = tabBrowsers.iterator();
-		Collection<Integer> tabIndexes = tabWindows.keySet();
-		Iterator<Integer>	indexIterator = tabIndexes.iterator();
-		List<Integer> closeIndexes = new ArrayList<Integer>();	//イテレータ操作中に中身をいじっちゃダメなので
-
-		while (tabIterator.hasNext()) {
-			TabBrowse tab = tabIterator.next();
-			int index = indexIterator.next();
-			String guid = tab.getBrowserWindow().getNote().getGuid();
-			
-			for(int i = 0; i < noteGUIDs.size(); i++){
-				if(guid.equals(noteGUIDs.get(i))){
-					closeIndexes.add(index);
-				}
-			}
-		}
-		
-		for(int i = closeIndexes.size() - 1; i >= 0; i--){
-			tabWindowClosing(closeIndexes.get(i));
-		}
+    	for (String guid : noteGUIDs) {
+    		closeTab(guid);
+    	}
+    }
+    
+    // 対象ノートをタブで開いていたら閉じる
+    private void closeTab(String noteGUID) {
+    	List<TabBrowse> closeTabs = new ArrayList<TabBrowse>();
+    	
+    	for (TabBrowse tab : tabWindows.values()) {
+    		String guid = tab.getBrowserWindow().getNote().getGuid();
+    		
+    		if (guid.equals(noteGUID)) {
+    			closeTabs.add(tab);
+    		}
+    	}
+    	
+    	for (TabBrowse tab : closeTabs) {
+    		tabWindowClosing(tab);
+    	}
     }
     
     // 対象ノートを外部ウィンドウで開いていたら閉じる
     private void closeExternalWindows(List<String> noteGUIDs) {
-		Collection<ExternalBrowse> 	windows = externalWindows.values();
-		Iterator<ExternalBrowse> 	windowIterator = windows.iterator();
-		Collection<String> 			guids = externalWindows.keySet();
-		Iterator<String> 			guidIterator = guids.iterator();
-		List<ExternalBrowse>		closeWindows = new ArrayList<ExternalBrowse>();	// イテレータ操作中に中身をいじっちゃダメなので
+		List<ExternalBrowse> closeWindows = new ArrayList<ExternalBrowse>();
 		
-		while (windowIterator.hasNext()) {
-			ExternalBrowse browser = windowIterator.next();
-			String guid = guidIterator.next();
-			
-			for (int i = 0; i < noteGUIDs.size(); i++) {
-				if (guid.equals(noteGUIDs.get(i))) {
-					closeWindows.add(browser);
+		for (Map.Entry<String, ExternalBrowse> e : externalWindows.entrySet()) {
+			for (String guid : noteGUIDs) {
+				if (guid.equals(e.getKey())) {
+					closeWindows.add(e.getValue());
 				}
 			}
 		}
 		
-		for (int i = closeWindows.size() - 1; i >= 0; i--) {
-			closeWindows.get(i).close();
+		for (ExternalBrowse externalBrowse : closeWindows) {
+			externalBrowse.close();
 		}
     }
     
@@ -5677,7 +5637,6 @@ public class NeverNote extends QMainWindow{
     	listManager.addNote(newNote, metadata);
 //    	noteTableView.insertRow(newNote, true, -1);
     	
-    	// ICHANGED
     	String prevCurrentNoteGuid = new String(currentNoteGuid);
     	
     	currentNote = newNote;
@@ -5685,7 +5644,7 @@ public class NeverNote extends QMainWindow{
     	// IFIXED こいつのせいで、ノート追加時にcurrentNoteGuidが更新されないので消す
     	// noteTableView.clearSelection();
     	
-    	// ICHANGED 新規に作成したノートとそれまで開いていたノートの関連性を追加
+    	// 新規に作成したノートとそれまで開いていたノートの関連性を追加
     	if (prevCurrentNoteGuid != null && !prevCurrentNoteGuid.equals("")) {
     		if (currentNoteGuid != null && !currentNoteGuid.equals("")) {
     			conn.getHistoryTable().addHistory("addNewNote", prevCurrentNoteGuid, currentNoteGuid);
@@ -5777,7 +5736,6 @@ public class NeverNote extends QMainWindow{
    			externalWindows.put(newGuid, b);
    		}
     	
-		// ICHANGED
 		for(int i = 0; i < tabBrowser.count(); i++){
 			TabBrowse b = (TabBrowse)tabBrowser.widget(i);
 			if (b.getBrowserWindow().getNote().getGuid().equals(oldGuid)) {
@@ -5801,7 +5759,7 @@ public class NeverNote extends QMainWindow{
     }
 	
     // Toggle the note editor button bar
-    // ICHANGED すべてのタブに
+    // すべてのタブに
     private void toggleEditorButtonBar() {
     	boolean isChecked = menuBar.showEditorBar.isChecked();
     	
@@ -5919,7 +5877,6 @@ public class NeverNote extends QMainWindow{
 		}
 		newNote.setResources(resList);
 		
-		// ICHANGED
 		// 操作履歴と除外ノートとスター付きノートも複製する
 		if(Global.getDuplicateRensoNote()) {
 			conn.getHistoryTable().duplicateHistory(newGuid, oldNote.getGuid());
@@ -5957,7 +5914,7 @@ public class NeverNote extends QMainWindow{
 		notebookTreeSelection();
 		refreshEvernoteNote(true);
 		
-		// ICHANGED ゴミ箱から元の画面に戻す。連想ノートリストをONに。
+		// ゴミ箱から元の画面に戻す。連想ノートリストをONに。
 		if (!rensoNoteListDock.isEnabled()) {
 			rensoNoteListDock.setEnabled(true);
 		}
@@ -5986,7 +5943,7 @@ public class NeverNote extends QMainWindow{
 		mergeNoteContents(masterGuid, sources);
 		currentNoteGuid = masterGuid;
 		
-		// ICHANGED 操作履歴と除外ノートとスター付きノートをマージ
+		// 操作履歴と除外ノートとスター付きノートをマージ
 		if(Global.getMergeRensoNote()) {
 			for (int i = 0; i < sources.size(); i++) {
 				String childGuid = sources.get(i);
@@ -6000,13 +5957,12 @@ public class NeverNote extends QMainWindow{
 			}
 		}
 		
-    	// ICHANGED　↓↓↓ここから↓↓↓
 		// マージしたノート(child)を外部ウィンドウで開いていたら、閉じる
 		Collection<ExternalBrowse> 	windows = externalWindows.values();
 		Iterator<ExternalBrowse> 	windowIterator = windows.iterator();
 		Collection<String> 			guids = externalWindows.keySet();
 		Iterator<String> 			guidIterator = guids.iterator();
-		List<ExternalBrowse>		closeWindows = new ArrayList<ExternalBrowse>();	// イテレータ操作中に中身をいじっちゃダメなので
+		List<ExternalBrowse>		closeWindows = new ArrayList<ExternalBrowse>();
 		
 		while (windowIterator.hasNext()) {
 			ExternalBrowse browser = windowIterator.next();
@@ -6022,36 +5978,25 @@ public class NeverNote extends QMainWindow{
 		for (int i = closeWindows.size() - 1; i >= 0; i--) {
 			closeWindows.get(i).close();
 		}
-		// ICHANGED ↑↑↑ここまで↑↑↑
 		
-    	// ICHANGED　↓↓↓ここから↓↓↓
     	// マージしたノート（child）をタブで開いていたら、閉じる
-		Collection<TabBrowse> tabBrowsers = tabWindows.values();
-		Iterator<TabBrowse> tabIterator = tabBrowsers.iterator();
-		Collection<Integer> tabIndexes = tabWindows.keySet();
-		Iterator<Integer>	indexIterator = tabIndexes.iterator();
-		List<Integer> closeIndexes = new ArrayList<Integer>();	//イテレータ操作中に中身をいじっちゃダメなので
-
-		while (tabIterator.hasNext()) {
-			TabBrowse tab = tabIterator.next();
-			int tabIndex = indexIterator.next();
+		List<TabBrowse> closeTabs = new ArrayList<TabBrowse>();
+		for (TabBrowse tab : tabWindows.values()) {
 			String guid = tab.getBrowserWindow().getNote().getGuid();
 			
-			for(int i = 0; i < sources.size(); i++){
-				if(guid.equals(sources.get(i))){
-					closeIndexes.add(tabIndex);
+			for (String source : sources) {
+				if (guid.equals(source)) {
+					closeTabs.add(tab);
 				}
 			}
 		}
-		
-		for(int i = closeIndexes.size() - 1; i >= 0; i--){
-			tabWindowClosing(closeIndexes.get(i));
+		for (TabBrowse tab : closeTabs) {
+			tabWindowClosing(tab);
 		}
-		// ICHANGED ↑↑↑ここまで↑↑↑		
 		
 		noteIndexUpdated(false);
 		// IFIXED 
-		// ICHANGED マージ後の新しいノートコンテンツを表示するためキャッシュを削除
+		// マージ後の新しいノートコンテンツを表示するためキャッシュを削除
 		noteCache.remove(masterGuid);
 		
 		refreshEvernoteNote(true);
@@ -6218,6 +6163,9 @@ public class NeverNote extends QMainWindow{
 			setMessage("EDAMUserException: " +e.getMessage());
 			return;
 		} catch (EDAMSystemException e) {
+			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+			}
 			setMessage("EDAMSystemException: " +e.getMessage());
 			return;
 		} catch (EDAMNotFoundException e) {
@@ -6231,7 +6179,6 @@ public class NeverNote extends QMainWindow{
 		
 		// If we've gotten this far, we have a good note.
 		if (historyWindow == null) {
-			// ICHANGED
 			historyWindow = new OnlineNoteHistory(logger, conn, cbObserver);
 			
 			historyWindow.historyCombo.activated.connect(this, "reloadHistoryWindow(String)");
@@ -6278,6 +6225,9 @@ public class NeverNote extends QMainWindow{
 				waitCursor(false);
 				return null;
 			} catch (EDAMSystemException e) {
+				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+					QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+				}
 				setMessage("EDAMSystemException: " +e.getMessage());
 				waitCursor(false);
 				return null;
@@ -6342,6 +6292,9 @@ public class NeverNote extends QMainWindow{
 			setMessage("EDAMUserException: " +e.getMessage());
 			return;
 		} catch (EDAMSystemException e) {
+			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
+				QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+			}
 			setMessage("EDAMSystemException: " +e.getMessage());
 			return;
 		} catch (TException e) {
@@ -6467,7 +6420,6 @@ public class NeverNote extends QMainWindow{
 	//**********************************************************
 	//**********************************************************
 	// An error has happended fetching a resource.  let the user know
-    // ICHANGED
 	private void resourceErrorMessage(int tabIndex) {
 		if (tabIndex < 0) {
 			return;
@@ -6591,7 +6543,6 @@ public class NeverNote extends QMainWindow{
 	public void refreshLists() {
 		logger.log(logger.EXTREME, "Entering NeverNote.refreshLists");
 		updateQuotaBar();
-		// ICHANGED
 		// すべてのタブのノートを調べて、Dirtyならばセーブする。その後refreshListsする。
 		Collection<Integer> tabIndex = noteDirty.keySet();
 		Iterator<Integer> indexIterator = tabIndex.iterator();
@@ -7442,7 +7393,7 @@ public class NeverNote extends QMainWindow{
 	//* View / Hide source HTML for a note
 	//*************************************************
 	public void viewSource() {
-		// ICHANGED すべてのタブに対して
+		// すべてのタブに対して
     	for(int i = 0; i < tabBrowser.count(); i++){
     		BrowserWindow browser = ((TabBrowse) tabBrowser.widget(i)).getBrowserWindow();
     		browser.showSource(menuBar.viewSource.isChecked());
@@ -7478,7 +7429,6 @@ public class NeverNote extends QMainWindow{
 		blockSignals(false);
 	}
 	
-	// ICHANGED
 	// タブが変更された
 	private void tabWindowChanged(int index) {
 		if (index < 0 || index >= tabBrowser.count()) {
@@ -7577,7 +7527,6 @@ public class NeverNote extends QMainWindow{
 		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 	}
 	
-	// ICHANGD
 	// 生存ノートテーブル→ゴミ箱（またはその逆）に切り替える
 	private void switchNoteTable(boolean toDeleted) {
     	clearNotebookFilter();
@@ -7605,7 +7554,7 @@ public class NeverNote extends QMainWindow{
     		Global.showDeleted = false;
     		menuBar.noteRestoreAction.setEnabled(false);
     		menuBar.noteRestoreAction.setVisible(false);
-    		// ICHANGED ゴミ箱から元の画面に戻す。連想ノートリストをONに。
+    		// ゴミ箱から元の画面に戻す。連想ノートリストをONに。
     		rensoNoteListDock.setEnabled(true);
     	} else {	// ゴミ箱へ
     		trashTree.itemSelectionChanged.disconnect(this, "trashTreeSelection()");
@@ -7614,7 +7563,7 @@ public class NeverNote extends QMainWindow{
     		Global.showDeleted = true;
     		menuBar.noteRestoreAction.setEnabled(true);
     		menuBar.noteRestoreAction.setVisible(true);
-    		// ICHANGED ゴミ箱を開く。連想ノートリストをOFFに。
+    		// ゴミ箱を開く。連想ノートリストをOFFに。
     		rensoNoteListDock.setEnabled(false);
     	}
     	
@@ -7628,7 +7577,6 @@ public class NeverNote extends QMainWindow{
     	browserWindow.setReadOnly(!newButton.isEnabled());
 	}
 
-	// ICHANGED
 	// ユーザが連想ノートリストのアイテムを選択した時の処理
 	@SuppressWarnings("unused")
 	private void rensoNoteItemPressed(QListWidgetItem current) {
@@ -7665,7 +7613,6 @@ public class NeverNote extends QMainWindow{
 		logger.log(logger.HIGH, "Nevernote.rensoNoteSelectionChangeを出た");
 	}
 	
-	// ICHANGED
 	// 関連ノートリストからノートを除外する
 	@SuppressWarnings("unused")
 	private void excludeNote() {
@@ -7675,7 +7622,6 @@ public class NeverNote extends QMainWindow{
 		}
 	}
 	
-	// ICHANGED
 	// 関連ノートリストからノートを除外する
 	private void excludeNote(String guid) {
 		if (Global.verifyExclude()) {
@@ -7704,7 +7650,6 @@ public class NeverNote extends QMainWindow{
 		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 	}
 	
-	// ICHANGED
 	// 関連ノートリストのノートにスターを付ける
 	@SuppressWarnings("unused")
 	private void starNote() {
@@ -7714,7 +7659,6 @@ public class NeverNote extends QMainWindow{
 		}
 	}
 	
-	// ICHANGED
 	// 関連ノートリストのノートにスターを付ける
 	private void starNote(String guid) {
 		// スター付きノートテーブルに追加
@@ -7723,7 +7667,6 @@ public class NeverNote extends QMainWindow{
 		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 	}
 	
-	// ICHANGED
 	// 関連ノートリストのノートからスターを外す
 	@SuppressWarnings("unused")
 	private void unstarNote() {
@@ -7733,7 +7676,6 @@ public class NeverNote extends QMainWindow{
 		}
 	}
 	
-	// ICHANGED
 	// 関連ノートリストのノートからスターを外す
 	private void unstarNote(String guid) {
 		// スター付きノートテーブルから削除
@@ -7742,7 +7684,6 @@ public class NeverNote extends QMainWindow{
 		rensoNoteListDock.getRensoNoteList().refreshRensoNoteList(currentNoteGuid);
 	}
 	
-	// ICHANGED
 	// currentNoteGuidを返す
 	public String getCurrentNoteGuid() {
 		return currentNoteGuid;
@@ -7784,5 +7725,17 @@ public class NeverNote extends QMainWindow{
 	// 連想ノートリストのgetter
 	public RensoNoteList getRensoNoteList() {
 		return rensoNoteListDock.getRensoNoteList();
+	}
+	
+	// 帯域制限の超過をユーザに通知
+	@SuppressWarnings("unused")
+	private void informRateLimit(Integer rateLimitDuration) {
+		QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + rateLimitDuration + " seconds."));
+	}
+	
+	// ツールバーの「新規」ボタンの接続スロットを設定
+	public void connectNewButtonSlot(String slot) {
+		newButton.triggered.disconnect();
+		newButton.triggered.connect(this, slot);
 	}
 }

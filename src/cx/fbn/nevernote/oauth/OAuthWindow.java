@@ -40,7 +40,7 @@ import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
 public class OAuthWindow extends QDialog {
-	// ICHANGED 自分のキーに変更
+	// 自分のキーに変更
 	private final static String consumerKey = ""; 
 	private final static String consumerSecret = "";
 	

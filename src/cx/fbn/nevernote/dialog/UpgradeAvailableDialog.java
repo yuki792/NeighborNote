@@ -70,7 +70,7 @@ public class UpgradeAvailableDialog extends QDialog {
 		input.addWidget(doNotRemindeMe,2,1);
 		
 		QHBoxLayout labelLayout = new QHBoxLayout();
-		downloadLabel = new QLabel(tr("Do you want to download now?"));
+		downloadLabel = new QLabel(tr("Would you like to download now?"));
 		labelLayout.addStretch();
 		labelLayout.addWidget(downloadLabel);
 		labelLayout.addStretch();

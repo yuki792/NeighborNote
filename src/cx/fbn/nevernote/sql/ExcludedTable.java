@@ -17,7 +17,6 @@
  *
 */
 
-// ICHANGED
 package cx.fbn.nevernote.sql;
 
 import cx.fbn.nevernote.sql.driver.NSqlQuery;

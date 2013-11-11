@@ -131,7 +131,6 @@ public class ListManager  {
 		reloadIndexes();
 		
  		notebookSignal = new NotebookSignal();
- 		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
  		notebookCounterRunner = new CounterRunner("notebook_counter.log", CounterRunner.NOTEBOOK, 
  						Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
  						Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
@@ -141,7 +140,6 @@ public class ListManager  {
 		notebookThread.start();
 		
  		tagSignal = new TagSignal();
- 		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
  		tagCounterRunner = new CounterRunner("tag_counter.log", CounterRunner.TAG, 
  				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
  				Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
@@ -151,7 +149,6 @@ public class ListManager  {
 		tagThread.start();
 		
  		trashSignal = new TrashSignal();
- 		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
  		trashCounterRunner = new CounterRunner("trash_counter.log", CounterRunner.TRASH, 
  				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
  				Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
@@ -164,7 +161,6 @@ public class ListManager  {
 		tagSignal = new TagSignal();
 		
 		logger.log(logger.EXTREME, "Setting save thread");
-		// ICHANGED Global.getBehaviorDatabaseUrl()を追加
 		saveRunner = new SaveRunner("saveRunner.log", 
 				Global.getDatabaseUrl(), Global.getIndexDatabaseUrl(), Global.getResourceDatabaseUrl(), Global.getBehaviorDatabaseUrl(),
 				Global.getDatabaseUserid(), Global.getDatabaseUserPassword(), Global.cipherPassword);
@@ -223,7 +219,6 @@ public class ListManager  {
  	//* Refresh lists after a db sync
  	//***************************************************************
  	//***************************************************************
- 	// ICHANGED
  	public void saveUpdatedNotes(HashMap<Integer, Note> notes, HashMap<Integer, String> contents) {
  		for (int i = 0; i < notes.size(); i++) {
  			Note n = notes.get(i);
@@ -233,7 +228,6 @@ public class ListManager  {
  		}
  	}
  	
- 	// ICHANGED
  	public void refreshLists() {
  		setSavedSearchIndex(conn.getSavedSearchTable().getAll());
  		setTagIndex(conn.getTagTable().getAll());
@@ -494,7 +488,7 @@ public class ListManager  {
 	// Save Note Tags
 	public void saveNoteTags(String noteGuid, List<String> tags, boolean isDirty) {
 		logger.log(logger.HIGH, "Entering ListManager.saveNoteTags");
-		// ICHANGED　同じタグが付けられた履歴を記録（必ずdeleteNoteTagの前にやる）
+		// 同じタグが付けられた履歴を記録（必ずdeleteNoteTagの前にやる）
 		for (int i = 0; i < tags.size(); i++) {
 			String tagName = tags.get(i);
 			for (int j = 0; j < tagIndex.size(); j++) {

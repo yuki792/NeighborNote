@@ -80,7 +80,7 @@ public class RensoNoteListDock extends QDockWidget {
 		weightingModeSelect.setToolTip(tr("Preset Weighting Mode"));
 		weightingModeSelect.insertItem(PresetMode.Standard.ordinal(), tr("Standard"));
 		weightingModeSelect.insertItem(PresetMode.ConcurrentBrowse.ordinal(), tr("Concurrent Browse"));
-		weightingModeSelect.insertItem(PresetMode.OperationToOrganize.ordinal(), ("Operation to Organize"));
+		weightingModeSelect.insertItem(PresetMode.OperationToOrganize.ordinal(), tr("Operation to Organize"));
 		weightingModeSelect.insertItem(PresetMode.ContentSimilarity.ordinal(), tr("Content Similarity"));
 		weightingModeSelect.insertItem(PresetMode.Custom.ordinal(), tr("Custom"));
 		int savedModeIndex = 0;

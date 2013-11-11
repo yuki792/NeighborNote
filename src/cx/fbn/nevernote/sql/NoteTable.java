@@ -246,7 +246,7 @@ public class NoteTable {
 	// Get a note by Guid
 	public Note getNote(String noteGuid, boolean loadContent, boolean loadResources, boolean loadRecognition, boolean loadBinary, boolean loadTags) {
 
-		// ICHANGED 自分のキーに変更
+		// 自分のキーに変更
 //		extractMetadata("otherKey:{values};kimaira792:{titleColor=fff;pinned=true;};finalKey:{values1);");
 		if (noteGuid == null)
 			return null;
@@ -807,13 +807,13 @@ public class NoteTable {
 			logger.log(logger.MEDIUM, resQuery.lastError());
 		}
 		
-		// ICHANGED 操作履歴テーブルのguidを更新
+		// 操作履歴テーブルのguidを更新
 		db.getHistoryTable().updateHistoryGuid(newGuid, oldGuid);
 		
-		// ICHANGED 除外ノートテーブルのguidを更新
+		// 除外ノートテーブルのguidを更新
 		db.getExcludedTable().updateExcludedNoteGuid(newGuid, oldGuid);
 		
-		// ICHANGED スター付きノートテーブルのguidを更新
+		// スター付きノートテーブルのguidを更新
 		db.getStaredTable().updateStaredNoteGuid(newGuid, oldGuid);
 	}
 	// Update a note
@@ -1616,7 +1616,7 @@ public class NoteTable {
 
 	// Extract metadata from a note's Note.attributes.sourceApplication
 	private NoteMetadata extractMetadata(String sourceApplication) {
-		// ICHANGED 自分のキーに変更
+		// 自分のキーに変更
 		String consumerKey = "kimaira792:{";
 		
 		int startPos = sourceApplication.indexOf(consumerKey);
@@ -1678,7 +1678,7 @@ public class NoteTable {
 			if (value.length()>1 && (!value.toString().trim().endsWith(";") || !value.toString().trim().endsWith(";")))   
 				value.append("; ");
 			
-			// ICHANGED 自分のキーに変更
+			// 自分のキーに変更
 			value.append("kimaira792:{");
 			value.append(metaString);
 			value.append("};");
@@ -1706,7 +1706,7 @@ public class NoteTable {
 		if (sourceApplication == null) 
 			return "";
 		
-		// ICHANGED 自分のキーに変更
+		// 自分のキーに変更
 		String consumerKey = "kimaira792:{";
 		int startPos = sourceApplication.indexOf(consumerKey);
 		if (startPos < 0 )
@@ -1726,7 +1726,6 @@ public class NoteTable {
 		}
 	}
 	
-	// ICHANGED
 	// guidからノートのタイトルをゲット
 	public String getNoteTitle(String noteGuid) {
 
@@ -1755,21 +1754,6 @@ public class NoteTable {
 
 		return noteTitle;
 	}
-
-	/*
-	 * // ICHANGED // ノートがアクティブかどうか調べる public boolean isNoteActive(String guid){
-	 * if(guid == null) return false; if(guid.trim().equals("")) return false;
-	 *
-	 * NSqlQuery query = new NSqlQuery(db.getConnection());
-	 * query.prepare("Select active from Note where guid=:guid");
-	 * query.bindValue(":guid", guid); if(!query.exec()){
-	 * logger.log(logger.EXTREME, "note.isNoteActive SQL retrieve has failed.");
-	 * return false; } if(!query.next()){ logger.log(logger.EXTREME,
-	 * "SQL Retrieve failed for note guid " +guid + " in isNoteActive()");
-	 * return false; }
-	 *
-	 * boolean retVal = query.valueBoolean(0, false); return retVal; }
-	 */
 	
 	// ノートコンテンツのプレーンテキストを取得
 	public String getNoteContentText(String noteGuid) {
@@ -1798,6 +1782,44 @@ public class NoteTable {
 		String noteContentText = query.valueString(0);
 
 		return noteContentText;
+	}
+	
+	// Evernoteサムネイルを取得
+	public QByteArray getENThumbnail(String guid) {
+		boolean check;			
+        NSqlQuery query = new NSqlQuery(db.getConnection());
+        				
+		check = query.prepare("Select enThumbnail from note where guid=:guid");
+		query.bindValue(":guid", guid);
+		check = query.exec();
+		if (!check) {
+			logger.log(logger.EXTREME, "Note SQL get enThumbail failed: " +query.lastError().toString());
+		}
+		
+		if (query.next())  {
+			try {
+				if (query.getBlob(0) != null) {
+					return new QByteArray(query.getBlob(0)); 
+				}
+			} catch (java.lang.IllegalArgumentException e) {
+				return null;
+			}
+		}
+		return null;
+	}
+	
+	// Evernoteサムネイルを登録
+	public void setENThumbnail(String guid, QByteArray thumbnail) {
+		boolean check;
+        NSqlQuery query = new NSqlQuery(db.getConnection());
+        				
+		check = query.prepare("Update note set enThumbnail = :enThumbnail where guid=:guid");
+		query.bindValue(":guid", guid);
+		query.bindValue(":enThumbnail", thumbnail.toByteArray());
+		check = query.exec();
+		if (!check) {
+			logger.log(logger.EXTREME, "Note SQL set enThumbail failed: " +query.lastError().toString());
+		}
 	}
 }	
 
