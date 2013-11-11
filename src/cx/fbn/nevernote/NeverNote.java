@@ -3000,7 +3000,7 @@ public class NeverNote extends QMainWindow{
 		QMessageBox.about(this, 
 						tr("About NeighborNote"),
 						tr("<h4><center><b>NeighborNote</b></center></h4><hr><center>Version ")
-						+Global.version + "(based on NixNote 1.5)"
+						+Global.version + "(based on NixNote 1.6)"
 						//+"1.2.120724"
 						+tr("<hr>"
 								+"Open Source Evernote Client.<br><br>" 
