@@ -124,10 +124,11 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 		OAuthTokenizer tokenizer = new OAuthTokenizer();
     	AESEncrypter aes = new AESEncrypter();
     	try {
-			aes.decrypt(new FileInputStream(Global.getFileManager().getHomeDirFile("oauth.txt")));
+			aes.decrypt(new FileInputStream(Global.getFileManager().getHomeDirFile("oauthkey.txt")));
 		} catch (FileNotFoundException e) {
 			logger.log(logger.HIGH, "Evernoteサムネイル取得中に例外発生：FileNotFoundException");
 			e.printStackTrace();
+			return null;
 		}
 		String authString = aes.getString();
 		String oauthToken = new String();
