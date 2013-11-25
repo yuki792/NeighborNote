@@ -4823,13 +4823,13 @@ public class NeverNote extends QMainWindow{
 		}
 
 		int index = tabBrowser.indexOf(tab);
-		String guid = tab.getBrowserWindow().getNote().getGuid();
-		String content = tab.getBrowserWindow().getContent();
+//		String guid = tab.getBrowserWindow().getNote().getGuid();
+//		String content = tab.getBrowserWindow().getContent();
 		BrowserWindow browser = tab.getBrowserWindow();
-		// ノートが変更されていたら保存
-		if (tab.getNoteDirty()) {
-			saveNoteTabBrowser(guid, content, true, browser);
-		}
+//		// ノートが変更されていたら保存
+//		if (tab.getNoteDirty()) {
+//			saveNoteTabBrowser(guid, content, true, browser);
+//		}
 
 		// シグナル切断
 		browser.noteSignal.tagsChanged.disconnect();
@@ -5053,17 +5053,17 @@ public class NeverNote extends QMainWindow{
     	
     }
     
-	private void saveNoteTabBrowser(String guid, String content, Boolean save,
-			BrowserWindow browser) {
-		QTextCodec codec = QTextCodec.codecForName("UTF-8");
-		QByteArray unicode = codec.fromUnicode(content);
-		noteCache.remove(guid);
-		noteCache.put(guid, unicode.toString());
-		if (save) {
-			thumbnailRunner.addWork("GENERATE " + guid);
-			saveNote(guid, browser);
-		}
-	}
+//	private void saveNoteTabBrowser(String guid, String content, Boolean save,
+//			BrowserWindow browser) {
+//		QTextCodec codec = QTextCodec.codecForName("UTF-8");
+//		QByteArray unicode = codec.fromUnicode(content);
+//		noteCache.remove(guid);
+//		noteCache.put(guid, unicode.toString());
+//		if (save) {
+//			thumbnailRunner.addWork("GENERATE " + guid);
+//			saveNote(guid, browser);
+//		}
+//	}
 	
     private void saveNote() {
     	// すべてのタブに対して、Dirtyを確認し、trueならセーブする
