@@ -282,6 +282,11 @@ public class DatabaseConnection {
 			executeSql("update note set attributeContentClass = ''");
 		}
 		
+		// Evernoteサムネイルカラムを追加
+		if (!dbTableColumnExists("NOTE", "ENTHUMBNAIL")) {
+			executeSql("alter table note add column enThumbNail Blob");
+		}
+		
 		// Apache Luceneを使った日本語検索のためのプレーンテキストノートコンテンツカラムを準備
 		if (!dbTableColumnExists("NOTE", "CONTENTTEXT")) {
 			executeSql("alter table note add column contentText VarChar");
@@ -306,11 +311,6 @@ public class DatabaseConnection {
 			Global.rebuildFullTextNoteTarget(this);
 		}
 		
-		// Evernoteサムネイルカラムを追加
-		if (!dbTableColumnExists("NOTE", "ENTHUMBNAIL")) {
-			executeSql("alter table note add column enThumbNail Blob");
-		}
-		
 		// Apache Luceneを使った日本語検索のためのプレーンテキストノートリソースカラムを準備
 		NSqlQuery rQuery = new NSqlQuery(resourceConn);
 		rQuery.exec("select TABLE_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='NOTERESOURCES' and COLUMN_NAME='RESOURCETEXT'");
@@ -324,6 +324,8 @@ public class DatabaseConnection {
 			
 			Global.rebuildFullTextResourceTarget(this);
 		}
+		
+		// 注意：ここから先でnoteテーブルとnoteResourcesテーブルの構造を変更するな。全文検索ができなくなる。
 	}
 	
 	public void executeSql(String sql) {
