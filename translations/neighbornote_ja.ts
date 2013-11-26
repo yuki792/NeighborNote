@@ -553,6 +553,22 @@ be lost.  Please review the note to recover any critical data before restarting.
         <translation>帯域制限に到達</translation>
     </message>
     <message>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6167"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6229"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6296"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="7733"/>
+        <source>Evernote usage has been temporarily exceeded. Please try again in </source>
+        <translation>一時的に Evernote 利用上限を超えました。</translation>
+    </message>
+    <message>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6167"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6229"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6296"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="7733"/>
+        <source> seconds.</source>
+        <translation>秒後に操作をやり直して下さい。</translation>
+    </message>
+    <message>
         <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6172"/>
         <source>Note not found on server.</source>
         <translation>サーバにノートが見つかりませんでした。</translation>
@@ -2555,6 +2571,16 @@ Are you sure you want to continue?</source>
         <location filename="../src/cx/fbn/nevernote/dialog/ShareNotebook.java" line="236"/>
         <source>Rate limit reached</source>
         <translation>帯域制限に到達</translation>
+    </message>
+    <message>
+        <location filename="../src/cx/fbn/nevernote/dialog/ShareNotebook.java" line="236"/>
+        <source>Evernote usage has been temporarily exceeded. Please try again in </source>
+        <translation>一時的に Evernote 利用上限を超えました。</translation>
+    </message>
+    <message>
+        <location filename="../src/cx/fbn/nevernote/dialog/ShareNotebook.java" line="236"/>
+        <source> seconds.</source>
+        <translation>秒後に操作をやり直して下さい。</translation>
     </message>
 </context>
 <context>

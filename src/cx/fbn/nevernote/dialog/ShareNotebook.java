@@ -233,7 +233,7 @@ public class ShareNotebook extends QDialog {
 				e.printStackTrace();
 			} catch (EDAMSystemException e) {
 				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
-					QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+					QMessageBox.warning(this, tr("Rate limit reached"), tr("Evernote usage has been temporarily exceeded. Please try again in ") +  + e.getRateLimitDuration() + tr(" seconds."));
 				}
 				e.printStackTrace();
 			} catch (TException e) {

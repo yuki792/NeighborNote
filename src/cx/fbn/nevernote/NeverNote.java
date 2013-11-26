@@ -6164,7 +6164,7 @@ public class NeverNote extends QMainWindow{
 			return;
 		} catch (EDAMSystemException e) {
 			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
-				QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+				QMessageBox.warning(this, tr("Rate limit reached"), tr("Evernote usage has been temporarily exceeded. Please try again in ") +  + e.getRateLimitDuration() + tr(" seconds."));
 			}
 			setMessage("EDAMSystemException: " +e.getMessage());
 			return;
@@ -6226,7 +6226,7 @@ public class NeverNote extends QMainWindow{
 				return null;
 			} catch (EDAMSystemException e) {
 				if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
-					QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+					QMessageBox.warning(this, tr("Rate limit reached"), tr("Evernote usage has been temporarily exceeded. Please try again in ") +  + e.getRateLimitDuration() + tr(" seconds."));
 				}
 				setMessage("EDAMSystemException: " +e.getMessage());
 				waitCursor(false);
@@ -6293,7 +6293,7 @@ public class NeverNote extends QMainWindow{
 			return;
 		} catch (EDAMSystemException e) {
 			if (e.getErrorCode() == EDAMErrorCode.RATE_LIMIT_REACHED) {
-				QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + e.getRateLimitDuration() + " seconds."));
+				QMessageBox.warning(this, tr("Rate limit reached"), tr("Evernote usage has been temporarily exceeded. Please try again in ") +  + e.getRateLimitDuration() + tr(" seconds."));
 			}
 			setMessage("EDAMSystemException: " +e.getMessage());
 			return;
@@ -7730,7 +7730,7 @@ public class NeverNote extends QMainWindow{
 	// 帯域制限の超過をユーザに通知
 	@SuppressWarnings("unused")
 	private void informRateLimit(Integer rateLimitDuration) {
-		QMessageBox.warning(this, tr("Rate limit reached"), tr("Rate limit reached.\nRetry your request in " + rateLimitDuration + " seconds."));
+		QMessageBox.warning(this, tr("Rate limit reached"), tr("Evernote usage has been temporarily exceeded. Please try again in ") +  + rateLimitDuration + tr(" seconds."));
 	}
 	
 	// ツールバーの「新規」ボタンの接続スロットを設定

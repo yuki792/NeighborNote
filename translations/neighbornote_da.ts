@@ -481,6 +481,22 @@ be lost.  Please review the note to recover any critical data before restarting.
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6167"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6229"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6296"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="7733"/>
+        <source>Evernote usage has been temporarily exceeded. Please try again in </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6167"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6229"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6296"/>
+        <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="7733"/>
+        <source> seconds.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../src/cx/fbn/nevernote/NeverNote.java" line="6172"/>
         <source>Note not found on server.</source>
         <translation type="unfinished"></translation>
@@ -2359,6 +2375,16 @@ Are you sure you want to continue?</source>
     <message>
         <location filename="../src/cx/fbn/nevernote/dialog/ShareNotebook.java" line="236"/>
         <source>Rate limit reached</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cx/fbn/nevernote/dialog/ShareNotebook.java" line="236"/>
+        <source>Evernote usage has been temporarily exceeded. Please try again in </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/cx/fbn/nevernote/dialog/ShareNotebook.java" line="236"/>
+        <source> seconds.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
