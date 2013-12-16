@@ -104,7 +104,6 @@ import com.trolltech.qt.gui.QApplication;
 import com.trolltech.qt.gui.QClipboard;
 import com.trolltech.qt.gui.QCloseEvent;
 import com.trolltech.qt.gui.QColor;
-import com.trolltech.qt.gui.QComboBox;
 import com.trolltech.qt.gui.QCursor;
 import com.trolltech.qt.gui.QDesktopServices;
 import com.trolltech.qt.gui.QDialog;
@@ -116,7 +115,6 @@ import com.trolltech.qt.gui.QHBoxLayout;
 import com.trolltech.qt.gui.QIcon;
 import com.trolltech.qt.gui.QImage;
 import com.trolltech.qt.gui.QKeySequence;
-import com.trolltech.qt.gui.QLabel;
 import com.trolltech.qt.gui.QListWidgetItem;
 import com.trolltech.qt.gui.QMainWindow;
 import com.trolltech.qt.gui.QMenu;
@@ -129,7 +127,6 @@ import com.trolltech.qt.gui.QPrintDialog;
 import com.trolltech.qt.gui.QPrinter;
 import com.trolltech.qt.gui.QShortcut;
 import com.trolltech.qt.gui.QSizePolicy;
-import com.trolltech.qt.gui.QSizePolicy.Policy;
 import com.trolltech.qt.gui.QSpinBox;
 import com.trolltech.qt.gui.QSplashScreen;
 import com.trolltech.qt.gui.QSplitter;
@@ -139,6 +136,7 @@ import com.trolltech.qt.gui.QTableWidgetItem;
 import com.trolltech.qt.gui.QTextEdit;
 import com.trolltech.qt.gui.QToolBar;
 import com.trolltech.qt.gui.QTreeWidgetItem;
+import com.trolltech.qt.gui.QWidget;
 import com.trolltech.qt.network.QNetworkAccessManager;
 import com.trolltech.qt.network.QNetworkProxy;
 import com.trolltech.qt.network.QNetworkProxy.ProxyType;
@@ -185,13 +183,14 @@ import cx.fbn.nevernote.gui.NotebookTreeWidget;
 import cx.fbn.nevernote.gui.RensoNoteList;
 import cx.fbn.nevernote.gui.RensoNoteListDock;
 import cx.fbn.nevernote.gui.SavedSearchTreeWidget;
-import cx.fbn.nevernote.gui.SearchPanel;
+import cx.fbn.nevernote.gui.SearchEdit;
 import cx.fbn.nevernote.gui.TabBrowse;
 import cx.fbn.nevernote.gui.TabBrowserWidget;
 import cx.fbn.nevernote.gui.TableView;
 import cx.fbn.nevernote.gui.TagTreeWidget;
 import cx.fbn.nevernote.gui.Thumbnailer;
 import cx.fbn.nevernote.gui.TrashTreeWidget;
+import cx.fbn.nevernote.gui.ZoomPanel;
 import cx.fbn.nevernote.gui.controls.QuotaProgressBar;
 import cx.fbn.nevernote.oauth.OAuthTokenizer;
 import cx.fbn.nevernote.oauth.OAuthWindow;
@@ -237,7 +236,7 @@ public class NeverNote extends QMainWindow{
 
     public BrowserWindow	browserWindow;				// Window containing browser & labels
     public QToolBar 		toolBar;					// The tool bar under the menu
-    QComboBox				searchField;				// search filter bar on the toolbar;
+    SearchEdit				searchField;				// search filter bar on the toolbar;
     QShortcut				searchShortcut;				// Shortcut to search bar
     boolean					searchPerformed = false;	// Search was done?
     QuotaProgressBar		quotaBar;					// The current quota usage
@@ -308,7 +307,7 @@ public class NeverNote extends QMainWindow{
     QSpinBox			zoomSpinner;				// Zoom zoom
     QAction				searchClearButton;			// Clear the search field
     
-    SearchPanel			searchLayout;				// Widget to hold search field, zoom, & quota
+    ZoomPanel			zoomLayout;					// Widget to hold search field, zoom, & quota
     
     QSplitter			mainLeftRightSplitter;		// main splitter for left/right side
     QSplitter 			leftSplitter1;				// first left hand splitter
@@ -545,17 +544,6 @@ public class NeverNote extends QMainWindow{
         trashTree = new TrashTreeWidget();
 		noteTableView = new TableView(logger, listManager, this);     
         
-        searchField = new QComboBox();
-        searchField.setObjectName("searchField");
-        //setStyleSheet("QComboBox#searchField { background-color: yellow }");
-        searchField.setEditable(true);
-    	searchField.activatedIndex.connect(this, "searchFieldChanged()");
-    	searchField.setDuplicatesEnabled(false);
-    	searchField.editTextChanged.connect(this,"searchFieldTextChanged(String)");
-    	searchShortcut = new QShortcut(this);
-    	setupShortcut(searchShortcut, "Focus_Search");
-    	searchShortcut.activated.connect(this, "focusSearch()");
-        
     	quotaBar = new QuotaProgressBar();
     	// Setup the zoom
     	zoomSpinner = new QSpinBox();
@@ -566,13 +554,13 @@ public class NeverNote extends QMainWindow{
     	zoomSpinner.setValue(100);
     	zoomSpinner.valueChanged.connect(this, "zoomChanged()");
     	
-    	searchLayout = new SearchPanel(searchField, quotaBar, notebookTree, zoomSpinner);
+    	zoomLayout = new ZoomPanel(quotaBar, notebookTree, zoomSpinner);
         
         
         QGridLayout leftGrid = new QGridLayout();
         leftSplitter1.setContentsMargins(5, 0, 0, 7);
         leftSplitter1.setLayout(leftGrid);
-    	leftGrid.addWidget(searchLayout,1,1);
+    	leftGrid.addWidget(zoomLayout,1,1);
         leftGrid.addWidget(tagTree,2,1);
         leftGrid.addWidget(attributeTree,3,1);
         leftGrid.addWidget(savedSearchTree,4,1);
@@ -664,7 +652,7 @@ public class NeverNote extends QMainWindow{
 		listManager.tagSignal.listChanged.connect(this, "reloadTagTree()");
 		
 		if (!Global.isWindowVisible("zoom")) {
-			searchLayout.hideZoom();
+			zoomLayout.hideZoom();
 			menuBar.hideZoom.setChecked(false);
 		} 
 	
@@ -741,14 +729,8 @@ public class NeverNote extends QMainWindow{
 		if (!Global.isWindowVisible("quota"))
 			menuBar.hideQuota.setChecked(false);
 		
-		searchField.setVisible(Global.isWindowVisible("searchField"));
-		// IFIXED !searchField.isVisible() → !Global.isWindowVisible("searchField")
-		// なぜかsearchField.isVisible()が常にfalseを返すようなので修正
-		if (!Global.isWindowVisible("searchField"))
-			menuBar.hideSearch.setChecked(false);
-		
-		if (searchField.isHidden() && quotaBar.isHidden() && zoomSpinner.isHidden() && notebookTree.isHidden())
-			searchLayout.hide();
+		if (quotaBar.isHidden() && zoomSpinner.isHidden() && notebookTree.isHidden())
+			zoomLayout.hide();
 		
 		setMenuBar(menuBar);
 		setupToolBar();
@@ -1585,15 +1567,22 @@ public class NeverNote extends QMainWindow{
 	@SuppressWarnings("unused")
 	private void toggleSearchWindow() {
 		logger.log(logger.HIGH, "Entering NeverNote.toggleSearchWindow");
-    	searchLayout.toggleSearchField();
+		toggleSearchField();
     	menuBar.hideSearch.setChecked(searchField.isVisible());
     	Global.saveWindowVisible("searchField", searchField.isVisible());
     	logger.log(logger.HIGH, "Leaving NeverNote.toggleSearchWindow");
-    }	
+    }
+	private void toggleSearchField() {
+		if (searchField.isVisible())
+			searchField.hide();
+		else
+			searchField.show();
+	}
+	
 	@SuppressWarnings("unused")
 	private void toggleQuotaWindow() {
 		logger.log(logger.HIGH, "Entering NeverNote.toggleQuotaWindow");
-    	searchLayout.toggleQuotaBar();
+    	zoomLayout.toggleQuotaBar();
     	menuBar.hideQuota.setChecked(quotaBar.isVisible());
     	Global.saveWindowVisible("quota", quotaBar.isVisible());
     	logger.log(logger.HIGH, "Leaving NeverNote.toggleQuotaWindow");
@@ -1601,7 +1590,7 @@ public class NeverNote extends QMainWindow{
 	@SuppressWarnings("unused")
 	private void toggleZoomWindow() {
 		logger.log(logger.HIGH, "Entering NeverNote.toggleZoomWindow");
-    	searchLayout.toggleZoom();
+    	zoomLayout.toggleZoom();
     	menuBar.hideZoom.setChecked(zoomSpinner.isVisible());
     	Global.saveWindowVisible("zoom", zoomSpinner.isVisible());
     	logger.log(logger.HIGH, "Leaving NeverNote.toggleZoomWindow");
@@ -1632,8 +1621,7 @@ public class NeverNote extends QMainWindow{
 		clearSavedSearchFilter();
 		if (Global.mimicEvernoteInterface) {
 			clearTagFilter();
-			//searchField.clear();
-			searchField.clearEditText();
+			searchField.clear();
 		}
 		menuBar.noteRestoreAction.setVisible(false);		
     	menuBar.notebookEditAction.setEnabled(true);
@@ -1750,7 +1738,7 @@ public class NeverNote extends QMainWindow{
 	@SuppressWarnings("unused")
 	private void toggleNotebookWindow() {
 		logger.log(logger.HIGH, "Entering NeverNote.toggleNotebookWindow");
-		searchLayout.toggleNotebook();
+		zoomLayout.toggleNotebook();
     	menuBar.hideNotebooks.setChecked(notebookTree.isVisible());
     	Global.saveWindowVisible("notebookTree", notebookTree.isVisible());
     	logger.log(logger.HIGH, "Leaving NeverNote.toggleNotebookWindow");
@@ -2816,7 +2804,7 @@ public class NeverNote extends QMainWindow{
     	savedSearchTree.clearSelection();
     	savedSearchTree.blockSignals(false);
     	selectedSavedSearchGUID = "";
-    	searchField.setEditText("");
+    	searchField.setText("");
     	searchPerformed = false;
     	listManager.setSelectedSavedSearch(selectedSavedSearchGUID);
     }
@@ -2846,13 +2834,13 @@ public class NeverNote extends QMainWindow{
     		menuBar.savedSearchIconAction.setEnabled(true);
     		selectedSavedSearchGUID = selections.get(0).text(1);
     		SavedSearch s = conn.getSavedSearchTable().getSavedSearch(selectedSavedSearchGUID);
-    		searchField.setEditText(s.getQuery());
+    		searchField.setText(s.getQuery());
     	} else { 
         	menuBar.savedSearchEditAction.setEnabled(false);
         	menuBar.savedSearchDeleteAction.setEnabled(false);
         	menuBar.savedSearchIconAction.setEnabled(false);
         	selectedSavedSearchGUID = "";
-        	searchField.setEditText("");
+        	searchField.setText("");
     	}
     	searchFieldChanged();
     	
@@ -3125,7 +3113,7 @@ public class NeverNote extends QMainWindow{
 		QWebSettings.setMaximumPagesInCache(0);
 		QWebSettings.setObjectCacheCapacities(0, 0, 0);
         
-		searchField.setEditText("");
+		searchField.setdefaultText();
 		saveNoteColumnPositions();
 		saveNoteIndexWidth();
 		noteIndexUpdated(true);
@@ -3144,7 +3132,7 @@ public class NeverNote extends QMainWindow{
 		QWebSettings.setMaximumPagesInCache(0);
 		QWebSettings.setObjectCacheCapacities(0, 0, 0);
 
-		if (text.trim().equals("")) {
+		if (text.trim().equals("") && !searchField.hasFocus()) {
 			searchFieldCleared();
 			if (searchPerformed) {
 
@@ -3171,7 +3159,7 @@ public class NeverNote extends QMainWindow{
     	inkNoteCache.clear();
     	saveNoteColumnPositions();
     	saveNoteIndexWidth();
-    	String text = searchField.currentText();
+    	String text = searchField.text();
     	listManager.setEnSearch(text.trim());
     	listManager.loadNotesIndex();
     	noteIndexUpdated(false);
@@ -3291,13 +3279,35 @@ public class NeverNote extends QMainWindow{
     	
     	//toolBar.addWidget(new QLabel("                    "));
     	//toolBar.addSeparator();
-    	//toolBar.addWidget(new QLabel(tr("  Search:")));
-    	//toolBar.addWidget(searchField);
-    	QSizePolicy sizePolicy = new QSizePolicy();
-    	sizePolicy.setHorizontalPolicy(Policy.MinimumExpanding);
-    	QLabel spacer = new QLabel("");
-    	spacer.setSizePolicy(sizePolicy);
-    	toolBar.addWidget(spacer);
+    	
+    	// 検索ボックスを右寄せするためのスペーサ
+    	QWidget spacerWidget = new QWidget();
+    	spacerWidget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred);
+    	toolBar.addWidget(spacerWidget);
+    	spacerWidget.setVisible(true);
+    	
+        searchField = new SearchEdit(iconPath);
+        searchField.setObjectName("searchField");
+    	searchField.returnPressed.connect(this, "searchFieldChanged()");
+    	searchField.textChanged.connect(this,"searchFieldTextChanged(String)");
+    	searchField.setFixedWidth(300);
+    	searchShortcut = new QShortcut(this);
+    	setupShortcut(searchShortcut, "Focus_Search");
+    	searchShortcut.activated.connect(this, "focusSearch()");
+    	toolBar.addWidget(searchField);
+    	
+		searchField.setVisible(Global.isWindowVisible("searchField"));
+		// IFIXED !searchField.isVisible() → !Global.isWindowVisible("searchField")
+		// なぜかsearchField.isVisible()が常にfalseを返すようなので修正
+		if (!Global.isWindowVisible("searchField"))
+			menuBar.hideSearch.setChecked(false);
+		
+//    	QSizePolicy sizePolicy = new QSizePolicy();
+//    	sizePolicy.setHorizontalPolicy(Policy.MinimumExpanding);
+//    	QLabel spacer = new QLabel("");
+//    	spacer.setSizePolicy(sizePolicy);
+//    	toolBar.addWidget(spacer);
+		
     	//searchField.setInsertPolicy(InsertPolicy.InsertAtTop);
 
     	//searchClearButton = toolBar.addAction("Search Clear");
