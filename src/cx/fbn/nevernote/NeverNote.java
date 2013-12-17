@@ -1638,6 +1638,8 @@ public class NeverNote extends QMainWindow{
 		
     	List<QTreeWidgetItem> selections = notebookTree.selectedItems();
     	selectedNotebookGUIDs.clear();
+    	searchField.setTargetNotebook("");
+    	searchField.setTargetStack("");
    		String guid = "";
    		String stackName = "";
    		if (selections.size() > 0) {
@@ -1658,14 +1660,17 @@ public class NeverNote extends QMainWindow{
    			}
    		}
     	if (!guid.equals("") && !guid.equals("STACK")) {
-    		selectedNotebookGUIDs.add(guid);
+    		selectedNotebookGUIDs.add(stackName);
+    		searchField.setTargetNotebook(guid);
     		menuBar.notebookIconAction.setEnabled(true);
-    	} else {
+    	} else {	// スタック選択
+    		searchField.setTargetStack(guid);
     		menuBar.notebookIconAction.setEnabled(true);
 			for (int j=0; j<listManager.getNotebookIndex().size(); j++) {
 				Notebook book = listManager.getNotebookIndex().get(j);
-				if (book.getStack() != null && book.getStack().equalsIgnoreCase(stackName))
+				if (book.getStack() != null && book.getStack().equalsIgnoreCase(stackName)) {
 					selectedNotebookGUIDs.add(book.getGuid());
+				}
 			}
     	}
     	listManager.setSelectedNotebooks(selectedNotebookGUIDs);
@@ -1696,6 +1701,8 @@ public class NeverNote extends QMainWindow{
     	menuBar.notebookEditAction.setEnabled(false);
     	menuBar.notebookDeleteAction.setEnabled(false);
     	selectedNotebookGUIDs.clear();
+    	searchField.setTargetNotebook("");
+    	searchField.setTargetStack("");
     	listManager.setSelectedNotebooks(selectedNotebookGUIDs);
     	notebookTree.blockSignals(false);
     }
@@ -1725,8 +1732,11 @@ public class NeverNote extends QMainWindow{
     	notebookTree.load(books, listManager.getLocalNotebooks());
     	for (int i=selectedNotebookGUIDs.size()-1; i>=0; i--) {
     		boolean found = notebookTree.selectGuid(selectedNotebookGUIDs.get(i));
-    		if (!found)
+    		if (!found) {
     			selectedNotebookGUIDs.remove(i);
+    			searchField.setTargetNotebook("");
+    			searchField.setTargetStack("");
+    		}
     	}
     	listManager.refreshCounters = true;
     	listManager.refreshCounters();
@@ -2410,9 +2420,11 @@ public class NeverNote extends QMainWindow{
     	List<QTreeWidgetItem> selections = tagTree.selectedItems();
     	QTreeWidgetItem currentSelection;
     	selectedTagGUIDs.clear();
+    	searchField.getTargetTags().clear();
     	for (int i=0; i<selections.size(); i++) {
     		currentSelection = selections.get(i);
     		selectedTagGUIDs.add(currentSelection.text(2));
+    		searchField.addTargetTag(currentSelection.text(2));
     	}
     	if (selections.size() > 0) {
     		menuBar.tagEditAction.setEnabled(true);
@@ -2456,8 +2468,10 @@ public class NeverNote extends QMainWindow{
 
     	for (int i=selectedTagGUIDs.size()-1; i>=0; i--) {
     		boolean found = tagTree.selectGuid(selectedTagGUIDs.get(i));
-    		if (!found)
+    		if (!found) {
     			selectedTagGUIDs.remove(i);
+    			searchField.getTargetTags().remove(i);
+    		}
     	}
     	tagTree.blockSignals(false);
     	
@@ -2585,6 +2599,7 @@ public class NeverNote extends QMainWindow{
 		menuBar.tagDeleteAction.setEnabled(false);
 		menuBar.tagIconAction.setEnabled(false);
 		selectedTagGUIDs.clear();
+		searchField.getTargetTags().clear();
     	listManager.setSelectedTags(selectedTagGUIDs);
     	tagTree.blockSignals(false);
 	}
@@ -3113,7 +3128,7 @@ public class NeverNote extends QMainWindow{
 		QWebSettings.setMaximumPagesInCache(0);
 		QWebSettings.setObjectCacheCapacities(0, 0, 0);
         
-		searchField.setdefaultText();
+		searchField.setDefaultText();
 		saveNoteColumnPositions();
 		saveNoteIndexWidth();
 		noteIndexUpdated(true);
@@ -3159,8 +3174,8 @@ public class NeverNote extends QMainWindow{
     	inkNoteCache.clear();
     	saveNoteColumnPositions();
     	saveNoteIndexWidth();
-    	String text = searchField.text();
-    	listManager.setEnSearch(text.trim());
+    	String query = searchField.getSearchQuery();
+    	listManager.setEnSearch(query.trim());
     	listManager.loadNotesIndex();
     	noteIndexUpdated(false);
 
@@ -3286,7 +3301,7 @@ public class NeverNote extends QMainWindow{
     	toolBar.addWidget(spacerWidget);
     	spacerWidget.setVisible(true);
     	
-        searchField = new SearchEdit(iconPath);
+        searchField = new SearchEdit(iconPath, conn);
         searchField.setObjectName("searchField");
     	searchField.returnPressed.connect(this, "searchFieldChanged()");
     	searchField.textChanged.connect(this,"searchFieldTextChanged(String)");
