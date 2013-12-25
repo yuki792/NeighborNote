@@ -3305,7 +3305,9 @@ public class NeverNote extends QMainWindow{
         searchField.setObjectName("searchField");
     	searchField.returnPressed.connect(this, "searchFieldChanged()");
     	searchField.textChanged.connect(this,"searchFieldTextChanged(String)");
-    	searchField.setFixedWidth(300);
+    	searchField.setMaximumWidth(400);
+    	searchField.setMinimumWidth(80);
+    	searchField.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed);
     	searchShortcut = new QShortcut(this);
     	setupShortcut(searchShortcut, "Focus_Search");
     	searchShortcut.activated.connect(this, "focusSearch()");

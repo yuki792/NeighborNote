@@ -37,6 +37,7 @@ import com.trolltech.qt.gui.QResizeEvent;
 import com.trolltech.qt.gui.QStyle.PixelMetric;
 import com.trolltech.qt.gui.QToolButton;
 
+import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 
 public class SearchEdit extends QLineEdit {
@@ -94,16 +95,24 @@ public class SearchEdit extends QLineEdit {
 		targetMenu.addAction(currentContextAction);
 		targetGroup.triggered.connect(this, "toggleSearchTarget(QAction)");
 		
-		// 初期状態として「すべてのノートを検索」を選択
-		allNotesAction.setChecked(true);
-		toggleSearchTarget(allNotesAction);
+		// 検索対象を初期状態をiniファイルから取得して設定
+		final SearchTarget target = Global.searchTarget();
+		if (target == SearchTarget.AllNotes) {
+			allNotesAction.setChecked(true);
+			toggleSearchTarget(allNotesAction);
+		} else if (target == SearchTarget.CurrentContext) {
+			currentContextAction.setChecked(true);
+			toggleSearchTarget(currentContextAction);
+		}
 	}
 	
 	private void toggleSearchTarget(QAction action) {
 		if (action == allNotesAction) {
 			defaultText = new String(tr("Search All Notes"));
+			Global.setSearchTarget(SearchTarget.AllNotes);
 		} else if (action == currentContextAction) {
 			defaultText = new String(tr("Search Current Context"));
+			Global.setSearchTarget(SearchTarget.CurrentContext);
 		}
     	setDefaultText();
     	this.clearFocus();
