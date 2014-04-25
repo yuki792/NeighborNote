@@ -106,6 +106,7 @@ import com.trolltech.qt.gui.QPalette;
 import com.trolltech.qt.gui.QPalette.ColorRole;
 import com.trolltech.qt.gui.QPushButton;
 import com.trolltech.qt.gui.QShortcut;
+import com.trolltech.qt.gui.QSizePolicy;
 import com.trolltech.qt.gui.QSplitter;
 import com.trolltech.qt.gui.QTextEdit;
 import com.trolltech.qt.gui.QTextEdit.LineWrapMode;
@@ -548,8 +549,11 @@ public class BrowserWindow extends QWidget {
 		fontSize = new QComboBox();
 		fontList.setMaximumWidth(130);
 		fontSize.setMaximumWidth(45);
+		fontSize.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed);
 		fontList.setToolTip("Font");
 		fontSize.setToolTip("Font Size");
+		fontList.setStyleSheet("QComboBox {padding: 3px;} ");
+		fontSize.setStyleSheet("QComboBox {padding: 3px;} ");
 		fontList.activated.connect(this, "fontChanged(String)");
 		fontSize.activated.connect(this, "fontSizeChanged(String)");
 		fontListAction = buttonLayout.addWidget(fontList);
@@ -778,6 +782,7 @@ public class BrowserWindow extends QWidget {
 		
 		button.setToolTip(toolTip);
 		button.clicked.connect(this, name + "Clicked()");
+		button.setStyleSheet("QPushButton {padding: 3px;} ");
 		return button;
 	}
 	// New Editor Button
@@ -790,12 +795,14 @@ public class BrowserWindow extends QWidget {
 		
 		button.setToolTip(toolTip);
 		button.clicked.connect(this, name + "Clicked()");
+		button.setStyleSheet("QToolButton {padding: 3px;} ");
+		button.setMaximumHeight(22);
 		return button;
 	}
 
 	// New Separator
 	private QLabel newSeparator() {
-		return new QLabel("   ");
+		return new QLabel("");
 	}
 
 	// Set the title in the window
