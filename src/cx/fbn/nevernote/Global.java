@@ -52,6 +52,7 @@ import cx.fbn.nevernote.config.InitializationException;
 import cx.fbn.nevernote.config.StartupConfig;
 import cx.fbn.nevernote.gui.ContainsAttributeFilterTable;
 import cx.fbn.nevernote.gui.DateAttributeFilterTable;
+import cx.fbn.nevernote.gui.SearchEdit.SearchTarget;
 import cx.fbn.nevernote.gui.ShortcutKeys;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.sql.driver.NSqlQuery;
@@ -2620,6 +2621,29 @@ public class Global {
 		settings.beginGroup("General");
 		settings.setValue("toolBarNewAction", value);
 		settings.endGroup();	
+	}
+	
+	// 全文検索の範囲
+	public static SearchTarget searchTarget() {
+		settings.beginGroup("General");
+		try {
+			String text = (String)settings.value("searchTarget", "0");
+			settings.endGroup();
+			int ordinal = Integer.parseInt(text);
+			SearchTarget target = fromOrdinal(SearchTarget.class, ordinal);
+			return target;
+		} catch (java.lang.ClassCastException e) {
+			int value = (Integer) settings.value("searchTarget", 0);
+			settings.endGroup();;
+			SearchTarget target = fromOrdinal(SearchTarget.class, value);
+			return target;
+		}
+	}
+	
+	public static void setSearchTarget(SearchTarget target) {
+		settings.beginGroup("General");
+		settings.setValue("searchTarget", target.ordinal());
+		settings.endGroup();
 	}
 }
 
