@@ -6,6 +6,7 @@
     <licenseFile>C:/pleiades/workspace/NeighborNote/LICENSE</licenseFile>
     <logoImage>C:/pleiades/workspace/NeighborNote/installbuilder/installerLogo.png</logoImage>
     <splashImage>C:/pleiades/workspace/NeighborNote/installbuilder/installerSplash.png</splashImage>
+    <defaultLanguage>auto</defaultLanguage>
     <allowLanguageSelection>1</allowLanguageSelection>
     <componentList>
         <component>

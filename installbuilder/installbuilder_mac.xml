@@ -6,6 +6,7 @@
     <licenseFile>/Users/takahashi/Desktop/NeighborNote/LICENSE</licenseFile>
     <logoImage>/Users/takahashi/Desktop/NeighborNote/installbuilder/installerLogo.png</logoImage>
     <splashImage>/Users/takahashi/Desktop/NeighborNote/installbuilder/installerSplash.png</splashImage>
+    <defaultLanguage>auto</defaultLanguage>
     <allowLanguageSelection>1</allowLanguageSelection>
     <componentList>
         <component>

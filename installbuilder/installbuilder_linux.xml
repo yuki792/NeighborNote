@@ -6,6 +6,7 @@
     <licenseFile>/home/yuki/デスクトップ/NeighborNote/LICENSE</licenseFile>
     <logoImage>/home/yuki/デスクトップ/NeighborNote/installbuilder/installerLogo.png</logoImage>
     <splashImage>/home/yuki/デスクトップ/NeighborNote/installbuilder/installerSplash.png</splashImage>
+    <defaultLanguage>auto</defaultLanguage>
     <allowLanguageSelection>1</allowLanguageSelection>
     <componentList>
         <component>
