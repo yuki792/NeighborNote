@@ -255,6 +255,9 @@ public class DatabaseConnection {
 				executeSql("Drop table words;");
 			if (dbTableExists("NoteResources"))
 				executeSql("Drop table NoteResources;");
+			
+			version = "0.97";
+			Global.setDatabaseVersion(version);
 		}
 		if (!dbTableColumnExists("NOTE", "ORIGINAL_GUID")) {
 			executeSql("alter table note add column ORIGINAL_GUID VarChar");
@@ -334,12 +337,12 @@ public class DatabaseConnection {
 	}
 	
 	public void checkDatabaseVersion() {
-		if (!Global.getDatabaseVersion().equals("0.86")) {
-			upgradeDb(Global.getDatabaseVersion());
-		}
-		if (!Global.getDatabaseVersion().equals("0.95")) {
-			upgradeDb(Global.getDatabaseVersion());
-		}
+//		if (!Global.getDatabaseVersion().equals("0.86")) {
+//			upgradeDb(Global.getDatabaseVersion());
+//		}
+//		if (!Global.getDatabaseVersion().equals("0.95")) {
+//			upgradeDb(Global.getDatabaseVersion());
+//		}
 		if (!Global.getDatabaseVersion().equals("0.97")) {
 			upgradeDb(Global.getDatabaseVersion());
 		}
