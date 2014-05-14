@@ -291,10 +291,10 @@ public class DatabaseConnection {
 		}
 		
 		// Apache Luceneを使った日本語検索のためのプレーンテキストノートコンテンツカラムを準備
+		NSqlQuery query = new NSqlQuery(conn);
 		if (!dbTableColumnExists("NOTE", "CONTENTTEXT")) {
 			executeSql("alter table note add column contentText VarChar");
 			executeSql("update note set contentText = ''");
-			NSqlQuery query = new NSqlQuery(conn);
 			query.exec("Select guid, content from Note where contentText = ''");
 			while (query.next()) {
 				String guid = query.valueString(0);
@@ -310,8 +310,6 @@ public class DatabaseConnection {
 			// Apache Luceneを使った全文検索のための準備
 			query.exec("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLuceneEx.init\"");
 			query.exec("CALL FTL_INIT()");
-			
-			Global.rebuildFullTextNoteTarget(this);
 		}
 		
 		// Apache Luceneを使った日本語検索のためのプレーンテキストノートリソースカラムを準備
@@ -324,11 +322,20 @@ public class DatabaseConnection {
 			// Apache Luceneを使った全文検索のための準備
 			rQuery.exec("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLuceneEx.init\"");
 			rQuery.exec("CALL FTL_INIT()");
-			
-			Global.rebuildFullTextResourceTarget(this);
 		}
 		
 		// 注意：ここから先でnoteテーブルとnoteResourcesテーブルの構造を変更するな。全文検索ができなくなる。
+		
+		// v0.4.1以前では起動時に全文検索が正しく設定されない問題があったのでLuceneを再構築
+		if (version.equals("0.97")) {
+			query.exec("CALL FTL_DROP_ALL();");
+			rQuery.exec("CALL FTL_DROP_ALL();");
+			Global.rebuildFullTextNoteTarget(this);
+			Global.rebuildFullTextResourceTarget(this);
+			
+			version = "0.98";
+			Global.setDatabaseVersion(version);
+		}
 	}
 	
 	public void executeSql(String sql) {
@@ -343,7 +350,7 @@ public class DatabaseConnection {
 //		if (!Global.getDatabaseVersion().equals("0.95")) {
 //			upgradeDb(Global.getDatabaseVersion());
 //		}
-		if (!Global.getDatabaseVersion().equals("0.97")) {
+		if (!Global.getDatabaseVersion().equals("0.98")) {
 			upgradeDb(Global.getDatabaseVersion());
 		}
 	}
