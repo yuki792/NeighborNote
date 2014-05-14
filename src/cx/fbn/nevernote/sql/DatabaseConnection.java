@@ -255,6 +255,9 @@ public class DatabaseConnection {
 				executeSql("Drop table words;");
 			if (dbTableExists("NoteResources"))
 				executeSql("Drop table NoteResources;");
+			
+			version = "0.97";
+			Global.setDatabaseVersion(version);
 		}
 		if (!dbTableColumnExists("NOTE", "ORIGINAL_GUID")) {
 			executeSql("alter table note add column ORIGINAL_GUID VarChar");
@@ -282,11 +285,16 @@ public class DatabaseConnection {
 			executeSql("update note set attributeContentClass = ''");
 		}
 		
+		// Evernoteサムネイルカラムを追加
+		if (!dbTableColumnExists("NOTE", "ENTHUMBNAIL")) {
+			executeSql("alter table note add column enThumbNail Blob");
+		}
+		
 		// Apache Luceneを使った日本語検索のためのプレーンテキストノートコンテンツカラムを準備
+		NSqlQuery query = new NSqlQuery(conn);
 		if (!dbTableColumnExists("NOTE", "CONTENTTEXT")) {
 			executeSql("alter table note add column contentText VarChar");
 			executeSql("update note set contentText = ''");
-			NSqlQuery query = new NSqlQuery(conn);
 			query.exec("Select guid, content from Note where contentText = ''");
 			while (query.next()) {
 				String guid = query.valueString(0);
@@ -302,13 +310,6 @@ public class DatabaseConnection {
 			// Apache Luceneを使った全文検索のための準備
 			query.exec("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLuceneEx.init\"");
 			query.exec("CALL FTL_INIT()");
-			
-			Global.rebuildFullTextNoteTarget(this);
-		}
-		
-		// Evernoteサムネイルカラムを追加
-		if (!dbTableColumnExists("NOTE", "ENTHUMBNAIL")) {
-			executeSql("alter table note add column enThumbNail Blob");
 		}
 		
 		// Apache Luceneを使った日本語検索のためのプレーンテキストノートリソースカラムを準備
@@ -321,8 +322,19 @@ public class DatabaseConnection {
 			// Apache Luceneを使った全文検索のための準備
 			rQuery.exec("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLuceneEx.init\"");
 			rQuery.exec("CALL FTL_INIT()");
-			
+		}
+		
+		// 注意：ここから先でnoteテーブルとnoteResourcesテーブルの構造を変更するな。全文検索ができなくなる。
+		
+		// v0.4.1以前では起動時に全文検索が正しく設定されない問題があったのでLuceneを再構築
+		if (version.equals("0.97")) {
+			query.exec("CALL FTL_DROP_ALL();");
+			rQuery.exec("CALL FTL_DROP_ALL();");
+			Global.rebuildFullTextNoteTarget(this);
 			Global.rebuildFullTextResourceTarget(this);
+			
+			version = "0.98";
+			Global.setDatabaseVersion(version);
 		}
 	}
 	
@@ -332,13 +344,13 @@ public class DatabaseConnection {
 	}
 	
 	public void checkDatabaseVersion() {
-		if (!Global.getDatabaseVersion().equals("0.86")) {
-			upgradeDb(Global.getDatabaseVersion());
-		}
-		if (!Global.getDatabaseVersion().equals("0.95")) {
-			upgradeDb(Global.getDatabaseVersion());
-		}
-		if (!Global.getDatabaseVersion().equals("0.97")) {
+//		if (!Global.getDatabaseVersion().equals("0.86")) {
+//			upgradeDb(Global.getDatabaseVersion());
+//		}
+//		if (!Global.getDatabaseVersion().equals("0.95")) {
+//			upgradeDb(Global.getDatabaseVersion());
+//		}
+		if (!Global.getDatabaseVersion().equals("0.98")) {
 			upgradeDb(Global.getDatabaseVersion());
 		}
 	}

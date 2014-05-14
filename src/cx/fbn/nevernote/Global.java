@@ -52,6 +52,7 @@ import cx.fbn.nevernote.config.InitializationException;
 import cx.fbn.nevernote.config.StartupConfig;
 import cx.fbn.nevernote.gui.ContainsAttributeFilterTable;
 import cx.fbn.nevernote.gui.DateAttributeFilterTable;
+import cx.fbn.nevernote.gui.SearchEdit.SearchTarget;
 import cx.fbn.nevernote.gui.ShortcutKeys;
 import cx.fbn.nevernote.sql.DatabaseConnection;
 import cx.fbn.nevernote.sql.driver.NSqlQuery;
@@ -68,8 +69,8 @@ import cx.fbn.nevernote.utilities.Pair;
 
 public class Global {
 	// Set current version and the known versions.
-	public static String version = "0.4.1";
-	public static String[] validVersions = {"0.4.1", "0.4", "0.3", "0.2", "0.1.3", "0.1.2", "0.1.1", "0.1"};
+	public static String version = "0.5";
+	public static String[] validVersions = {"0.5", "0.4.1", "0.4", "0.3", "0.2", "0.1.3", "0.1.2", "0.1.1", "0.1"};
 	
     public static String username = ""; 
     //public static String password = "";     
@@ -2620,6 +2621,29 @@ public class Global {
 		settings.beginGroup("General");
 		settings.setValue("toolBarNewAction", value);
 		settings.endGroup();	
+	}
+	
+	// 全文検索の範囲
+	public static SearchTarget searchTarget() {
+		settings.beginGroup("General");
+		try {
+			String text = (String)settings.value("searchTarget", "0");
+			settings.endGroup();
+			int ordinal = Integer.parseInt(text);
+			SearchTarget target = fromOrdinal(SearchTarget.class, ordinal);
+			return target;
+		} catch (java.lang.ClassCastException e) {
+			int value = (Integer) settings.value("searchTarget", 0);
+			settings.endGroup();;
+			SearchTarget target = fromOrdinal(SearchTarget.class, value);
+			return target;
+		}
+	}
+	
+	public static void setSearchTarget(SearchTarget target) {
+		settings.beginGroup("General");
+		settings.setValue("searchTarget", target.ordinal());
+		settings.endGroup();
 	}
 }
 
