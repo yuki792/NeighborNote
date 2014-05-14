@@ -1,7 +1,7 @@
 <project>
     <shortName>neighbornote</shortName>
     <fullName>NeighborNote</fullName>
-    <version>0.4.1</version>
+    <version>0.5</version>
     <readmeFile>/home/yuki/デスクトップ/NeighborNote/README.md</readmeFile>
     <licenseFile>/home/yuki/デスクトップ/NeighborNote/LICENSE</licenseFile>
     <logoImage>/home/yuki/デスクトップ/NeighborNote/installbuilder/installerLogo.png</logoImage>
