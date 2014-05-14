@@ -69,8 +69,8 @@ import cx.fbn.nevernote.utilities.Pair;
 
 public class Global {
 	// Set current version and the known versions.
-	public static String version = "0.4.1";
-	public static String[] validVersions = {"0.4.1", "0.4", "0.3", "0.2", "0.1.3", "0.1.2", "0.1.1", "0.1"};
+	public static String version = "0.5";
+	public static String[] validVersions = {"0.5", "0.4.1", "0.4", "0.3", "0.2", "0.1.3", "0.1.2", "0.1.1", "0.1"};
 	
     public static String username = ""; 
     //public static String password = "";     
