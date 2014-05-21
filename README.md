@@ -18,9 +18,10 @@ NeighborNoteは[http://puma.cis.ibaraki.ac.jp/products/neighbornote/](http://pum
 
 起動方法(MacOSX)
 ------------
-1. ダウンロードしたneighbornote-[version]-osx-installer.appを実行して下さい。
-2. インストーラの指示に従ってインストールを完了してください。
-3. Dockに表示されたNeighborNoteを実行してください。
+1. ダウンロードしたneighbornote-[version]-osx-installer.zipを解凍してください。
+2. 生成されたneighbornote-[version]-osx-installer.appを実行して下さい。
+3. インストーラの指示に従ってインストールを完了してください。
+4. Dockに表示されたNeighborNoteを実行してください。
 
 起動方法(Linux)
 ------------
@@ -41,21 +42,22 @@ NeighborNote is available on [http://puma.cis.ibaraki.ac.jp/products/neighbornot
 
 How to Run(Windows)
 ------------
-1. Please run the neighbornote-[version]-windows-installer.exe.
-2. Please complete the installation by following the instructions of the installer.
-3. Please run the NeighborNote that is displayed on the desktop.
+1. Run the neighbornote-[version]-windows-installer.exe.
+2. Complete the installation by following the instructions of the installer.
+3. Run the NeighborNote that is displayed on the desktop.
 
 How to Run(MacOSX)
 ------------
-1. Please run the neighbornote-[version]-osx-installer.app.
-2. Please complete the installation by following the instructions of the installer.
-3. Please run the NeighborNote that is displayed on the dock.
+1. Unzip the neighbornote-[version]-osx-installer.zip.
+2. Run the neighbornote-[version]-osx-installer.app.
+3. Complete the installation by following the instructions of the installer.
+4. Run the NeighborNote that is displayed on the dock.
 
 How to Run(Linux)
 ------------
-1. Please run the neighbornote-[version]-linux-installer.run.
-2. Please complete the installation by following the instructions of the installer.
-3. Please run the NeighborNote that is displayed on the desktop.
+1. Run the neighbornote-[version]-linux-installer.run.
+2. Complete the installation by following the instructions of the installer.
+3. Run the NeighborNote that is displayed on the desktop.
 
 Requirements
 ------------
