@@ -62,7 +62,6 @@ public class OAuthWindow extends QDialog {
 	private final QWebView tempPage;
 	private final QWebView authPage;
 	private final QGridLayout grid;
-	private NNOAuthNetworkAccessManager manager;
 
 	static final String callbackUrl = "index.jsp?action=callbackReturn";
 	private final ApplicationLogger logger;
@@ -83,8 +82,7 @@ public class OAuthWindow extends QDialog {
 		permanentCredUrl = "https://"+Global.getServer() + "/oauth?oauth_consumer_key=" +consumerKey + "&oauth_signature=" +
 				consumerSecret + "%26&oauth_signature_method=PLAINTEXT&oauth_timestamp="+String.valueOf(time)+
 				"&oauth_nonce="+String.valueOf(millis) +"&oauth_token=";
-
-
+		
 		// Build the window
 		setWindowTitle(tr("Please Grant NeighborNote Access"));
 		setWindowIcon(new QIcon(iconPath+"icons/password.png"));
@@ -109,9 +107,11 @@ public class OAuthWindow extends QDialog {
 		// finished, this QWebView will contain the URL to start the
 		// authentication process.
 		QUrl tu = new QUrl(temporaryCredUrl);
+		
+		TlsNetworkAccessManager manager = new TlsNetworkAccessManager(logger);
+		tempPage.page().setNetworkAccessManager(manager);
 		tempPage.load(tu);
 	}
-
 	
 	// This method is triggered when the temporary credentials are received from Evernote
 	public void temporaryCredentialsReceived() {
@@ -122,7 +122,7 @@ public class OAuthWindow extends QDialog {
 		if (index > 0) {
 			contents = contents.substring(0,index);
 			QUrl accessUrl = new QUrl(urlBase+"/OAuth.action?" +contents);
-			manager = new NNOAuthNetworkAccessManager(logger);
+			NNOAuthNetworkAccessManager manager = new NNOAuthNetworkAccessManager(logger);
 			authPage.page().setNetworkAccessManager(manager);
 			manager.tokenFound.connect(this, "tokenFound(String)");
 

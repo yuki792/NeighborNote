@@ -294,7 +294,7 @@ public class ImportEnex {
 				if (reader.name().equalsIgnoreCase("Latitude")) 
 					attributes.setLatitude(doubleValue());		
 				if (reader.name().equalsIgnoreCase("Timestamp")) 
-					attributes.setTimestamp(longValue());		
+					attributes.setTimestamp(datetimeValue());
 				if (reader.name().equalsIgnoreCase("Attachment")) 
 					attributes.setAttachment(booleanValue());		
 				if (reader.name().equalsIgnoreCase("ClientWillIndex")) 
@@ -312,9 +312,7 @@ public class ImportEnex {
 	private String textValue() {
 		return reader.readElementText();
 	}
-	private long longValue() {
-		return new Long(textValue());
-	}
+	
 	private long datetimeValue() {
 		Date d;
 		String time = textValue();

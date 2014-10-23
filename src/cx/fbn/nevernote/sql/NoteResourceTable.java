@@ -167,6 +167,10 @@ public class NoteResourceTable  {
 		NSqlQuery query = new NSqlQuery(db.getResourceConnection());
 		SimpleDateFormat simple = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		
+		if (r.getData().getBodyHash() == null || r.getData().getBody() == null) {
+			return;
+		}
+		
 		query.prepare("Insert Into NoteResources ("
 				+"guid, noteGuid, dataHash, dataSize, dataBinary, updateSequenceNumber, "
 				+"mime, width, height, duration, active, recognitionHash, "				
@@ -187,7 +191,6 @@ public class NoteResourceTable  {
 			query.bindValue(":noteGuid", r.getNoteGuid());
 			if (r.getData() != null) {
 				query.bindValue(":dataHash", byteArrayToHexString(r.getData().getBodyHash()));
-//				query.bindValue(":dataHash", "c0369123fe9871d675ae456fd056ba33");
 				query.bindValue(":dataSize", r.getData().getSize());
 				query.bindBlob(":dataBody", r.getData().getBody());
 			}

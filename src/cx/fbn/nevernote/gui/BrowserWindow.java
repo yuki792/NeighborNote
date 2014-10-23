@@ -1097,8 +1097,7 @@ public class BrowserWindow extends QWidget {
 	}
 
 	// Listener for when cut is clicked
-	@SuppressWarnings("unused")
-	private void cutClicked() {
+	public void cutClicked() {
 		cbObserver.setCopySourceGuid(currentNote.getGuid(), browser.page().selectedText());
 		
 		browser.page().triggerAction(WebAction.Cut);
@@ -1106,8 +1105,7 @@ public class BrowserWindow extends QWidget {
 	}
 
 	// Listener when COPY is clicked
-	@SuppressWarnings("unused")
-	private void copyClicked() {
+	public void copyClicked() {
 		cbObserver.setCopySourceGuid(currentNote.getGuid(), browser.page().selectedText());
 		
 		browser.page().triggerAction(WebAction.Copy);

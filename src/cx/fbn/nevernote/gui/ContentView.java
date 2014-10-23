@@ -330,6 +330,21 @@ public class ContentView extends QWebView {
 			e.accept();
 			return;
 		}
+		
+		// This is done to capture the operation of cutting by shortcut keys
+		if (e.matches(StandardKey.Cut)) {
+			parent.cutClicked();
+			e.accept();
+			return;
+		}
+		
+		// This is done to capture the operation of copying by shortcut keys
+		if (e.matches(StandardKey.Copy)) {
+			parent.copyClicked();
+			e.accept();
+			return;
+		}
+		
 		super.keyPressEvent(e);
 	}
 

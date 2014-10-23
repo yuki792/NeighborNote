@@ -4867,8 +4867,8 @@ public class NeverNote extends QMainWindow{
 		browser.noteSignal.alteredDateChanged.disconnect();
 
 		// ノートを削除
-		tabWindows.remove(index);
 		tabBrowser.removeTab(index);
+		tabWindows.remove(index);
 		noteDirty.remove(index);
 		inkNote.remove(index);
 		readOnly.remove(index);

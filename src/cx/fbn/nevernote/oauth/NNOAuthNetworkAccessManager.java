@@ -27,25 +27,25 @@ package cx.fbn.nevernote.oauth;
 
 import com.trolltech.qt.core.QIODevice;
 import com.trolltech.qt.core.QObject;
-import com.trolltech.qt.network.QNetworkAccessManager;
 import com.trolltech.qt.network.QNetworkReply;
 import com.trolltech.qt.network.QNetworkRequest;
 
 import cx.fbn.nevernote.utilities.ApplicationLogger;
 
-public class NNOAuthNetworkAccessManager extends QNetworkAccessManager {
+public class NNOAuthNetworkAccessManager extends TlsNetworkAccessManager {
 	public Signal1<String> tokenFound;
-	private ApplicationLogger logger;
+	private final ApplicationLogger logger;
 
-	public NNOAuthNetworkAccessManager(ApplicationLogger l){
-		super();
+	public NNOAuthNetworkAccessManager(ApplicationLogger logger){
+		super(logger);
 		tokenFound = new Signal1<String>();
-		logger = l;
+		this.logger = logger;
 	}
 
-	public NNOAuthNetworkAccessManager(QObject qObject){
-		super(qObject);
+	public NNOAuthNetworkAccessManager(QObject qObject, ApplicationLogger logger){
+		super(qObject, logger);
 		tokenFound = new Signal1<String>();
+		this.logger = logger;
 	}
 
 	@Override
@@ -54,6 +54,7 @@ public class NNOAuthNetworkAccessManager extends QNetworkAccessManager {
 
 		logger.log(logger.EXTREME,"NNOAuthNetworkAccessManager URL request scheme: " 
 				+request.url().scheme() + " " + request.url().toString());
+		
 		String searchReq = "nnoauth?oauth_token=";
 		int pos = request.url().toString().indexOf(searchReq);
 		if (pos>0) {
