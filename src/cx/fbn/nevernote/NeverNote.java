@@ -2819,7 +2819,7 @@ public class NeverNote extends QMainWindow{
     	savedSearchTree.clearSelection();
     	savedSearchTree.blockSignals(false);
     	selectedSavedSearchGUID = "";
-    	searchField.setText("");
+    	searchField.setDefaultText();
     	searchPerformed = false;
     	listManager.setSelectedSavedSearch(selectedSavedSearchGUID);
     }
@@ -2855,7 +2855,7 @@ public class NeverNote extends QMainWindow{
         	menuBar.savedSearchDeleteAction.setEnabled(false);
         	menuBar.savedSearchIconAction.setEnabled(false);
         	selectedSavedSearchGUID = "";
-        	searchField.setText("");
+        	searchField.setDefaultText();
     	}
     	searchFieldChanged();
     	
@@ -3304,7 +3304,7 @@ public class NeverNote extends QMainWindow{
         searchField = new SearchEdit(iconPath, conn);
         searchField.setObjectName("searchField");
     	searchField.returnPressed.connect(this, "searchFieldChanged()");
-    	searchField.textChanged.connect(this,"searchFieldTextChanged(String)");
+    	searchField.textEdited.connect(this,"searchFieldTextChanged(String)");
     	searchField.setMaximumWidth(400);
     	searchField.setMinimumWidth(80);
     	searchField.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed);
