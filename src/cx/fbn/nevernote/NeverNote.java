@@ -1660,11 +1660,11 @@ public class NeverNote extends QMainWindow{
    			}
    		}
     	if (!guid.equals("") && !guid.equals("STACK")) {
-    		selectedNotebookGUIDs.add(stackName);
+    		selectedNotebookGUIDs.add(guid);
     		searchField.setTargetNotebook(guid);
     		menuBar.notebookIconAction.setEnabled(true);
     	} else {	// スタック選択
-    		searchField.setTargetStack(guid);
+    		searchField.setTargetStack(stackName);
     		menuBar.notebookIconAction.setEnabled(true);
 			for (int j=0; j<listManager.getNotebookIndex().size(); j++) {
 				Notebook book = listManager.getNotebookIndex().get(j);
