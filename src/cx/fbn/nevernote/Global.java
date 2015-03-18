@@ -69,8 +69,8 @@ import cx.fbn.nevernote.utilities.Pair;
 
 public class Global {
 	// Set current version and the known versions.
-	public static String version = "0.5.3";
-	public static String[] validVersions = {"0.5.3", "0.5.2", "0.5.1", "0.5", "0.4.1", "0.4", "0.3", "0.2", "0.1.3", "0.1.2", "0.1.1", "0.1"};
+	public static String version = "0.5.4";
+	public static String[] validVersions = {"0.5.4", "0.5.3", "0.5.2", "0.5.1", "0.5", "0.4.1", "0.4", "0.3", "0.2", "0.1.3", "0.1.2", "0.1.1", "0.1"};
 	
     public static String username = ""; 
     //public static String password = "";     
@@ -1774,19 +1774,19 @@ public class Global {
     }
     public static String getUpdatesAvailableUrl() {
 		settings.beginGroup("Upgrade");
-		String text = (String)settings.value("avialableUrl", "http://puma.cis.ibaraki.ac.jp/products/neighbornote/develop/versions.txt");
+		String text = (String)settings.value("avialableUrl", "https://neighbornote.herokuapp.com/develop/versions.txt");
 		settings.endGroup();	
 		return text;
     }
     public static String getUpdateAnnounceUrl() {
 		settings.beginGroup("Upgrade");
-		String text = (String)settings.value("announceUrl", "http://puma.cis.ibaraki.ac.jp/products/neighbornote/develop/upgrade.html");
+		String text = (String)settings.value("announceUrl", "https://neighbornote.herokuapp.com/develop/upgrade.html");
 		settings.endGroup();	
 		return text;
     }
     public static String getUpdateDownloadUrl() {
 		settings.beginGroup("Upgrade");
-		String text = (String)settings.value("downloadUrl", "http://puma.cis.ibaraki.ac.jp/products/neighbornote/download.html");
+		String text = (String)settings.value("downloadUrl", "https://neighbornote.herokuapp.com/download.html");
 		settings.endGroup();	
 		return text;
     }

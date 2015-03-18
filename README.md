@@ -8,7 +8,7 @@ Getting Started
 
 ダウンロード
 ------------
-NeighborNoteは[http://puma.cis.ibaraki.ac.jp/products/neighbornote/](http://puma.cis.ibaraki.ac.jp/products/neighbornote/)からダウンロード出来ます。
+NeighborNoteは[https://neighbornote.herokuapp.com/](https://neighbornote.herokuapp.com/)からダウンロード出来ます。
 
 起動方法(Windows)
 ------------
@@ -38,7 +38,7 @@ Linuxの場合、Ubuntuであれば"sudo apt-get install libssl-dev"コマンド
 
 Download
 ------------
-NeighborNote is available on [http://puma.cis.ibaraki.ac.jp/products/neighbornote/](http://puma.cis.ibaraki.ac.jp/products/neighbornote/).
+NeighborNote is available on [https://neighbornote.herokuapp.com/](https://neighbornote.herokuapp.com/).
 
 How to Run(Windows)
 ------------

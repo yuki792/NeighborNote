@@ -1,7 +1,7 @@
 <project>
     <shortName>neighbornote</shortName>
     <fullName>NeighborNote</fullName>
-    <version>0.5.3</version>
+    <version>0.5.4</version>
     <readmeFile>C:/pleiades/workspace/NeighborNote/README.md</readmeFile>
     <licenseFile>C:/pleiades/workspace/NeighborNote/LICENSE</licenseFile>
     <logoImage>C:/pleiades/workspace/NeighborNote/installbuilder/installerLogo.png</logoImage>

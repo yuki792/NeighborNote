@@ -1,7 +1,7 @@
 <project>
     <shortName>neighbornote</shortName>
     <fullName>NeighborNote</fullName>
-    <version>0.5.3</version>
+    <version>0.5.4</version>
     <readmeFile>/Users/takahashi/Desktop/NeighborNote/README.md</readmeFile>
     <licenseFile>/Users/takahashi/Desktop/NeighborNote/LICENSE</licenseFile>
     <logoImage>/Users/takahashi/Desktop/NeighborNote/installbuilder/installerLogo.png</logoImage>
