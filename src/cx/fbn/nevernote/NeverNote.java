@@ -6525,6 +6525,9 @@ public class NeverNote extends QMainWindow{
 		noteTableView.selectionModel().blockSignals(false);
 		refreshEvernoteNote(false);
 		scrollToGuid(currentNoteGuid);
+		if (selectedNoteGUIDs.isEmpty()) {
+			selectedNoteGUIDs.add(currentNoteGuid);
+		}
 		waitCursor(false);
 		
 		// Check to see if there were any shared notebook errors
