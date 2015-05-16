@@ -41,7 +41,7 @@ import com.evernote.edam.type.User;
 import com.trolltech.qt.core.QByteArray;
 import com.trolltech.qt.core.QMutex;
 import com.trolltech.qt.core.QObject;
-import com.trolltech.qt.gui.QPixmap;
+import com.trolltech.qt.gui.QImage;
 
 import cx.fbn.nevernote.Global;
 import cx.fbn.nevernote.oauth.OAuthTokenizer;
@@ -92,10 +92,10 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 					if (thumbnailData == null) {				// 取得に失敗
 						logger.log(logger.EXTREME, "Evernoteサムネイルの取得に失敗");
 					} else {
-						QPixmap thumbnail_p = new QPixmap();
-						thumbnail_p.loadFromData(thumbnailData);
+						QImage thumbnail_i = new QImage();
+						thumbnail_i.loadFromData(thumbnailData);
 						logger.log(logger.EXTREME, "Evernoteサムネイルの取得に成功");
-						saveImage(thumbnail_p, guid);
+						saveImage(thumbnail_i, guid);
 						registImage(thumbnailData, guid);
 					}
 					
@@ -175,7 +175,7 @@ public class ENThumbnailRunner extends QObject implements Runnable{
 	}
 	
 	// サムネイルをpng形式のファイルとしてresディレクトリに保存
-	private synchronized void saveImage(QPixmap thumbnail, String guid) {
+	private synchronized void saveImage(QImage thumbnail, String guid) {
 		String thumbnailName = Global.getFileManager().getResDirPath("enThumbnail-" + guid + ".png");
 		thumbnail.save(thumbnailName, "PNG");
 	}
