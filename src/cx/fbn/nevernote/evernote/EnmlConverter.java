@@ -347,12 +347,12 @@ public class EnmlConverter {
 			pos = buffer.indexOf("<b/>",pos);
 		}
 		// change all <br/> to <br></br> because Evernote hates them if they happen in <span>
-		logger.log(logger.EXTREME, "converting <br/>");
-		pos = buffer.indexOf("<br/>");
-		for (; pos>-1; ) {
-			buffer.replace(pos, pos+5, "<br></br>");
-			pos = buffer.indexOf("<br/>",pos);
-		}
+//		logger.log(logger.EXTREME, "converting <br/>");
+//		pos = buffer.indexOf("<br/>");
+//		for (; pos>-1; ) {
+//			buffer.replace(pos, pos+5, "<br></br>");
+//			pos = buffer.indexOf("<br/>",pos);
+//		}
 		
 		// change all <span> elements in lists because Evernote hates them if they happen 
 		int endPos = 0;
@@ -371,8 +371,14 @@ public class EnmlConverter {
 			spanPos = buffer.indexOf("<span/>",spanPos);
 		}
 		
+		// remove all white spaces at the end of line and beggining of line because Evernote(Android) hates them
+		String content = buffer.toString();
+		String ls = System.getProperty("line.separator");
+		String fixedContent = content.replaceAll(ls + " +", "");
+		System.out.println(fixedContent);
+		
 		logger.log(logger.EXTREME, "Leaving EnmlConverter.fixEnXMLCrap");
-		return buffer.toString();
+		return fixedContent;
 	}
 	
  	// Fix stupid en-media problems
